@@ -4,7 +4,7 @@ using LocalCommerce.Infrastructure;
 using LocalCommerce.Infrastructure.Ordering;
 using LocalCommerce.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
+using Xunit;
 
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
 
