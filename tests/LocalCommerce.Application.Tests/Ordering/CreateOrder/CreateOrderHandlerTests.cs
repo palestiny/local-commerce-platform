@@ -1,4 +1,5 @@
 using LocalCommerce.Application.Ordering.CreateOrder;
+using LocalCommerce.Domain.Ordering;
 using Xunit;
 
 namespace LocalCommerce.Application.Tests.Ordering.CreateOrder;
@@ -160,11 +161,11 @@ public sealed class CreateOrderHandlerTests
         }
 
         public CreateOrderHandler Handler { get; }
-        public FakeCartCheckout CartCheckout { get; }
-        public FakeOrderWriter OrderWriter { get; }
-        public FakeIdempotencyStore IdempotencyStore { get; }
-        public FakeUnitOfWork UnitOfWork { get; }
-        public FakeOrderNumberGenerator OrderNumberGenerator { get; }
+        private FakeCartCheckout CartCheckout { get; }
+        private FakeOrderWriter OrderWriter { get; }
+        private FakeIdempotencyStore IdempotencyStore { get; }
+        private FakeUnitOfWork UnitOfWork { get; }
+        private FakeOrderNumberGenerator OrderNumberGenerator { get; }
 
         public static Fixture WithActiveCart(
             Guid? customerId = null,
