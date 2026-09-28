@@ -1,0 +1,25 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LocalCommerce.Domain", "src\LocalCommerce.Domain\LocalCommerce.Domain.csproj", "{B4B3F2F4-4D3A-4A0B-9E1A-2B8D6F7C1101}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LocalCommerce.Domain.Tests", "tests\LocalCommerce.Domain.Tests\LocalCommerce.Domain.Tests.csproj", "{D2E6B9B1-8F4C-47C7-A3E9-5B1A0D2C2202}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B4B3F2F4-4D3A-4A0B-9E1A-2B8D6F7C1101}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B4B3F2F4-4D3A-4A0B-9E1A-2B8D6F7C1101}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B4B3F2F4-4D3A-4A0B-9E1A-2B8D6F7C1101}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B4B3F2F4-4D3A-4A0B-9E1A-2B8D6F7C1101}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B4B3F2F4-4D3A-4A0B-9E1A-2B8D6F7C1101}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D2E6B9B1-8F4C-47C7-A3E9-5B1A0D2C2202}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D2E6B9B1-8F4C-47C7-A3E9-5B1A0D2C2202}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D2E6B9B1-8F4C-47C7-A3E9-5B1A0D2C2202}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D2E6B9B1-8F4C-47C7-A3E9-5B1A0D2C2202}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
