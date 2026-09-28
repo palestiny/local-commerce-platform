@@ -161,11 +161,14 @@ public sealed class CreateOrderHandlerTests
         }
 
         public CreateOrderHandler Handler { get; }
-        private FakeCartCheckout CartCheckout { get; }
-        private FakeOrderWriter OrderWriter { get; }
-        private FakeIdempotencyStore IdempotencyStore { get; }
-        private FakeUnitOfWork UnitOfWork { get; }
-        private FakeOrderNumberGenerator OrderNumberGenerator { get; }
+        public FakeCartReader CartReader { get; }
+        public FakeCartCheckout CartCheckout { get; }
+        public FakeStoreReader StoreReader { get; }
+        public FakeProductReader ProductReader { get; }
+        public FakeOrderWriter OrderWriter { get; }
+        public FakeIdempotencyStore IdempotencyStore { get; }
+        public FakeUnitOfWork UnitOfWork { get; }
+        public FakeOrderNumberGenerator OrderNumberGenerator { get; }
 
         public static Fixture WithActiveCart(
             Guid? customerId = null,
@@ -201,13 +204,13 @@ public sealed class CreateOrderHandlerTests
                     productPrice,
                     productOrderable));
 
-        private sealed class FakeCartReader(CartSnapshot? cart) : ICartReader
+        public sealed class FakeCartReader(CartSnapshot? cart) : ICartReader
         {
             public Task<CartSnapshot?> GetAsync(Guid cartId, CancellationToken cancellationToken) =>
                 Task.FromResult(cart);
         }
 
-        private sealed class FakeCartCheckout : ICartCheckout
+        public sealed class FakeCartCheckout : ICartCheckout
         {
             public Guid? ConsumedCartId { get; private set; }
 
@@ -218,13 +221,13 @@ public sealed class CreateOrderHandlerTests
             }
         }
 
-        private sealed class FakeStoreReader(StoreSnapshot store) : IStoreReader
+        public sealed class FakeStoreReader(StoreSnapshot store) : IStoreReader
         {
             public Task<StoreSnapshot?> GetAsync(Guid storeId, CancellationToken cancellationToken) =>
                 Task.FromResult<StoreSnapshot?>(store);
         }
 
-        private sealed class FakeProductReader(ProductSnapshot product) : IProductReader
+        public sealed class FakeProductReader(ProductSnapshot product) : IProductReader
         {
             public Task<IReadOnlyCollection<ProductSnapshot>> GetAsync(
                 IReadOnlyCollection<Guid> productIds,
@@ -232,7 +235,7 @@ public sealed class CreateOrderHandlerTests
                 Task.FromResult<IReadOnlyCollection<ProductSnapshot>>([product]);
         }
 
-        private sealed class FakeOrderWriter : IOrderWriter
+        public sealed class FakeOrderWriter : IOrderWriter
         {
             public List<Order> Orders { get; } = [];
 
@@ -246,7 +249,7 @@ public sealed class CreateOrderHandlerTests
             }
         }
 
-        private sealed class FakeIdempotencyStore : IIdempotencyStore
+        public sealed class FakeIdempotencyStore : IIdempotencyStore
         {
             private readonly Dictionary<string, IdempotencyRecord> records = [];
 
@@ -280,7 +283,7 @@ public sealed class CreateOrderHandlerTests
             }
         }
 
-        private sealed class FakeUnitOfWork : ICreateOrderUnitOfWork
+        public sealed class FakeUnitOfWork : ICreateOrderUnitOfWork
         {
             public bool Fail { get; set; }
 
@@ -295,7 +298,7 @@ public sealed class CreateOrderHandlerTests
             }
         }
 
-        private sealed class FakeOrderNumberGenerator : IOrderNumberGenerator
+        public sealed class FakeOrderNumberGenerator : IOrderNumberGenerator
         {
             public string Next() => "ORD-000001";
         }
