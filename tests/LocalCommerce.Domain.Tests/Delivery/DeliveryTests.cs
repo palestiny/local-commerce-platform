@@ -1,4 +1,5 @@
 using LocalCommerce.Domain;
+using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
 using LocalCommerce.Domain.Delivery;
 using Xunit;
 
@@ -13,7 +14,7 @@ public sealed class DeliveryTests
     [Fact]
     public void Delivery_starts_unassigned()
     {
-        var delivery = Delivery.Create(OrderId, StoreId);
+        var delivery = DeliveryEntity.Create(OrderId, StoreId);
 
         Assert.Equal(DeliveryStatus.Unassigned, delivery.Status);
         Assert.Null(delivery.DriverId);
