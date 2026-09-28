@@ -10,6 +10,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LocalCommerce.Application",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LocalCommerce.Application.Tests", "tests\LocalCommerce.Application.Tests\LocalCommerce.Application.Tests.csproj", "{F4A8D9E3-7B52-4CA3-9D26-8E3F0A5B4404}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LocalCommerce.Infrastructure", "src\LocalCommerce.Infrastructure\LocalCommerce.Infrastructure.csproj", "{A5B9E0F4-8C63-4DB4-AE37-9F4B1C6D5505}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LocalCommerce.Infrastructure.Tests", "tests\LocalCommerce.Infrastructure.Tests\LocalCommerce.Infrastructure.Tests.csproj", "{B6C0F1A5-9D74-4EC5-BF48-A05C2D7E6606}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,5 +36,13 @@ Global
 		{F4A8D9E3-7B52-4CA3-9D26-8E3F0A5B4404}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F4A8D9E3-7B52-4CA3-9D26-8E3F0A5B4404}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F4A8D9E3-7B52-4CA3-9D26-8E3F0A5B4404}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A5B9E0F4-8C63-4DB4-AE37-9F4B1C6D5505}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A5B9E0F4-8C63-4DB4-AE37-9F4B1C6D5505}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A5B9E0F4-8C63-4DB4-AE37-9F4B1C6D5505}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A5B9E0F4-8C63-4DB4-AE37-9F4B1C6D5505}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B6C0F1A5-9D74-4EC5-BF48-A05C2D7E6606}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6C0F1A5-9D74-4EC5-BF48-A05C2D7E6606}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6C0F1A5-9D74-4EC5-BF48-A05C2D7E6606}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6C0F1A5-9D74-4EC5-BF48-A05C2D7E6606}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
