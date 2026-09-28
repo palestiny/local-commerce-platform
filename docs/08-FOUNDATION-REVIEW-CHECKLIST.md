@@ -1,6 +1,6 @@
 # Foundation Review Checklist
 
-Status: **APPLICATION GREEN — PERSISTENCE NEXT**
+Status: **PERSISTENCE GREEN — DELIVERY NEXT**
 
 ## Review Scope
 
@@ -53,21 +53,24 @@ This removes the previous overlap between Order and Delivery.
 - CI verified the Application suite with **12 passed**.
 - Full solution CI verified **20 passed, 0 warnings, 0 errors** on commit `8b9bc4662d113671cf9c43b389ce36d65106237d`.
 
-## Remaining M0 Work
+## Verified Persistence Evidence
+
+- Real PostgreSQL integration suite: **5/5 passed** in CI run `36473596710`.
+- Concurrency and rollback scenarios are covered by the integration suite.
+- Migration/initialization path is version-controlled and repeatable.
+- PostgreSQL backup/restore smoke test: **passed** in CI run `36474156793`, job `109103551191`.
+
+## Remaining M0 / M1 Work
 
 These are now implementation/integration concerns, not unresolved foundation semantics:
-1. PostgreSQL persistence model and mappings.
-2. Real transaction boundary covering Order, OrderItems, Cart consumption, and idempotency completion.
-3. Database-enforced idempotency uniqueness and concurrent same-key convergence.
-4. Cart-consumption concurrency behavior.
-5. Persistence integration tests.
-6. Concrete migration/backup/restore operational path.
-7. Delivery creation/assignment semantics.
-8. Customer-facing composed status/read model.
-9. Cancellation and Delivery FAILED semantics.
+1. Delivery creation/assignment semantics.
+2. Customer-facing composed status/read model.
+3. Cancellation and Delivery FAILED semantics.
+4. API contracts/security and HTTP implementation.
+5. Operational control and pilot-readiness concerns.
 
-These must be resolved in the relevant M0 design/test artifacts before their implementation.
+Persistence implementation is no longer a foundation blocker. Delivery semantics must now be designed and verified against ADR-007 before implementation.
 
 ## Next Step
 
-Complete the Persistence & Reliability Design Gate before introducing HTTP/API behavior.
+Create and pass the Delivery vertical-slice design gate before introducing Delivery production code. Keep HTTP/API implementation sequenced after the domain/application boundaries are proven.
