@@ -42,10 +42,22 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          docker run --rm --network host -e PGPASSWORD=postgres postgres:16             psql -h 127.0.0.1 -U postgres -d localcommerce             -v ON_ERROR_STOP=1             -c "INSERT INTO \"Stores\" (\"Id\", \"IsActive\") VALUES ('00000000-0000-0000-0000-000000000001', true) ON CONFLICT (\"Id\") DO NOTHING;"
-          docker run --rm --network host -e PGPASSWORD=postgres postgres:16             pg_dump -h 127.0.0.1 -U postgres -d localcommerce --format=custom --file=/tmp/localcommerce.dump
-          docker run --rm --network host -e PGPASSWORD=postgres postgres:16             psql -h 127.0.0.1 -U postgres -d postgres             -v ON_ERROR_STOP=1             -c "DROP DATABASE localcommerce;"             -c "CREATE DATABASE localcommerce;"
-          docker cp /tmp/localcommerce.dump $(docker ps -q --filter ancestor=postgres:16 | head -1):/tmp/localcommerce.dump 2>/dev/null || true
-          docker run --rm --network host -v "${RUNNER_TEMP}:/backup" -e PGPASSWORD=postgres postgres:16             bash -lc 'pg_dump -h 127.0.0.1 -U postgres -d localcommerce --format=custom --file=/backup/localcommerce.dump'
-          docker run --rm --network host -v "${RUNNER_TEMP}:/backup" -e PGPASSWORD=postgres postgres:16             pg_restore -h 127.0.0.1 -U postgres -d localcommerce --exit-on-error /backup/localcommerce.dump
-          docker run --rm --network host -e PGPASSWORD=postgres postgres:16             psql -h 127.0.0.1 -U postgres -d localcommerce             -v ON_ERROR_STOP=1             -c "SELECT 1 FROM \"Stores\" WHERE \"Id\"='00000000-0000-0000-0000-000000000001';"
+          backup_dir="${RUNNER_TEMP}/local-commerce-backup"
+          mkdir -p "$backup_dir"
+          docker run --rm --network host -e PGPASSWORD=postgres postgres:16 \
+            psql -h 127.0.0.1 -U postgres -d localcommerce \
+            -v ON_ERROR_STOP=1 \
+            -c "INSERT INTO \"Stores\" (\"Id\", \"IsActive\") VALUES ('00000000-0000-0000-0000-000000000001', true) ON CONFLICT (\"Id\") DO NOTHING;"
+          docker run --rm --network host -v "$backup_dir:/backup" -e PGPASSWORD=postgres postgres:16 \
+            pg_dump -h 127.0.0.1 -U postgres -d localcommerce --format=custom --file=/backup/localcommerce.dump
+          docker run --rm --network host -e PGPASSWORD=postgres postgres:16 \
+            psql -h 127.0.0.1 -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 \
+            -c "DROP DATABASE localcommerce;" \
+            -c "CREATE DATABASE localcommerce;"
+          docker run --rm --network host -v "$backup_dir:/backup" -e PGPASSWORD=postgres postgres:16 \
+            pg_restore -h 127.0.0.1 -U postgres -d localcommerce --exit-on-error /backup/localcommerce.dump
+          docker run --rm --network host -e PGPASSWORD=postgres postgres:16 \
+            psql -h 127.0.0.1 -U postgres -d localcommerce \
+            -v ON_ERROR_STOP=1 \
+            -c "SELECT 1 FROM \"Stores\" WHERE \"Id\"='00000000-0000-0000-0000-000000000001';"
