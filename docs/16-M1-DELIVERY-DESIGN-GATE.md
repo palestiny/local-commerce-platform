@@ -306,9 +306,9 @@ Before implementation, add failing tests for:
 - rollback of coordinated Order + Delivery operation
 - Delivery history persistence
 
-## Proposed M1 Decision Baseline — PENDING OWNER APPROVAL
+## Accepted M1 Decision Baseline — OWNER APPROVED
 
-The following baseline is recommended for the first vertical slice. These are **proposals, not accepted decisions**, until the project owner approves them.
+The following baseline is recommended for the first vertical slice. These decisions are **ACCEPTED** by the project owner.
 
 ### Decision matrix
 
@@ -367,15 +367,15 @@ The initial read model should compose, rather than duplicate:
 
 No mutable `DeliveryStatus` field is added to Order.
 
-### Approval boundary
+### Approval boundary — CLOSED
 
-Owner approval is required for the proposed business-policy choices above, especially:
+The project owner approved the proposed business-policy choices:
 
 1. cancellation after Delivery creation;
 2. replacement Delivery after FAILED;
 3. minimal Driver eligibility for M1.
 
-The technical transaction boundary, state authority, idempotency, and no-duplicate-state rules are already aligned with the accepted architecture and existing ADR-007.
+The technical transaction boundary, state authority, idempotency, and no-duplicate-state rules remain aligned with the accepted architecture and ADR-007.
 
 ## Design Decisions Still Open
 
