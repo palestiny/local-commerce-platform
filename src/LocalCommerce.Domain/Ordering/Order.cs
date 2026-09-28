@@ -1,3 +1,5 @@
+using LocalCommerce.Domain;
+
 namespace LocalCommerce.Domain.Ordering;
 
 public enum OrderStatus
@@ -121,9 +123,4 @@ public sealed class Order
 
         Status = next;
     }
-}
-
-public sealed class DomainRuleViolationException : Exception
-{
-    public DomainRuleViolationException(string message) : base(message) { }
 }
