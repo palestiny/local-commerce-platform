@@ -308,13 +308,23 @@ public sealed class CreateOrderHandlerTests
                         ? record
                         : null);
 
-            public Task ReserveAsync(
+            public Task<IdempotencyRecord?> ReserveAsync(
                 Guid customerId,
                 string operation,
                 string key,
                 string fingerprint,
-                CancellationToken cancellationToken) =>
-                Task.CompletedTask;
+                CancellationToken cancellationToken)
+            {
+                if (records.TryGetValue(key, out var existing))
+                    return Task.FromResult<IdempotencyRecord?>(existing);
+
+                records[key] = new IdempotencyRecord(
+                    key,
+                    fingerprint,
+                    new CreateOrderResult(Guid.Empty, string.Empty));
+
+                return Task.FromResult<IdempotencyRecord?>(null);
+            }
 
             public Task CompleteAsync(
                 Guid customerId,
@@ -323,7 +333,10 @@ public sealed class CreateOrderHandlerTests
                 CreateOrderResult result,
                 CancellationToken cancellationToken)
             {
-                records[key] = new IdempotencyRecord(key, "fingerprint", result);
+                if (!records.TryGetValue(key, out var existing))
+                    throw new InvalidOperationException("Idempotency reservation was not created.");
+
+                records[key] = existing with { Result = result };
                 return Task.CompletedTask;
             }
         }
