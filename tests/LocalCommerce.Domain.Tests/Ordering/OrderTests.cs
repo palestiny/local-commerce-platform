@@ -44,11 +44,8 @@ public sealed class OrderTests
         var item = CreateItem(StoreId);
         var order = Order.Create(StoreId, [item]);
 
-        var originalPrice = item.UnitPrice;
-
-        item.UnitPrice = originalPrice + 10m;
-
-        Assert.Equal(originalPrice, order.Items.Single().UnitPrice);
+        Assert.NotSame(item, order.Items.Single());
+        Assert.Equal(item.UnitPrice, order.Items.Single().UnitPrice);
     }
 
     [Fact]
