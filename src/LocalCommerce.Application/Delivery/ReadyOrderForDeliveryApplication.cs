@@ -1,3 +1,4 @@
+using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
 using LocalCommerce.Domain.Delivery;
 using LocalCommerce.Domain.Ordering;
 
@@ -25,8 +26,8 @@ public interface IOrderForDeliveryRepository
 
 public interface IDeliveryRepository
 {
-    Task<Delivery?> GetActiveByOrderIdAsync(Guid orderId, CancellationToken cancellationToken);
-    Task AddAsync(Delivery delivery, CancellationToken cancellationToken);
+    Task<DeliveryEntity?> GetActiveByOrderIdAsync(Guid orderId, CancellationToken cancellationToken);
+    Task AddAsync(DeliveryEntity delivery, CancellationToken cancellationToken);
 }
 
 public interface IReadyForDeliveryAuthorization
@@ -158,7 +159,7 @@ public sealed class ReadyOrderForDeliveryHandler
 
             order.MarkReadyForPickup();
 
-            var delivery = Delivery.Create(order.Id, order.StoreId);
+            var delivery = DeliveryEntity.Create(order.Id, order.StoreId);
 
             await OrderRepository.SaveAsync(order, transactionCancellationToken);
             await DeliveryRepository.AddAsync(delivery, transactionCancellationToken);
