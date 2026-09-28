@@ -31,7 +31,7 @@ public sealed class CommerceDbContext : DbContext
 
         m.Entity<OrderItemEntity>(e =>
         {
-            e.ToTable("OrderItems", t => t.HasCheckConstraint("CK_OrderItems_Quantity_Positive", ""Quantity" > 0"));
+            e.ToTable("OrderItems", t => t.HasCheckConstraint("CK_OrderItems_Quantity_Positive", """ "Quantity" > 0 """));
             e.HasKey(x => x.Id);
             e.Property(x => x.ProductName).HasMaxLength(256).IsRequired();
             e.Property(x => x.VariantName).HasMaxLength(256);
@@ -77,7 +77,7 @@ public sealed class CommerceDbContext : DbContext
 
         m.Entity<CartLineEntity>(e =>
         {
-            e.ToTable("CartLines", t => t.HasCheckConstraint("CK_CartLines_Quantity_Positive", ""Quantity" > 0"));
+            e.ToTable("CartLines", t => t.HasCheckConstraint("CK_CartLines_Quantity_Positive", """ "Quantity" > 0 """));
             e.HasKey(x => x.Id);
             e.Property(x => x.VariantName).HasMaxLength(256);
             e.HasOne<ProductEntity>().WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Restrict);
