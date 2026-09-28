@@ -216,7 +216,7 @@ public sealed class ReadyOrderForDeliveryHandlerTests
         public Task<DeliveryEntity?> GetActiveByOrderIdAsync(
             Guid orderId,
             CancellationToken cancellationToken) =>
-            Task.FromResult<Delivery?>(
+            Task.FromResult<DeliveryEntity?>(
                 Deliveries.SingleOrDefault(x =>
                     x.OrderId == orderId &&
                     x.Status is not DeliveryStatus.Failed and not DeliveryStatus.Delivered));
