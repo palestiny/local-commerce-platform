@@ -431,3 +431,65 @@ The suite defines the first executable Delivery domain contract for:
 - required Order/Store identity invariants
 
 Production Delivery implementation has **not** been added yet. The next implementation step is GREEN: introduce the minimum Delivery aggregate required to satisfy these tests without expanding M1 scope.
+
+
+## Updated Implementation Status — 2026-09-28
+
+**Design approval: CLOSED.**
+
+The previously approved M1 business-policy baseline remains authoritative.
+
+### Domain implementation
+
+**Implemented, CI verification pending.**
+
+src/LocalCommerce.Domain/Delivery/Delivery.cs now implements the minimum Delivery aggregate required by the approved RED contract:
+
+- UNASSIGNED -> ASSIGNED
+- ASSIGNED -> PICKED_UP
+- PICKED_UP -> OUT_FOR_DELIVERY
+- OUT_FOR_DELIVERY -> DELIVERED
+- explicit FAILED terminal state
+- assigned-driver validation for pickup
+- required Order/Store identity
+- terminal-state protection
+
+No mutable Delivery fulfillment state was added to Order.
+
+### Application TDD RED
+
+**Status: IN PROGRESS — first application contract committed.**
+
+The first M1 application slice is now defined in:
+
+- src/LocalCommerce.Application/Delivery/ReadyOrderForDeliveryApplication.cs
+- tests/LocalCommerce.Application.Tests/Delivery/ReadyOrderForDeliveryHandlerTests.cs
+
+The contract covers:
+
+- PREPARING -> READY_FOR_PICKUP + Delivery creation as one application operation
+- prevention of an existing active Delivery
+- authorization boundary for the actor marking the Order ready
+- same-key idempotent replay
+- same-key fingerprint conflict
+- unit-of-work failure boundary
+
+The current implementation is intentionally the next GREEN target; the application behavior must be verified before expanding into driver commands.
+
+### Verification state
+
+No GitHub Actions workflow run or commit status is currently exposed for the latest head commit. Therefore this increment is **not marked GREEN VERIFIED**.
+
+### Next TDD increment
+
+GREEN the first application slice, then add the next RED contract for:
+
+1. active Driver validation and assignment;
+2. assigned-driver pickup authorization;
+3. pickup -> out-for-delivery -> delivered application commands;
+4. failure and replacement Delivery;
+5. coordinated cancellation;
+6. composed customer-facing Delivery read;
+7. persistence constraints/history and PostgreSQL concurrency verification.
+
+API implementation remains intentionally deferred.
