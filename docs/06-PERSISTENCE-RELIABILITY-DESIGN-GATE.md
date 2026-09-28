@@ -1,6 +1,6 @@
 # Persistence & Reliability Design Gate
 
-Status: **DESIGN PROPOSAL — OWNER DECISION REQUIRED**
+Status: **IMPLEMENTATION IN PROGRESS — DECISION ACCEPTED**
 
 ## Objective
 
@@ -37,7 +37,7 @@ The application contract is already GREEN at the unit level. This gate moves the
 
 For M0, the main requirement is reliable transactional behavior rather than maximum SQL control. EF Core reduces infrastructure code while still allowing explicit transactions and database constraints. Dapper remains a valid future choice if measured query requirements justify it.
 
-**Decision requested:** accept Option A for M0.
+**Decision accepted:** Option A — EF Core + PostgreSQL for M0.
 
 ## Transaction Boundary
 
@@ -244,6 +244,6 @@ This gate becomes **PASS** only when:
 
 Application layer: **GREEN VERIFIED**.
 
-Persistence layer: **NOT IMPLEMENTED / NOT VERIFIED**.
+Persistence layer: **IMPLEMENTATION IN PROGRESS / NOT YET VERIFIED**.
 
 No API implementation should start before this gate reaches PASS.
