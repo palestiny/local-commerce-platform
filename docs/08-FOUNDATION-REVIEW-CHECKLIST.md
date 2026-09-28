@@ -74,3 +74,15 @@ Persistence implementation is no longer a foundation blocker. Delivery semantics
 ## Next Step
 
 Create and pass the Delivery vertical-slice design gate before introducing Delivery production code. Keep HTTP/API implementation sequenced after the domain/application boundaries are proven.
+
+
+## M1 Delivery Design Gate
+
+- **Status:** ACCEPTED — READY FOR TDD RED
+- Delivery ownership remains separate from Order commercial lifecycle.
+- READY_FOR_PICKUP + Delivery creation uses one application-level PostgreSQL transaction.
+- FAILED is terminal per Delivery attempt; replacement Delivery is explicit.
+- Cancellation semantics before/after pickup are accepted.
+- Minimal Driver eligibility is accepted for M1.
+- Customer read is a composed Order + Delivery response without duplicated mutable state.
+- Delivery history is append-only.
