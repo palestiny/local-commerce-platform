@@ -59,6 +59,8 @@ public sealed class EfIdempotencyStore(CommerceDbContext db) : IIdempotencyStore
         if(row.CompletedAt is not null) throw new InvalidOperationException("Idempotency record is already completed.");
 
         row.OrderId=result.OrderId;
+        row.Order = db.Orders.Local.SingleOrDefault(x => x.Id == result.OrderId)
+            ?? throw new InvalidOperationException("Order to complete idempotency was not found in the current unit of work.");
         row.OrderNumber=result.OrderNumber;
         row.CompletedAt=DateTimeOffset.UtcNow;
     }
