@@ -133,6 +133,41 @@ public sealed class CreateOrderHandlerTests
         Assert.Null(fixture.CartCheckout.ConsumedCartId);
     }
 
+
+    [Fact]
+    public async Task Product_from_a_different_store_is_rejected()
+    {
+        var fixture = Fixture.WithActiveCart(productStoreId: Guid.NewGuid());
+
+        var act = () => fixture.Handler.HandleAsync(
+            new CreateOrderCommand(CustomerId, CartId, "idem-1"));
+
+        await Assert.ThrowsAsync<CreateOrderRejectedException>(act);
+        Assert.Empty(fixture.OrderWriter.Orders);
+        Assert.Null(fixture.CartCheckout.ConsumedCartId);
+    }
+
+    [Fact]
+    public async Task Product_name_variant_and_quantity_are_snapshotted_into_the_order()
+    {
+        var fixture = Fixture.WithActiveCart(
+            productName: "Whole Milk",
+            productVariant: "2L",
+            productPrice: 37.50m,
+            lines: [new CartLine(ProductId, "2L", 3)]);
+
+        await fixture.Handler.HandleAsync(
+            new CreateOrderCommand(CustomerId, CartId, "idem-1"));
+
+        var orderItem = fixture.OrderWriter.Orders.Single().Items.Single();
+
+        Assert.Equal("Whole Milk", orderItem.ProductName);
+        Assert.Equal("2L", orderItem.VariantName);
+        Assert.Equal(3, orderItem.Quantity);
+        Assert.Equal(37.50m, orderItem.UnitPrice);
+        Assert.Equal(112.50m, orderItem.LineTotal);
+    }
+
     private sealed class Fixture
     {
         private Fixture(
@@ -174,19 +209,29 @@ public sealed class CreateOrderHandlerTests
             Guid? customerId = null,
             bool storeActive = true,
             bool productOrderable = true,
-            decimal productPrice = 30m) =>
+            decimal productPrice = 30m,
+            Guid? productStoreId = null,
+            string productName = "Whole Milk",
+            string? productVariant = "1L",
+            IReadOnlyCollection<CartLine>? lines = null) =>
             WithCart(
                 customerId,
                 storeActive,
                 productOrderable,
                 productPrice,
-                [new CartLine(ProductId, "1L", 2)]);
+                productStoreId,
+                productName,
+                productVariant,
+                lines ?? [new CartLine(ProductId, "1L", 2)]);
 
         public static Fixture WithCart(
             Guid? customerId = null,
             bool storeActive = true,
             bool productOrderable = true,
             decimal productPrice = 30m,
+            Guid? productStoreId = null,
+            string productName = "Whole Milk",
+            string? productVariant = "1L",
             IReadOnlyCollection<CartLine>? lines = null) =>
             new(
                 new CartSnapshot(
@@ -198,9 +243,9 @@ public sealed class CreateOrderHandlerTests
                 new StoreSnapshot(StoreId, storeActive),
                 new ProductSnapshot(
                     ProductId,
-                    StoreId,
-                    "Whole Milk",
-                    "1L",
+                    productStoreId ?? StoreId,
+                    productName,
+                    productVariant,
                     productPrice,
                     productOrderable));
 
