@@ -56,6 +56,8 @@ public sealed class OrderTests
     {
         var order = Order.Create(StoreId, [CreateItem(StoreId)]);
 
+        Assert.Equal(OrderStatus.PendingStoreConfirmation, order.Status);
+
         order.Accept();
         order.Prepare();
         order.MarkReadyForPickup();
@@ -87,6 +89,8 @@ public sealed class OrderTests
     public void Cancellation_is_allowed_only_from_explicit_commercial_states()
     {
         var order = Order.Create(StoreId, [CreateItem(StoreId)]);
+
+        Assert.Equal(OrderStatus.PendingStoreConfirmation, order.Status);
 
         order.Cancel();
 
