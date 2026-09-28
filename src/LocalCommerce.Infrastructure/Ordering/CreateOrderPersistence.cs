@@ -52,12 +52,15 @@ public sealed class EfIdempotencyStore(CommerceDbContext db) : IIdempotencyStore
 
     public async Task CompleteAsync(Guid customerId,string operation,string key,CreateOrderResult result,CancellationToken ct)
     {
-        var affected=await db.Database.ExecuteSqlInterpolatedAsync($"""
-            UPDATE "IdempotencyRecords"
-            SET "OrderId"={result.OrderId},"OrderNumber"={result.OrderNumber},"CompletedAt"={DateTimeOffset.UtcNow}
-            WHERE "CustomerId"={customerId} AND "Operation"={operation} AND "IdempotencyKey"={key} AND "CompletedAt" IS NULL
-            """,ct);
-        if(affected!=1) throw new InvalidOperationException("Idempotency completion affected an unexpected number of records.");
+        var row=await db.IdempotencyRecords.SingleOrDefaultAsync(
+            x=>x.CustomerId==customerId && x.Operation==operation && x.IdempotencyKey==key,ct);
+
+        if(row is null) throw new InvalidOperationException("Idempotency reservation was not found.");
+        if(row.CompletedAt is not null) throw new InvalidOperationException("Idempotency record is already completed.");
+
+        row.OrderId=result.OrderId;
+        row.OrderNumber=result.OrderNumber;
+        row.CompletedAt=DateTimeOffset.UtcNow;
     }
 
     private async Task<IdempotencyRecord?> Read(Guid customerId,string operation,string key,CancellationToken ct)
