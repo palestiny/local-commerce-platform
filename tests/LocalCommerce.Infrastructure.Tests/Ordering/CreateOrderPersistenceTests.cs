@@ -50,7 +50,7 @@ public sealed class CreateOrderPersistenceTests
         var result=await Handler(db).HandleAsync(new CreateOrderCommand(s.customerId,s.cartId,"key-1"));
 
         var order=await db.Orders.Include(x=>x.Items).SingleAsync(x=>x.Id==result.OrderId);
-        var cart=await db.Carts.SingleAsync(x=>x.Id==s.cartId);
+        var cart=await db.Carts.AsNoTracking().SingleAsync(x=>x.Id==s.cartId);
 
         Assert.Equal("Milk",order.Items.Single().ProductName);
         Assert.Equal(12.50m,order.Items.Single().UnitPrice);
