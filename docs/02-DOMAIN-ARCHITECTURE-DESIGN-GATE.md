@@ -1,6 +1,6 @@
 # Domain & Architecture Foundation Design Gate
 
-Status: IN PROGRESS
+Status: READY FOR TDD RED
 
 This gate must be completed before production feature implementation.
 
@@ -46,10 +46,12 @@ Commercial snapshot plus lifecycle state.
 Snapshot includes product name, variant, unit price, quantity, discount and relevant purchase-time values.
 
 Lifecycle:
-CREATED -> PENDING_STORE_CONFIRMATION -> ACCEPTED -> PREPARING -> READY_FOR_PICKUP -> DRIVER_ASSIGNED -> PICKED_UP -> OUT_FOR_DELIVERY -> DELIVERED
+CREATED -> PENDING_STORE_CONFIRMATION -> ACCEPTED -> PREPARING -> READY_FOR_PICKUP
 
-Exception states:
-REJECTED, CANCELLED, DELIVERY_FAILED, RETURNED
+Commercial exception states:
+REJECTED, CANCELLED
+
+Delivery fulfillment state is owned exclusively by the Delivery aggregate after READY_FOR_PICKUP.
 
 ### Payment
 Independent lifecycle:
@@ -61,7 +63,7 @@ MVP method: CASH_ON_DELIVERY.
 Independent fulfillment aggregate.
 
 Lifecycle:
-UNASSIGNED -> ASSIGNED -> PICKED_UP -> DELIVERED
+UNASSIGNED -> ASSIGNED -> PICKED_UP -> OUT_FOR_DELIVERY -> DELIVERED
 with FAILED as an exception path.
 
 ### CustomerAddress
@@ -154,7 +156,7 @@ Pilot city/zones, merchant categories, delivery operating model, commission/fees
 
 - Aggregate boundaries reviewed.
 - Invariants converted into tests.
-- Order/Payment/Delivery transitions documented.
+- Order/Payment/Delivery transitions documented with distinct state ownership.
 - Authorization boundaries verified.
 - Transaction/idempotency rules implementable.
 - Persistence model has no contradiction with domain rules.
@@ -163,4 +165,4 @@ Pilot city/zones, merchant categories, delivery operating model, commission/fees
 
 ## Next Step
 
-After this gate: TDD RED for Create Order, then the first vertical slice end-to-end.
+Foundation decision ADR-007 is accepted. Proceed to TDD RED for Create Order, while treating the remaining M0 transaction/read-model/failure semantics as implementation design work.
