@@ -1,18 +1,39 @@
-name: .NET
+name: dotnet
 
 on:
   push:
-    branches: ["main", "feature/**"]
+    branches:
+      - main
+      - "feature/**"
   pull_request:
-    branches: ["main"]
+    branches:
+      - main
 
 jobs:
-  test:
+  build-and-test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: localcommerce
+        options: >-
+          --health-cmd "pg_isready -U postgres -d localcommerce"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+        ports:
+          - 5432:5432
+    env:
+      LOCAL_COMMERCE_POSTGRES: Host=localhost;Port=5432;Database=localcommerce;Username=postgres;Password=postgres
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "8.0.x"
-      - run: dotnet restore LocalCommercePlatform.sln
-      - run: dotnet test LocalCommercePlatform.sln --no-restore --verbosity normal
+          dotnet-version: 8.0.x
+      - name: Restore
+        run: dotnet restore LocalCommercePlatform.sln
+      - name: Test
+        run: dotnet test LocalCommercePlatform.sln --no-restore --verbosity normal
