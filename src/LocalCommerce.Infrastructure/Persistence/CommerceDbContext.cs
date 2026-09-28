@@ -24,10 +24,10 @@ public sealed class CommerceDbContext : DbContext
             e.HasOne<StoreEntity>().WithMany().HasForeignKey(x=>x.StoreId).OnDelete(DeleteBehavior.Restrict);
         });
         m.Entity<OrderItemEntity>(e => {
-            e.ToTable("OrderItems"); e.HasKey(x=>x.Id); e.Property(x=>x.ProductName).HasMaxLength(256).IsRequired();
+            e.ToTable("OrderItems", t => t.HasCheckConstraint("CK_OrderItems_Quantity_Positive", ""Quantity" > 0"));
+            e.HasKey(x=>x.Id); e.Property(x=>x.ProductName).HasMaxLength(256).IsRequired();
             e.Property(x=>x.VariantName).HasMaxLength(256); e.Property(x=>x.UnitPrice).HasPrecision(18,2).IsRequired();
             e.Property(x=>x.LineDiscount).HasPrecision(18,2).IsRequired(); e.Property(x=>x.LineTotal).HasPrecision(18,2).IsRequired();
-            e.HasCheckConstraint("CK_OrderItems_Quantity_Positive", "\"Quantity\" > 0");
         });
         m.Entity<IdempotencyEntity>(e => {
             e.ToTable("IdempotencyRecords"); e.HasKey(x=>x.Id); e.Property(x=>x.Operation).HasMaxLength(128).IsRequired();
@@ -46,9 +46,9 @@ public sealed class CommerceDbContext : DbContext
             e.HasMany(x=>x.Lines).WithOne().HasForeignKey(x=>x.CartId).OnDelete(DeleteBehavior.Cascade);
         });
         m.Entity<CartLineEntity>(e => {
-            e.ToTable("CartLines"); e.HasKey(x=>x.Id); e.Property(x=>x.VariantName).HasMaxLength(256);
+            e.ToTable("CartLines", t => t.HasCheckConstraint("CK_CartLines_Quantity_Positive", ""Quantity" > 0"));
+            e.HasKey(x=>x.Id); e.Property(x=>x.VariantName).HasMaxLength(256);
             e.HasOne<ProductEntity>().WithMany().HasForeignKey(x=>x.ProductId).OnDelete(DeleteBehavior.Restrict);
-            e.HasCheckConstraint("CK_CartLines_Quantity_Positive", "\"Quantity\" > 0");
         });
     }
 }
