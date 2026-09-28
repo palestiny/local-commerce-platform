@@ -1,4 +1,5 @@
 using LocalCommerce.Domain.Ordering;
+using Xunit;
 
 namespace LocalCommerce.Domain.Tests.Ordering;
 
