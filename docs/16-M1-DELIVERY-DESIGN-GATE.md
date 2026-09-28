@@ -306,6 +306,77 @@ Before implementation, add failing tests for:
 - rollback of coordinated Order + Delivery operation
 - Delivery history persistence
 
+## Proposed M1 Decision Baseline — PENDING OWNER APPROVAL
+
+The following baseline is recommended for the first vertical slice. These are **proposals, not accepted decisions**, until the project owner approves them.
+
+### Decision matrix
+
+| Decision | Proposed M1 baseline | Why | Deferred complexity |
+|---|---|---|---|
+| READY + Delivery creation | One application command, one PostgreSQL transaction | Prevents READY-without-Delivery partial state | Outbox/async orchestration |
+| Delivery failure | FAILED is terminal for the current Delivery attempt | Keeps failure semantics explicit and avoids invented retries | Automated retry/re-dispatch |
+| Failed delivery recovery | Explicit operational `CreateReplacementDelivery` only when no active Delivery exists and Order remains eligible | Preserves failed attempt history while allowing controlled recovery | Automatic re-dispatch |
+| Cancellation after Delivery exists | Customer/merchant cancellation allowed only before pickup; after pickup requires explicit admin operational handling | Avoids silently reversing a fulfillment operation already in motion | Refund/dispute automation |
+| Driver model | Minimal Driver identity + Active/Inactive state; assignment performed by authorized operational actor | Enough for M1 without prematurely building dispatch | Zones, capacity, scoring, auto-dispatch |
+| Driver eligibility | M1 validates active Driver only; Store/zone eligibility is an explicit future constraint | Avoids pretending an unmodeled zone system exists | Zone/capacity/vehicle rules |
+| Customer read | Synchronous composed application DTO: Order commercial state + nullable Delivery summary + lifecycle timestamps | Simple, authoritative, no duplicated mutable state | Projection/read model |
+| Delivery history | Append-only `DeliveryStatusHistory`; actor, timestamp, previous/new state, command/correlation id, failure code/reason | Auditable and consistent with Order history | Retention/archival subsystem |
+
+### Proposed Delivery transition table
+
+| Current | Command | Actor | Next | Notes |
+|---|---|---|---|---|
+| UNASSIGNED | AssignDriver | Authorized operator | ASSIGNED | Driver must be active |
+| ASSIGNED | ConfirmPickup | Assigned driver / authorized operator | PICKED_UP | No Order fulfillment mutation |
+| PICKED_UP | StartDelivery | Assigned driver / authorized operator | OUT_FOR_DELIVERY | No Order fulfillment mutation |
+| OUT_FOR_DELIVERY | CompleteDelivery | Assigned driver / authorized operator | DELIVERED | Payment remains independent |
+| UNASSIGNED / ASSIGNED / PICKED_UP / OUT_FOR_DELIVERY | FailDelivery | Authorized operational actor | FAILED | Explicit reason required |
+| FAILED | CreateReplacementDelivery | Authorized operational actor | new Delivery = UNASSIGNED | Only if Order is still eligible and no active Delivery exists |
+
+`FAILED` remains terminal for that Delivery record. A replacement creates a new Delivery attempt rather than reopening the failed record.
+
+### Proposed cancellation rule
+
+Cancellation is still an Order command and never originates from Delivery.
+
+- Before Delivery exists: normal Order cancellation rules apply.
+- After Delivery exists but before pickup: application-level cancellation may atomically cancel the Order and terminate the active Delivery attempt.
+- After pickup: ordinary customer/merchant cancellation is rejected; only an explicitly authorized operational intervention may handle the case.
+- Payment/refund behavior remains a separate Payment decision and is not silently inferred from Delivery state.
+
+This keeps commercial cancellation authoritative in Order while preventing an active fulfillment attempt from being left ambiguous.
+
+### Proposed customer-facing DTO
+
+The initial read model should compose, rather than duplicate:
+
+- `OrderId`
+- `OrderNumber`
+- `OrderStatus`
+- `Order timestamps`
+- `Delivery` nullable
+  - `DeliveryId`
+  - `Status`
+  - `AssignedAt`
+  - `PickedUpAt`
+  - `OutForDeliveryAt`
+  - `DeliveredAt`
+  - `FailedAt`
+  - `FailureReason` when appropriate
+
+No mutable `DeliveryStatus` field is added to Order.
+
+### Approval boundary
+
+Owner approval is required for the proposed business-policy choices above, especially:
+
+1. cancellation after Delivery creation;
+2. replacement Delivery after FAILED;
+3. minimal Driver eligibility for M1.
+
+The technical transaction boundary, state authority, idempotency, and no-duplicate-state rules are already aligned with the accepted architecture and existing ADR-007.
+
 ## Design Decisions Still Open
 
 1. Exact Delivery failure recovery policy.
