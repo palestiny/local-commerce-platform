@@ -23,7 +23,7 @@ public sealed class DeliveryTests
     [Fact]
     public void Delivery_can_be_assigned_to_an_active_driver()
     {
-        var delivery = Delivery.Create(OrderId, StoreId);
+        var delivery = DeliveryEntity.Create(OrderId, StoreId);
 
         delivery.AssignDriver(DriverId);
 
@@ -35,7 +35,7 @@ public sealed class DeliveryTests
     [Fact]
     public void Delivery_cannot_be_assigned_twice()
     {
-        var delivery = Delivery.Create(OrderId, StoreId);
+        var delivery = DeliveryEntity.Create(OrderId, StoreId);
         delivery.AssignDriver(DriverId);
 
         var act = () => delivery.AssignDriver(Guid.NewGuid());
@@ -46,7 +46,7 @@ public sealed class DeliveryTests
     [Fact]
     public void Only_assigned_driver_can_confirm_pickup()
     {
-        var delivery = Delivery.Create(OrderId, StoreId);
+        var delivery = DeliveryEntity.Create(OrderId, StoreId);
         delivery.AssignDriver(DriverId);
 
         var act = () => delivery.ConfirmPickup(Guid.NewGuid());
@@ -62,7 +62,7 @@ public sealed class DeliveryTests
     [Fact]
     public void Delivery_can_progress_to_delivered()
     {
-        var delivery = Delivery.Create(OrderId, StoreId);
+        var delivery = DeliveryEntity.Create(OrderId, StoreId);
         delivery.AssignDriver(DriverId);
         delivery.ConfirmPickup(DriverId);
         delivery.StartDelivery();
@@ -76,7 +76,7 @@ public sealed class DeliveryTests
     [Fact]
     public void Delivery_cannot_start_delivery_before_pickup()
     {
-        var delivery = Delivery.Create(OrderId, StoreId);
+        var delivery = DeliveryEntity.Create(OrderId, StoreId);
         delivery.AssignDriver(DriverId);
 
         var act = () => delivery.StartDelivery();
@@ -87,7 +87,7 @@ public sealed class DeliveryTests
     [Fact]
     public void Delivery_failure_is_terminal_for_the_current_attempt()
     {
-        var delivery = Delivery.Create(OrderId, StoreId);
+        var delivery = DeliveryEntity.Create(OrderId, StoreId);
         delivery.AssignDriver(DriverId);
 
         delivery.Fail("DRIVER_UNAVAILABLE", "Driver became unavailable.");
@@ -104,7 +104,7 @@ public sealed class DeliveryTests
     [Fact]
     public void Delivered_delivery_is_terminal()
     {
-        var delivery = Delivery.Create(OrderId, StoreId);
+        var delivery = DeliveryEntity.Create(OrderId, StoreId);
         delivery.AssignDriver(DriverId);
         delivery.ConfirmPickup(DriverId);
         delivery.StartDelivery();
@@ -116,7 +116,7 @@ public sealed class DeliveryTests
     [Fact]
     public void Delivery_requires_order_and_store()
     {
-        Assert.Throws<DomainRuleViolationException>(() => Delivery.Create(Guid.Empty, StoreId));
-        Assert.Throws<DomainRuleViolationException>(() => Delivery.Create(OrderId, Guid.Empty));
+        Assert.Throws<DomainRuleViolationException>(() => DeliveryEntity.Create(Guid.Empty, StoreId));
+        Assert.Throws<DomainRuleViolationException>(() => DeliveryEntity.Create(OrderId, Guid.Empty));
     }
 }
