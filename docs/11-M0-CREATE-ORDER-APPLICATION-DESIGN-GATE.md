@@ -1,6 +1,6 @@
 # M0 Create Order — Application Design Gate
 
-Status: **READY FOR TDD RED**
+Status: **GREEN VERIFIED**
 
 ## Scope
 
@@ -95,6 +95,17 @@ Customer → Cart → Store.
 
 A caller cannot select another customer's Cart merely by supplying its identifier.
 
+## Verification evidence
+
+GitHub Actions run **36436405305** completed successfully for application commit `8b9bc4662d113671cf9c43b389ce36d65106237d`.
+
+- Application tests: **12 passed**
+- Domain tests: **8 passed**
+- Total: **20 passed**
+- Build: **0 warnings, 0 errors**
+
+The unit-level failure test proves failure before entering the transaction delegate does not consume the cart. It does **not** prove rollback after partial writes; that remains an Infrastructure integration concern.
+
 ## Explicit non-goals
 
 - HTTP controllers/endpoints
@@ -108,6 +119,16 @@ A caller cannot select another customer's Cart merely by supplying its identifie
 
 ## Gate exit criteria
 
+- Application command and result contract is explicit: PASS.
+- Required ports are explicit: PASS.
+- Cart consumption semantics are explicit: PASS.
+- Idempotency semantics are explicit: PASS.
+- Transaction boundary is explicit at the application level: PASS.
+- RED suite established the contract: PASS.
+- GREEN behavior verified in CI: PASS.
+
+## Gate verification
+
 - Application command and result contract is explicit.
 - Required ports are explicit.
 - Cart consumption semantics are explicit.
@@ -117,4 +138,4 @@ A caller cannot select another customer's Cart merely by supplying its identifie
 
 ## Next step
 
-Create the executable Create Order RED suite. Production behavior remains intentionally unimplemented until the tests establish the contract.
+Move to the Persistence & Reliability implementation design and integration test gate. The next gate must prove real PostgreSQL transaction, uniqueness, concurrency, cart-consumption, and idempotency behavior before the first production API slice.
