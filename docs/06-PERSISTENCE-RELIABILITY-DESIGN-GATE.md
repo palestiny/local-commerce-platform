@@ -1,6 +1,6 @@
 # Persistence & Reliability Design Gate
 
-Status: **IMPLEMENTATION IN PROGRESS — DECISION ACCEPTED**
+Status: **PASS — GREEN VERIFIED**
 
 ## Objective
 
@@ -130,7 +130,7 @@ The proposed M0 model is:
 - A failed conditional update produces a deterministic concurrency rejection.
 - The same idempotency key remains replayable through the idempotency record.
 
-The exact Cart schema is not yet implemented because the Cart domain model is still outside the current executable slice.
+The Cart persistence schema and checkout concurrency behavior are implemented and verified in the real PostgreSQL integration slice.
 
 ## Concurrency Strategy
 
@@ -206,15 +206,13 @@ The tests must execute against a real PostgreSQL instance, not an in-memory subs
 
 ## Migration and Recovery
 
-Before production readiness:
+The M0 persistence path now has executable recovery evidence:
 
-- migrations are version-controlled
-- database initialization is repeatable
-- backup procedure is documented
-- restore procedure is tested
-- post-restore smoke test is defined
-
-Recovery documentation alone is not evidence of recoverability.
+- the initial PostgreSQL schema is version-controlled as `001_initial.sql`
+- database initialization is repeatable through the embedded initializer
+- CI executes a PostgreSQL backup with `pg_dump`
+- CI drops and recreates the database, restores with `pg_restore`, and verifies a sentinel row
+- the restore smoke test completed successfully in GitHub Actions run `36474156793` (run 82), job `109103551191`
 
 ## Explicit Non-Goals
 
@@ -229,21 +227,21 @@ Recovery documentation alone is not evidence of recoverability.
 
 ## Gate Exit Criteria
 
-This gate becomes **PASS** only when:
+This gate is **PASS** because all exit criteria are now evidenced:
 
-1. Persistence technology decision is accepted.
-2. Entity mappings are defined.
-3. Transaction boundary is implemented.
-4. Database constraints are implemented.
-5. Real PostgreSQL integration tests pass.
-6. Concurrency behavior is verified.
-7. Rollback behavior is verified.
-8. Migration path is verified.
+1. Persistence technology decision accepted: ADR-008, EF Core + PostgreSQL.
+2. Entity mappings defined and implemented.
+3. Transaction boundary implemented for reservation, Order/OrderItems, Cart consumption, and completion.
+4. Database constraints implemented, including uniqueness, foreign keys, and positive quantities.
+5. Real PostgreSQL integration suite passes: 5/5 tests in CI.
+6. Concurrency behavior verified for same-key idempotency and competing keys against one Cart.
+7. Rollback behavior verified after an Order write.
+8. Migration/initialization and backup/restore path verified by CI smoke test.
 
 ## Current Status
 
 Application layer: **GREEN VERIFIED**.
 
-Persistence layer: **IMPLEMENTATION IN PROGRESS / NOT YET VERIFIED**.
+Persistence layer: **GREEN VERIFIED**.
 
-No API implementation should start before this gate reaches PASS.
+The next design/implementation boundary is the Delivery vertical slice. HTTP/API work remains intentionally sequenced after the core domain/application/persistence gates.
