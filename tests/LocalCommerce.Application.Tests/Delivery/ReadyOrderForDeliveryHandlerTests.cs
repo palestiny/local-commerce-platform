@@ -1,5 +1,6 @@
 using LocalCommerce.Application.Delivery;
 using LocalCommerce.Domain;
+using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
 using LocalCommerce.Domain.Delivery;
 using LocalCommerce.Domain.Ordering;
 using Xunit;
@@ -49,7 +50,7 @@ public sealed class ReadyOrderForDeliveryHandlerTests
     {
         var fixture = Fixture.PreparingOrder();
         fixture.DeliveryRepository.AddExisting(
-            Delivery.Create(fixture.Order.Id, fixture.Order.StoreId));
+            DeliveryEntity.Create(fixture.Order.Id, fixture.Order.StoreId));
 
         var act = () => fixture.Handler.HandleAsync(
             new ReadyOrderForDeliveryCommand(
@@ -210,9 +211,9 @@ public sealed class ReadyOrderForDeliveryHandlerTests
 
     private sealed class FakeDeliveryRepository : IDeliveryRepository
     {
-        public List<Delivery> Deliveries { get; } = [];
+        public List<DeliveryEntity> Deliveries { get; } = [];
 
-        public Task<Delivery?> GetActiveByOrderIdAsync(
+        public Task<DeliveryEntity?> GetActiveByOrderIdAsync(
             Guid orderId,
             CancellationToken cancellationToken) =>
             Task.FromResult<Delivery?>(
@@ -220,13 +221,13 @@ public sealed class ReadyOrderForDeliveryHandlerTests
                     x.OrderId == orderId &&
                     x.Status is not DeliveryStatus.Failed and not DeliveryStatus.Delivered));
 
-        public Task AddAsync(Delivery delivery, CancellationToken cancellationToken)
+        public Task AddAsync(DeliveryEntity delivery, CancellationToken cancellationToken)
         {
             Deliveries.Add(delivery);
             return Task.CompletedTask;
         }
 
-        public void AddExisting(Delivery delivery) => Deliveries.Add(delivery);
+        public void AddExisting(DeliveryEntity delivery) => Deliveries.Add(delivery);
     }
 
     private sealed class FakeAuthorization : IReadyForDeliveryAuthorization
