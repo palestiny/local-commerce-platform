@@ -21,9 +21,11 @@ public sealed class ReadyOrderForDeliveryHandlerTests
         Assert.Equal(fixture.Order.Id, result.OrderId);
         Assert.Equal(OrderStatus.ReadyForPickup, fixture.Order.Status);
         Assert.Single(fixture.DeliveryRepository.Deliveries);
-        Assert.Equal(fixture.Order.Id, fixture.DeliveryRepository.Deliveries.Single().OrderId);
-        Assert.Equal(fixture.Order.StoreId, fixture.DeliveryRepository.Deliveries.Single().StoreId);
-        Assert.Equal(DeliveryStatus.Unassigned, fixture.DeliveryRepository.Deliveries.Single().Status);
+
+        var delivery = fixture.DeliveryRepository.Deliveries.Single();
+        Assert.Equal(fixture.Order.Id, delivery.OrderId);
+        Assert.Equal(fixture.Order.StoreId, delivery.StoreId);
+        Assert.Equal(DeliveryStatus.Unassigned, delivery.Status);
     }
 
     [Fact]
@@ -37,7 +39,7 @@ public sealed class ReadyOrderForDeliveryHandlerTests
                 fixture.ActorId,
                 "ready-1"));
 
-        await Assert.ThrowsAsync<ReadyOrderForDeliveryRejectedException>(act);
+        await Assert.ThrowsAsync<DomainRuleViolationException>(act);
         Assert.Empty(fixture.DeliveryRepository.Deliveries);
     }
 
@@ -60,10 +62,65 @@ public sealed class ReadyOrderForDeliveryHandlerTests
     }
 
     [Fact]
-    public async Task Failure_during_coordinated_operation_does_not_leave_order_ready_or_delivery_created()
+    public async Task Unauthorized_actor_cannot_mark_order_ready()
     {
         var fixture = Fixture.PreparingOrder();
-        fixture.UnitOfWork.FailAfterOperation = true;
+        fixture.Authorization.Allowed = false;
+
+        var act = () => fixture.Handler.HandleAsync(
+            new ReadyOrderForDeliveryCommand(
+                fixture.Order.Id,
+                fixture.ActorId,
+                "ready-1"));
+
+        await Assert.ThrowsAsync<ReadyOrderForDeliveryRejectedException>(act);
+        Assert.Equal(OrderStatus.Preparing, fixture.Order.Status);
+        Assert.Empty(fixture.DeliveryRepository.Deliveries);
+    }
+
+    [Fact]
+    public async Task Same_idempotency_key_and_same_fingerprint_returns_original_result()
+    {
+        var fixture = Fixture.PreparingOrder();
+        var command = new ReadyOrderForDeliveryCommand(
+            fixture.Order.Id,
+            fixture.ActorId,
+            "ready-1");
+
+        var first = await fixture.Handler.HandleAsync(command);
+        var second = await fixture.Handler.HandleAsync(command);
+
+        Assert.Equal(first, second);
+        Assert.Single(fixture.DeliveryRepository.Deliveries);
+    }
+
+    [Fact]
+    public async Task Same_idempotency_key_with_different_order_is_rejected()
+    {
+        var fixture = Fixture.PreparingOrder();
+
+        await fixture.Handler.HandleAsync(
+            new ReadyOrderForDeliveryCommand(
+                fixture.Order.Id,
+                fixture.ActorId,
+                "ready-1"));
+
+        var otherOrder = Fixture.PreparingOrder().Order;
+
+        var act = () => fixture.Handler.HandleAsync(
+            new ReadyOrderForDeliveryCommand(
+                otherOrder.Id,
+                fixture.ActorId,
+                "ready-1"));
+
+        await Assert.ThrowsAsync<ReadyOrderForDeliveryRejectedException>(act);
+    }
+
+    [Fact]
+    public async Task Unit_of_work_failure_before_operation_leaves_order_and_delivery_unchanged()
+    {
+        var fixture = Fixture.PreparingOrder();
+        fixture.UnitOfWork.FailBeforeOperation = true;
 
         var act = () => fixture.Handler.HandleAsync(
             new ReadyOrderForDeliveryCommand(
@@ -84,10 +141,14 @@ public sealed class ReadyOrderForDeliveryHandlerTests
             ActorId = Guid.NewGuid();
             OrderRepository = new FakeOrderRepository(order);
             DeliveryRepository = new FakeDeliveryRepository();
-            UnitOfWork = new FakeUnitOfWork(OrderRepository, DeliveryRepository);
+            Authorization = new FakeAuthorization();
+            IdempotencyStore = new FakeIdempotencyStore();
+            UnitOfWork = new FakeUnitOfWork();
             Handler = new ReadyOrderForDeliveryHandler(
                 OrderRepository,
                 DeliveryRepository,
+                Authorization,
+                IdempotencyStore,
                 UnitOfWork);
         }
 
@@ -95,6 +156,8 @@ public sealed class ReadyOrderForDeliveryHandlerTests
         public Guid ActorId { get; }
         public FakeOrderRepository OrderRepository { get; }
         public FakeDeliveryRepository DeliveryRepository { get; }
+        public FakeAuthorization Authorization { get; }
+        public FakeIdempotencyStore IdempotencyStore { get; }
         public FakeUnitOfWork UnitOfWork { get; }
         public ReadyOrderForDeliveryHandler Handler { get; }
 
@@ -115,13 +178,16 @@ public sealed class ReadyOrderForDeliveryHandlerTests
             return new Fixture(order);
         }
 
-        private static Order CreateOrder() =>
-            Order.Create(
-                Guid.NewGuid(),
+        private static Order CreateOrder()
+        {
+            var storeId = Guid.NewGuid();
+
+            return Order.Create(
+                storeId,
                 [
                     new OrderItem(
                         Guid.NewGuid(),
-                        Guid.NewGuid(),
+                        storeId,
                         "Whole Milk",
                         "1L",
                         30m,
@@ -129,6 +195,7 @@ public sealed class ReadyOrderForDeliveryHandlerTests
                         0m,
                         30m)
                 ]);
+        }
     }
 
     private sealed class FakeOrderRepository(Order order) : IOrderForDeliveryRepository
@@ -150,7 +217,7 @@ public sealed class ReadyOrderForDeliveryHandlerTests
             Task.FromResult<Delivery?>(
                 Deliveries.SingleOrDefault(x =>
                     x.OrderId == orderId &&
-                    x.Status != DeliveryStatus.Failed));
+                    x.Status is not DeliveryStatus.Failed and not DeliveryStatus.Delivered));
 
         public Task AddAsync(Delivery delivery, CancellationToken cancellationToken)
         {
@@ -161,28 +228,74 @@ public sealed class ReadyOrderForDeliveryHandlerTests
         public void AddExisting(Delivery delivery) => Deliveries.Add(delivery);
     }
 
-    private sealed class FakeUnitOfWork(
-        FakeOrderRepository orderRepository,
-        FakeDeliveryRepository deliveryRepository) : IReadyForDeliveryUnitOfWork
+    private sealed class FakeAuthorization : IReadyForDeliveryAuthorization
     {
-        public bool FailAfterOperation { get; set; }
+        public bool Allowed { get; set; } = true;
+
+        public Task<bool> CanMarkReadyAsync(
+            Guid actorId,
+            Order order,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(Allowed);
+    }
+
+    private sealed class FakeIdempotencyStore : IReadyForDeliveryIdempotencyStore
+    {
+        private readonly Dictionary<string, DeliveryIdempotencyRecord> records = [];
+
+        public Task<DeliveryIdempotencyRecord?> GetAsync(
+            Guid actorId,
+            string operation,
+            string key,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(
+                records.TryGetValue(key, out var record)
+                    ? record
+                    : null);
+
+        public Task<DeliveryIdempotencyRecord?> ReserveAsync(
+            Guid actorId,
+            string operation,
+            string key,
+            string fingerprint,
+            CancellationToken cancellationToken)
+        {
+            if (records.TryGetValue(key, out var existing))
+                return Task.FromResult<DeliveryIdempotencyRecord?>(existing);
+
+            records[key] = new DeliveryIdempotencyRecord(
+                key,
+                fingerprint,
+                new ReadyOrderForDeliveryResult(Guid.Empty, Guid.Empty));
+
+            return Task.FromResult<DeliveryIdempotencyRecord?>(null);
+        }
+
+        public Task CompleteAsync(
+            Guid actorId,
+            string operation,
+            string key,
+            ReadyOrderForDeliveryResult result,
+            CancellationToken cancellationToken)
+        {
+            var existing = records[key];
+            records[key] = existing with { Result = result };
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class FakeUnitOfWork : IReadyForDeliveryUnitOfWork
+    {
+        public bool FailBeforeOperation { get; set; }
 
         public async Task ExecuteAsync(
             Func<CancellationToken, Task> operation,
             CancellationToken cancellationToken)
         {
-            var originalOrderStatus = orderRepository
-                .GetAsync(Guid.Empty, cancellationToken);
+            if (FailBeforeOperation)
+                throw new InvalidOperationException("Persistence failure.");
 
             await operation(cancellationToken);
-
-            if (FailAfterOperation)
-            {
-                deliveryRepository.Deliveries.Clear();
-                throw new InvalidOperationException("Persistence failure.");
-            }
-
-            _ = originalOrderStatus;
         }
     }
 }
