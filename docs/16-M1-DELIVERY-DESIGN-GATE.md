@@ -411,3 +411,23 @@ The gate becomes PASS when:
 ## Next Step
 
 Finalize the open M1 decisions, then implement TDD RED tests before Delivery production code.
+
+
+## TDD RED execution status
+
+**Status: IN PROGRESS — Domain RED suite committed**
+
+Initial RED specification has been committed at:
+- `tests/LocalCommerce.Domain.Tests/Delivery/DeliveryTests.cs`
+
+The suite defines the first executable Delivery domain contract for:
+- initial UNASSIGNED state
+- driver assignment and duplicate-assignment rejection
+- assigned-driver-only pickup
+- pickup → out-for-delivery → delivered lifecycle
+- invalid lifecycle transitions
+- terminal FAILED semantics
+- terminal DELIVERED semantics
+- required Order/Store identity invariants
+
+Production Delivery implementation has **not** been added yet. The next implementation step is GREEN: introduce the minimum Delivery aggregate required to satisfy these tests without expanding M1 scope.
