@@ -4,13 +4,10 @@ public static class DatabaseInitializer
 {
     public static async Task InitializeAsync(CommerceDbContext db,CancellationToken ct=default)
     {
-        await db.Database.ExecuteSqlRawAsync("""CREATE TABLE IF NOT EXISTS ""Stores"" (""Id"" uuid PRIMARY KEY,""IsActive"" boolean NOT NULL);
-CREATE TABLE IF NOT EXISTS ""Products"" (""Id"" uuid PRIMARY KEY,""StoreId"" uuid NOT NULL REFERENCES ""Stores""(""Id""),""Name"" varchar(256) NOT NULL,""VariantName"" varchar(256),""UnitPrice"" numeric(18,2) NOT NULL,""IsOrderable"" boolean NOT NULL);
-CREATE TABLE IF NOT EXISTS ""Carts"" (""Id"" uuid PRIMARY KEY,""CustomerId"" uuid NOT NULL,""StoreId"" uuid NOT NULL REFERENCES ""Stores""(""Id""),""IsActive"" boolean NOT NULL);
-CREATE TABLE IF NOT EXISTS ""CartLines"" (""Id"" uuid PRIMARY KEY,""CartId"" uuid NOT NULL REFERENCES ""Carts""(""Id"") ON DELETE CASCADE,""ProductId"" uuid NOT NULL REFERENCES ""Products""(""Id""),""VariantName"" varchar(256),""Quantity"" integer NOT NULL CHECK (""Quantity"" > 0));
-CREATE TABLE IF NOT EXISTS ""Orders"" (""Id"" uuid PRIMARY KEY,""StoreId"" uuid NOT NULL REFERENCES ""Stores""(""Id""),""OrderNumber"" varchar(64) NOT NULL UNIQUE,""Status"" varchar(64) NOT NULL,""CreatedAt"" timestamptz NOT NULL,""UpdatedAt"" timestamptz NOT NULL);
-CREATE TABLE IF NOT EXISTS ""OrderItems"" (""Id"" uuid PRIMARY KEY,""OrderId"" uuid NOT NULL REFERENCES ""Orders""(""Id"") ON DELETE CASCADE,""ProductId"" uuid NOT NULL,""StoreId"" uuid NOT NULL,""ProductName"" varchar(256) NOT NULL,""VariantName"" varchar(256),""UnitPrice"" numeric(18,2) NOT NULL,""Quantity"" integer NOT NULL CHECK (""Quantity"" > 0),""LineDiscount"" numeric(18,2) NOT NULL,""LineTotal"" numeric(18,2) NOT NULL);
-CREATE TABLE IF NOT EXISTS ""IdempotencyRecords"" (""Id"" uuid PRIMARY KEY,""CustomerId"" uuid NOT NULL,""Operation"" varchar(128) NOT NULL,""IdempotencyKey"" varchar(256) NOT NULL,""RequestFingerprint"" varchar(128) NOT NULL,""OrderId"" uuid REFERENCES ""Orders""(""Id""),""OrderNumber"" varchar(64),""CreatedAt"" timestamptz NOT NULL,""CompletedAt"" timestamptz);
-CREATE UNIQUE INDEX IF NOT EXISTS ""IX_IdempotencyRecords_Customer_Operation_Key"" ON ""IdempotencyRecords"" (""CustomerId"",""Operation"",""IdempotencyKey"");""",ct);
+        await using var stream=typeof(DatabaseInitializer).Assembly.GetManifestResourceStream("LocalCommerce.Infrastructure.Persistence.Migrations.001_initial.sql")
+            ?? throw new InvalidOperationException("Initial migration resource not found.");
+        using var reader=new StreamReader(stream);
+        var sql=await reader.ReadToEndAsync(ct);
+        await db.Database.ExecuteSqlRawAsync(sql,ct);
     }
 }
