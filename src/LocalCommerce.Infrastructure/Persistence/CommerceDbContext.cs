@@ -48,6 +48,7 @@ public sealed class CommerceDbContext : DbContext
             e.Property(x => x.IdempotencyKey).HasMaxLength(256).IsRequired();
             e.Property(x => x.RequestFingerprint).HasMaxLength(128).IsRequired();
             e.Property(x => x.OrderNumber).HasMaxLength(64);
+            e.HasOne(x => x.Order).WithMany().HasForeignKey(x => x.OrderId).OnDelete(DeleteBehavior.Restrict);
             e.HasIndex(x => new { x.CustomerId, x.Operation, x.IdempotencyKey }).IsUnique();
         });
 
@@ -118,6 +119,7 @@ public sealed class IdempotencyEntity
     public string IdempotencyKey { get; set; } = null!;
     public string RequestFingerprint { get; set; } = null!;
     public Guid? OrderId { get; set; }
+    public OrderEntity? Order { get; set; }
     public string? OrderNumber { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? CompletedAt { get; set; }
