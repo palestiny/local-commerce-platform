@@ -1,6 +1,6 @@
 # Foundation Review Checklist
 
-Status: READY FOR TDD RED
+Status: **APPLICATION GREEN — PERSISTENCE NEXT**
 
 ## Review Scope
 
@@ -40,17 +40,34 @@ This removes the previous overlap between Order and Delivery.
 - API contract can be derived without ambiguous state ownership: PASS.
 - No production feature code depends on unresolved domain semantics: PASS.
 
-## Remaining M0 Design Work
+## Executable Foundation Evidence
 
-These are implementation details, not foundation blockers:
-1. Transaction boundary for READY_FOR_PICKUP and Delivery creation.
-2. Delivery creation/assignment semantics.
-3. Customer-facing composed status/read model.
-4. Cancellation and Delivery FAILED semantics.
-5. Concrete persistence mappings and concurrency strategy.
+### Domain GREEN
+
+- Domain invariants and commercial lifecycle are implemented.
+- CI verified the Domain test suite with **8 passed**.
+
+### Application GREEN
+
+- Create Order orchestration is implemented.
+- CI verified the Application suite with **12 passed**.
+- Full solution CI verified **20 passed, 0 warnings, 0 errors** on commit `8b9bc4662d113671cf9c43b389ce36d65106237d`.
+
+## Remaining M0 Work
+
+These are now implementation/integration concerns, not unresolved foundation semantics:
+1. PostgreSQL persistence model and mappings.
+2. Real transaction boundary covering Order, OrderItems, Cart consumption, and idempotency completion.
+3. Database-enforced idempotency uniqueness and concurrent same-key convergence.
+4. Cart-consumption concurrency behavior.
+5. Persistence integration tests.
+6. Concrete migration/backup/restore operational path.
+7. Delivery creation/assignment semantics.
+8. Customer-facing composed status/read model.
+9. Cancellation and Delivery FAILED semantics.
 
 These must be resolved in the relevant M0 design/test artifacts before their implementation.
 
 ## Next Step
 
-Begin TDD RED for Create Order, then build the first vertical slice end-to-end.
+Complete the Persistence & Reliability Design Gate before introducing HTTP/API behavior.
