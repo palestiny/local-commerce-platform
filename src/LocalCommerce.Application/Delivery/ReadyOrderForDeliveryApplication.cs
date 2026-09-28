@@ -43,8 +43,14 @@ public sealed class ReadyOrderForDeliveryHandler
         IDeliveryRepository deliveryRepository,
         IReadyForDeliveryUnitOfWork unitOfWork)
     {
-        throw new NotImplementedException("M1 Application TDD RED: handler behavior is not implemented yet.");
+        OrderRepository = orderRepository;
+        DeliveryRepository = deliveryRepository;
+        UnitOfWork = unitOfWork;
     }
+
+    private IOrderForDeliveryRepository OrderRepository { get; }
+    private IDeliveryRepository DeliveryRepository { get; }
+    private IReadyForDeliveryUnitOfWork UnitOfWork { get; }
 
     public Task<ReadyOrderForDeliveryResult> HandleAsync(
         ReadyOrderForDeliveryCommand command,
