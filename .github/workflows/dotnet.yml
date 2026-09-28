@@ -1,0 +1,18 @@
+name: .NET
+
+on:
+  push:
+    branches: ["main", "feature/**"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - run: dotnet restore LocalCommercePlatform.sln
+      - run: dotnet test LocalCommercePlatform.sln --no-restore --verbosity normal
