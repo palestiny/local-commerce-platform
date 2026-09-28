@@ -1,132 +1,249 @@
 # Persistence & Reliability Design Gate
 
-Status: DESIGN REVIEW
+Status: **DESIGN PROPOSAL — OWNER DECISION REQUIRED**
 
 ## Objective
 
-Prevent data corruption, duplicate commercial effects and concurrency bugs before M0 implementation.
+Prove that the first commercial vertical slice remains correct under real persistence, transactions, retries, and concurrency.
 
-## Money
+The application contract is already GREEN at the unit level. This gate moves the proof boundary from in-memory fakes to PostgreSQL.
 
-Money must not use floating-point arithmetic.
+## Proposed Persistence Stack
 
-Initial model:
+### Option A — EF Core + PostgreSQL — RECOMMENDED
 
-- amount stored as fixed-precision decimal in persistence, or an equivalent integer minor-unit representation.
-- currency is explicit.
-- calculations use one consistent rounding policy.
-- persisted order totals are snapshots, not recalculated from mutable catalog data.
+- Entity Framework Core as the persistence implementation.
+- Npgsql PostgreSQL provider.
+- Application ports remain unchanged.
+- Domain objects are mapped through Infrastructure configuration.
+- Database transactions implement `ICreateOrderUnitOfWork`.
 
-The exact Money value-object representation is an implementation decision after confirming database/provider constraints.
+**Why this fits the current architecture**
 
-## Order Snapshot
+- Natural fit for ASP.NET Core/.NET 8.
+- Keeps persistence details outside Domain and Application.
+- Supports explicit transactions and optimistic concurrency.
+- Migrations provide a controlled schema evolution path.
+- Integration tests can exercise the same relational behavior used in production.
 
-OrderItem must preserve at least:
+### Option B — Dapper + PostgreSQL
 
-- ProductId
-- Product/variant display name
-- UnitPrice
-- Quantity
-- LineDiscount where applicable
-- LineTotal
+- SQL-first persistence.
+- Explicit SQL and mapping code.
+- Greater control over generated SQL and query shape.
+- More manual mapping, transaction plumbing, and change tracking.
 
-Order-level snapshot data must preserve the commercial values needed to reproduce what the customer purchased.
+### Trade-off
 
-Catalog edits after checkout must not rewrite historical Order data.
+For M0, the main requirement is reliable transactional behavior rather than maximum SQL control. EF Core reduces infrastructure code while still allowing explicit transactions and database constraints. Dapper remains a valid future choice if measured query requirements justify it.
 
-## Pricing Authority
+**Decision requested:** accept Option A for M0.
 
-Cart prices are provisional.
+## Transaction Boundary
 
-At Create Order:
+Create Order must execute as one database transaction containing:
 
-1. Load authoritative current catalog data.
-2. Validate product/store availability.
-3. Recalculate the checkout snapshot on the server.
-4. Persist Order and OrderItems atomically.
-5. Never trust client-submitted totals.
+1. Idempotency reservation.
+2. Order insert.
+3. OrderItem inserts.
+4. Cart consumption.
+5. Idempotency completion.
 
-## Concurrency
+If any step fails, the transaction rolls back.
 
-M0 must protect at least:
+A retry after rollback must be able to execute safely again.
 
-- two simultaneous order attempts against the same cart
-- product availability changes during checkout
-- duplicate command delivery
+## Idempotency Persistence
 
-Initial strategy:
+Proposed table concept:
 
-- database transaction boundaries
-- optimistic concurrency/version field where mutable aggregates require it
-- unique constraints for invariants that must be database-enforced
-- idempotency records for retryable commands
+`IdempotencyRecords`
 
-Pessimistic locking is not the default; introduce it only when an identified contention case requires it.
+Required fields:
 
-## Idempotency Record
-
-Minimum conceptual fields:
-
-- ActorId
+- CustomerId / ActorId
 - Operation
 - IdempotencyKey
 - RequestFingerprint
 - Status
-- StoredResponse/ResultReference
+- OrderId
+- OrderNumber
 - CreatedAt
 - CompletedAt
 
-Required behavior:
+Required database invariant:
 
-- same actor + operation + key + same fingerprint => return original result
-- same key with different fingerprint => conflict
-- concurrent requests using the same key must converge to one commercial effect
+- unique `(CustomerId, Operation, IdempotencyKey)`
 
-Retention/cleanup policy remains an operational decision.
+The application-level `ReserveAsync` contract maps to an atomic database operation:
 
-## Database Integrity
+- no existing row → create reservation
+- existing row → return existing record
+- unique-key race → resolve to the persisted existing record, not create a second Order
 
-Use database constraints for facts that must never be violated, including:
+A reservation must not be treated as a completed result until the Order and Cart changes commit successfully.
 
+## Order Persistence
+
+Proposed relational structure:
+
+### Orders
+
+- Id — primary key
+- StoreId — required foreign key
+- OrderNumber — required unique business identifier
+- Status — required
+- CreatedAt / UpdatedAt
+
+### OrderItems
+
+- Id — primary key
+- OrderId — required foreign key
+- ProductId — required
+- StoreId — required
+- ProductName — required snapshot
+- VariantName — nullable snapshot
+- UnitPrice — fixed precision decimal
+- Quantity — positive integer
+- LineDiscount — fixed precision decimal
+- LineTotal — fixed precision decimal
+
+OrderItem rows are historical snapshots. Future Catalog changes must not mutate them.
+
+## Money
+
+M0 will use fixed-precision decimal for persisted monetary values, with explicit currency introduced when the Payment/Money design is finalized.
+
+No floating-point money representation is permitted.
+
+The exact precision/scale must be fixed before migrations are created.
+
+## Cart Consumption
+
+The database must prevent two concurrent Create Order operations from consuming the same active Cart.
+
+The proposed M0 model is:
+
+- Cart has an explicit lifecycle/consumed marker.
+- Successful Create Order changes the Cart to consumed within the same transaction.
+- Consumption is conditional on the Cart still being active.
+- A failed conditional update produces a deterministic concurrency rejection.
+- The same idempotency key remains replayable through the idempotency record.
+
+The exact Cart schema is not yet implemented because the Cart domain model is still outside the current executable slice.
+
+## Concurrency Strategy
+
+Default strategy:
+
+- database transactions for atomic multi-row changes
+- optimistic concurrency for mutable aggregates where required
+- unique constraints for identity/invariants
+- conditional updates for state-sensitive mutations
+
+Pessimistic locks are not the default.
+
+For Create Order, the integration tests must prove:
+
+1. Two concurrent attempts against the same Cart cannot create two Orders.
+2. Two concurrent attempts with the same idempotency key converge to one result.
+3. A failed transaction leaves no partial Order/OrderItem/Cart/idempotency state.
+4. A successful transaction consumes the Cart exactly once.
+
+## Product Availability Race
+
+The application currently reads ProductSnapshot data before entering the transaction.
+
+For M0, the Product persistence design must explicitly decide whether checkout is:
+
+- snapshot-based without inventory reservation, or
+- protected by a product version/availability concurrency check.
+
+Because inventory reservation is an explicit M0 non-goal, the initial recommendation is **no inventory reservation**. Product orderability is validated from authoritative server state at checkout; stock reservation is deferred to the Inventory design.
+
+This means M0 must not claim strong inventory guarantees that it does not implement.
+
+## Order Number
+
+OrderNumber is a customer-facing business identifier and must be database-unique.
+
+The generator may create a candidate value, but the database remains the final uniqueness authority.
+
+Collision handling must be deterministic and must not create a duplicate commercial Order.
+
+## Database Constraints
+
+At minimum:
+
+- primary keys
 - required foreign keys
-- unique business identifiers
-- valid non-negative quantities
-- required money/currency fields
-- one active cart per customer/store as applicable to the chosen cart model
+- unique OrderNumber
+- unique Customer + Operation + IdempotencyKey
+- positive Quantity constraint
+- required monetary fields
+- valid Order status representation
 
-Indexes must be derived from actual query patterns, not added indiscriminately.
+Indexes should be introduced only from verified query patterns.
 
-## Failure Model
+## Integration Test Gate
 
-Every critical command must define behavior for:
+Unit tests are insufficient for the persistence claims above.
 
-- validation failure
-- authorization failure
-- concurrency conflict
-- database failure
-- external provider failure
-- client retry
+M0 requires PostgreSQL-backed integration tests covering:
 
-A retry must either safely repeat a non-commercial operation or resolve through idempotency.
+- successful Create Order
+- transaction rollback after a forced persistence failure
+- Cart consumption
+- duplicate idempotency replay
+- idempotency fingerprint conflict
+- concurrent same-key requests
+- concurrent different-key requests against one Cart
+- Order/OrderItem snapshot persistence
+- OrderNumber uniqueness
+- persistence constraints
 
-## Events and Outbox
+The tests must execute against a real PostgreSQL instance, not an in-memory substitute.
 
-M0 does not require Kafka/RabbitMQ.
+## Migration and Recovery
 
-In-process events may coordinate local side effects.
+Before production readiness:
 
-If a durable external notification/integration must be guaranteed with the same transaction as business state, use an Outbox pattern before relying on an external broker.
+- migrations are version-controlled
+- database initialization is repeatable
+- backup procedure is documented
+- restore procedure is tested
+- post-restore smoke test is defined
 
-This is a design rule, not a commitment to introduce a broker now.
+Recovery documentation alone is not evidence of recoverability.
 
-## Recovery
+## Explicit Non-Goals
 
-M0 must include:
+- Redis
+- Kafka/RabbitMQ
+- distributed transactions
+- inventory reservation
+- payment processing
+- delivery persistence
+- API controllers
+- microservices
 
-- migration strategy
-- database backup/restore procedure
-- failure logging with correlation ID
-- audit evidence for critical commands
-- smoke test after deployment
+## Gate Exit Criteria
 
-Production readiness is not complete until restore behavior is verified, not merely documented.
+This gate becomes **PASS** only when:
+
+1. Persistence technology decision is accepted.
+2. Entity mappings are defined.
+3. Transaction boundary is implemented.
+4. Database constraints are implemented.
+5. Real PostgreSQL integration tests pass.
+6. Concurrency behavior is verified.
+7. Rollback behavior is verified.
+8. Migration path is verified.
+
+## Current Status
+
+Application layer: **GREEN VERIFIED**.
+
+Persistence layer: **NOT IMPLEMENTED / NOT VERIFIED**.
+
+No API implementation should start before this gate reaches PASS.
