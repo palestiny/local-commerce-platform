@@ -1,6 +1,6 @@
 # ADR-007 — Order vs Delivery State Authority
 
-Status: PROPOSED
+Status: ACCEPTED
 
 ## Context
 
@@ -52,7 +52,7 @@ Keeping fulfillment state authoritative inside Delivery preserves the boundary a
 
 Adopt Option A — Strict separation.
 
-This remains PROPOSED until explicitly accepted.
+This ADR is ACCEPTED by the project owner.
 
 Resulting model:
 
@@ -89,4 +89,4 @@ The customer-facing order representation may include derived delivery progress, 
 
 ## Acceptance
 
-This ADR becomes ACCEPTED only after the project owner explicitly approves Option A.
+The project owner explicitly approved Option A — Strict separation.
