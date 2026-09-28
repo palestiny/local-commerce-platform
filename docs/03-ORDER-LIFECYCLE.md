@@ -10,28 +10,25 @@ CREATED
 -> ACCEPTED
 -> PREPARING
 -> READY_FOR_PICKUP
--> DRIVER_ASSIGNED
--> PICKED_UP
--> OUT_FOR_DELIVERY
--> DELIVERED
 
-Exception states:
+Commercial exception states:
 - REJECTED
 - CANCELLED
-- DELIVERY_FAILED
-- RETURNED
+
+Delivery fulfillment state is **not owned by Order**. After READY_FOR_PICKUP, fulfillment is represented by the Delivery aggregate.
 
 ## Rules
 
 - State transitions are explicit commands.
 - Invalid transitions are rejected.
-- Every transition creates OrderStatusHistory.
+- Every Order transition creates OrderStatusHistory.
 - History records actor type/id, timestamp, previous state and new state.
 - Customer cannot perform merchant-only transitions.
 - Merchant can only transition Orders belonging to its Stores.
-- Driver transitions require an authorized Delivery relationship.
+- Delivery commands require an authorized Delivery relationship.
 - Delivery completion does not silently rewrite Payment state.
 - Retried sensitive commands must not create duplicate effects.
+- Order must never independently transition DRIVER_ASSIGNED, PICKED_UP, OUT_FOR_DELIVERY or DELIVERED.
 
 ## Transition Responsibility
 
@@ -42,12 +39,34 @@ Exception states:
 | PENDING_STORE_CONFIRMATION -> REJECTED | Merchant | Reject |
 | ACCEPTED -> PREPARING | Merchant | Prepare |
 | PREPARING -> READY_FOR_PICKUP | Merchant | Ready |
-| READY_FOR_PICKUP -> DRIVER_ASSIGNED | System/Admin | Assign Delivery |
-| DRIVER_ASSIGNED -> PICKED_UP | Driver | Pickup |
-| PICKED_UP -> OUT_FOR_DELIVERY | Driver/System | Start Delivery |
-| OUT_FOR_DELIVERY -> DELIVERED | Driver | Deliver |
+| Any valid cancellable Order state -> CANCELLED | Authorized actor | Cancel |
 
-Cancellation and failure transition policy remains OPEN until explicitly decided.
+## Delivery Boundary
+
+Once an Order reaches READY_FOR_PICKUP, the Delivery aggregate owns:
+
+UNASSIGNED
+-> ASSIGNED
+-> PICKED_UP
+-> OUT_FOR_DELIVERY
+-> DELIVERED
+
+Delivery exception:
+- FAILED
+
+The customer-facing Order response may include a composed/derived DeliveryStatus, but that value is not an independently mutable Order state.
+
+## Cross-Aggregate Operations
+
+The application layer coordinates business operations that span Order and Delivery. Aggregate ownership remains separate.
+
+Examples:
+- READY_FOR_PICKUP may trigger Delivery creation through an application-level operation.
+- Driver assignment changes Delivery only.
+- Pickup, transit and completion change Delivery only.
+- Customer order views compose Order + Delivery state when delivery progress is needed.
+
+The exact transaction/event mechanism is an implementation detail to be finalized in the M0 application/persistence design without introducing a second fulfillment source of truth.
 
 ## Verification
 
