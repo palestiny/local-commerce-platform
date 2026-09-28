@@ -1,3 +1,4 @@
+using LocalCommerce.Domain;
 using LocalCommerce.Domain.Delivery;
 using Xunit;
 
