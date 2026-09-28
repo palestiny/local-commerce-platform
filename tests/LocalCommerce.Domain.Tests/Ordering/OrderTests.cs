@@ -56,8 +56,9 @@ public sealed class OrderTests
     {
         var order = Order.Create(StoreId, [CreateItem(StoreId)]);
 
-        Assert.Equal(OrderStatus.PendingStoreConfirmation, order.Status);
+        Assert.Equal(OrderStatus.Created, order.Status);
 
+        order.SubmitForStoreConfirmation();
         order.Accept();
         order.Prepare();
         order.MarkReadyForPickup();
@@ -90,6 +91,7 @@ public sealed class OrderTests
     {
         var order = Order.Create(StoreId, [CreateItem(StoreId)]);
 
+        order.SubmitForStoreConfirmation();
         Assert.Equal(OrderStatus.PendingStoreConfirmation, order.Status);
 
         order.Cancel();
