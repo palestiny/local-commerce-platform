@@ -108,12 +108,17 @@ public sealed class CreateOrderPersistenceTests
     public async Task Reusing_key_with_different_cart_is_rejected()
     {
         await using var db=CreateDb(); await DatabaseInitializer.InitializeAsync(db); await ResetAsync(db);
-        var first=await SeedAsync(db); var second=await SeedAsync(db);
+        var first=await SeedAsync(db);
+        var secondCart=Guid.NewGuid();
+        db.Carts.Add(new CartEntity{Id=secondCart,CustomerId=first.customerId,StoreId=first.storeId,IsActive=true,
+            Lines=[new CartLineEntity{Id=Guid.NewGuid(),CartId=secondCart,ProductId=first.productId,VariantName="1L",Quantity=1}]});
+        await db.SaveChangesAsync();
+
         var handler=Handler(db);
         await handler.HandleAsync(new CreateOrderCommand(first.customerId,first.cartId,"conflict-key"));
 
         await Assert.ThrowsAsync<CreateOrderRejectedException>(()=>
-            handler.HandleAsync(new CreateOrderCommand(first.customerId,second.cartId,"conflict-key")));
+            handler.HandleAsync(new CreateOrderCommand(first.customerId,secondCart,"conflict-key")));
     }
 
     private static async Task<(bool Success, CreateOrderResult? Result)> Capture(Task<CreateOrderResult> task)
