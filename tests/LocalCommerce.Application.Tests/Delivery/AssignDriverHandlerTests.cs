@@ -1,6 +1,7 @@
 using LocalCommerce.Application.Delivery;
 using LocalCommerce.Domain;
-using LocalCommerce.Domain.Delivery;
+using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
+using DriverEntity = LocalCommerce.Domain.Delivery.Driver;
 using Xunit;
 
 namespace LocalCommerce.Application.Tests.Delivery;
@@ -105,7 +106,7 @@ public sealed class AssignDriverHandlerTests
 
         await fixture.Handler.HandleAsync(command);
 
-        var otherDriver = Driver.Create(Guid.NewGuid());
+        var otherDriver = DriverEntity.Create(Guid.NewGuid());
 
         var act = () => fixture.Handler.HandleAsync(
             command with { DriverId = otherDriver.Id });
@@ -133,7 +134,7 @@ public sealed class AssignDriverHandlerTests
 
     private sealed class Fixture
     {
-        private Fixture(Delivery delivery, Driver driver)
+        private Fixture(DeliveryEntity delivery, DriverEntity driver)
         {
             Delivery = delivery;
             Driver = driver;
@@ -152,8 +153,8 @@ public sealed class AssignDriverHandlerTests
                 UnitOfWork);
         }
 
-        public Delivery Delivery { get; }
-        public Driver Driver { get; }
+        public DeliveryEntity Delivery { get; }
+        public DriverEntity Driver { get; }
         public Guid ActorId { get; }
         public FakeDeliveryRepository DeliveryRepository { get; }
         public FakeDriverRepository DriverRepository { get; }
@@ -164,24 +165,24 @@ public sealed class AssignDriverHandlerTests
 
         public static Fixture Create()
         {
-            var delivery = Delivery.Create(Guid.NewGuid(), Guid.NewGuid());
-            var driver = Driver.Create(Guid.NewGuid());
+            var delivery = DeliveryEntity.Create(Guid.NewGuid(), Guid.NewGuid());
+            var driver = DriverEntity.Create(Guid.NewGuid());
             return new Fixture(delivery, driver);
         }
     }
 
-    private sealed class FakeDeliveryRepository(Delivery delivery) : IDeliveryRepository
+    private sealed class FakeDeliveryRepository(DeliveryEntity delivery) : IDeliveryRepository
     {
-        public Task<Delivery?> GetAsync(Guid deliveryId, CancellationToken cancellationToken) =>
-            Task.FromResult<Delivery?>(delivery.Id == deliveryId ? delivery : null);
+        public Task<DeliveryEntity?> GetAsync(Guid deliveryId, CancellationToken cancellationToken) =>
+            Task.FromResult<DeliveryEntity?>(delivery.Id == deliveryId ? delivery : null);
 
-        public Task SaveAsync(Delivery delivery, CancellationToken cancellationToken) =>
+        public Task SaveAsync(DeliveryEntity delivery, CancellationToken cancellationToken) =>
             Task.CompletedTask;
     }
 
-    private sealed class FakeDriverRepository(Driver driver) : IDriverRepository
+    private sealed class FakeDriverRepository(DriverEntity driver) : IDriverRepository
     {
-        public Task<Driver?> GetAsync(Guid driverId, CancellationToken cancellationToken) =>
+        public Task<DriverEntity?> GetAsync(Guid driverId, CancellationToken cancellationToken) =>
             Task.FromResult<Driver?>(driver.Id == driverId ? driver : null);
     }
 
@@ -191,7 +192,7 @@ public sealed class AssignDriverHandlerTests
 
         public Task<bool> CanAssignAsync(
             Guid actorId,
-            Delivery delivery,
+            DeliveryEntity delivery,
             CancellationToken cancellationToken) =>
             Task.FromResult(Allowed);
     }
