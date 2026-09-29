@@ -176,6 +176,12 @@ public sealed class AssignDriverHandlerTests
         public Task<DeliveryEntity?> GetAsync(Guid deliveryId, CancellationToken cancellationToken) =>
             Task.FromResult<DeliveryEntity?>(delivery.Id == deliveryId ? delivery : null);
 
+        public Task<DeliveryEntity?> GetActiveByOrderIdAsync(Guid orderId, CancellationToken cancellationToken) =>
+            Task.FromResult<DeliveryEntity?>(delivery.OrderId == orderId && delivery.Status != DeliveryStatus.Delivered && delivery.Status != DeliveryStatus.Failed ? delivery : null);
+
+        public Task AddAsync(DeliveryEntity delivery, CancellationToken cancellationToken) =>
+            Task.CompletedTask;
+
         public Task SaveAsync(DeliveryEntity delivery, CancellationToken cancellationToken) =>
             Task.CompletedTask;
     }
