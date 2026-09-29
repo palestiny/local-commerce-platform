@@ -2,6 +2,7 @@ using LocalCommerce.Application.Delivery;
 using LocalCommerce.Domain;
 using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
 using DriverEntity = LocalCommerce.Domain.Delivery.Driver;
+using DeliveryEntityStatus = LocalCommerce.Domain.Delivery.DeliveryStatus;
 using Xunit;
 
 namespace LocalCommerce.Application.Tests.Delivery;
@@ -22,7 +23,7 @@ public sealed class AssignDriverHandlerTests
 
         Assert.Equal(fixture.Delivery.Id, result.DeliveryId);
         Assert.Equal(fixture.Driver.Id, fixture.Delivery.DriverId);
-        Assert.Equal(DeliveryStatus.Assigned, fixture.Delivery.Status);
+        Assert.Equal(DeliveryEntityStatus.Assigned, fixture.Delivery.Status);
     }
 
     [Fact]
@@ -39,7 +40,7 @@ public sealed class AssignDriverHandlerTests
                 "assign-1"));
 
         await Assert.ThrowsAsync<AssignDriverRejectedException>(act);
-        Assert.Equal(DeliveryStatus.Unassigned, fixture.Delivery.Status);
+        Assert.Equal(DeliveryEntityStatus.Unassigned, fixture.Delivery.Status);
         Assert.Null(fixture.Delivery.DriverId);
     }
 
@@ -57,7 +58,7 @@ public sealed class AssignDriverHandlerTests
                 "assign-1"));
 
         await Assert.ThrowsAsync<AssignDriverRejectedException>(act);
-        Assert.Equal(DeliveryStatus.Unassigned, fixture.Delivery.Status);
+        Assert.Equal(DeliveryEntityStatus.Unassigned, fixture.Delivery.Status);
     }
 
     [Fact]
@@ -90,7 +91,7 @@ public sealed class AssignDriverHandlerTests
         var second = await fixture.Handler.HandleAsync(command);
 
         Assert.Equal(first, second);
-        Assert.Equal(DeliveryStatus.Assigned, fixture.Delivery.Status);
+        Assert.Equal(DeliveryEntityStatus.Assigned, fixture.Delivery.Status);
         Assert.Equal(fixture.Driver.Id, fixture.Delivery.DriverId);
     }
 
@@ -128,7 +129,7 @@ public sealed class AssignDriverHandlerTests
                 "assign-1"));
 
         await Assert.ThrowsAsync<InvalidOperationException>(act);
-        Assert.Equal(DeliveryStatus.Unassigned, fixture.Delivery.Status);
+        Assert.Equal(DeliveryEntityStatus.Unassigned, fixture.Delivery.Status);
         Assert.Null(fixture.Delivery.DriverId);
     }
 
@@ -177,7 +178,7 @@ public sealed class AssignDriverHandlerTests
             Task.FromResult<DeliveryEntity?>(delivery.Id == deliveryId ? delivery : null);
 
         public Task<DeliveryEntity?> GetActiveByOrderIdAsync(Guid orderId, CancellationToken cancellationToken) =>
-            Task.FromResult<DeliveryEntity?>(delivery.OrderId == orderId && delivery.Status != DeliveryStatus.Delivered && delivery.Status != DeliveryStatus.Failed ? delivery : null);
+            Task.FromResult<DeliveryEntity?>(delivery.OrderId == orderId && delivery.Status != DeliveryEntityStatus.Delivered && delivery.Status != DeliveryEntityStatus.Failed ? delivery : null);
 
         public Task AddAsync(DeliveryEntity delivery, CancellationToken cancellationToken) =>
             Task.CompletedTask;
@@ -189,7 +190,7 @@ public sealed class AssignDriverHandlerTests
     private sealed class FakeDriverRepository(DriverEntity driver) : IDriverRepository
     {
         public Task<DriverEntity?> GetAsync(Guid driverId, CancellationToken cancellationToken) =>
-            Task.FromResult<Driver?>(driver.Id == driverId ? driver : null);
+            Task.FromResult<DriverEntity?>(driver.Id == driverId ? driver : null);
     }
 
     private sealed class FakeAuthorization : IAssignDriverAuthorization
