@@ -93,3 +93,13 @@ Continue the Delivery vertical slice with TDD RED for Driver Assignment. Keep HT
 - Minimal Driver eligibility is accepted for M1.
 - Customer read is a composed Order + Delivery response without duplicated mutable state.
 - Delivery history is append-only.
+
+
+## Current M1 Execution Status — 2026-09-29
+
+- First M1 application slice: **GREEN VERIFIED**.
+- CI evidence: run `36483288423` (#128), commit `7cb7f7cc099d3c84014449fe6d08c83ab50565de`, job `109133935990`; both `Test` and `Migration and recovery smoke test` passed.
+- Driver Assignment: **RED CONTRACT COMMITTED**.
+- RED artifacts: `DriverTests.cs` and `AssignDriverHandlerTests.cs`.
+- Driver assignment GREEN implementation has not started.
+- API/HTTP implementation remains deferred.
