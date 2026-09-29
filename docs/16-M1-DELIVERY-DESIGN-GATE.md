@@ -1,6 +1,6 @@
 # M1 Delivery Vertical Slice Design Gate
 
-Status: **DESIGN IN PROGRESS — PERSISTENCE FOUNDATION GREEN**
+Status: **M1 FIRST APPLICATION SLICE GREEN VERIFIED — DRIVER ASSIGNMENT NEXT**
 
 ## Objective
 
@@ -441,7 +441,7 @@ The previously approved M1 business-policy baseline remains authoritative.
 
 ### Domain implementation
 
-**Implemented, CI verification pending.**
+**Implemented and GREEN VERIFIED.**
 
 src/LocalCommerce.Domain/Delivery/Delivery.cs now implements the minimum Delivery aggregate required by the approved RED contract:
 
@@ -458,7 +458,7 @@ No mutable Delivery fulfillment state was added to Order.
 
 ### Application TDD RED
 
-**Status: IN PROGRESS — first application contract committed.**
+**Status: GREEN VERIFIED — first application slice.**
 
 The first M1 application slice is now defined in:
 
@@ -478,7 +478,9 @@ The current implementation is intentionally the next GREEN target; the applicati
 
 ### Verification state
 
-No GitHub Actions workflow run or commit status is currently exposed for the latest head commit. Therefore this increment is **not marked GREEN VERIFIED**.
+GREEN VERIFIED by GitHub Actions run `36483288423` (run #128) for commit `7cb7f7cc099d3c84014449fe6d08c83ab50565de`.
+
+The `build-and-test` job `109133935990` completed successfully. Both `Test` and `Migration and recovery smoke test` steps passed.
 
 ### Next TDD increment
 
