@@ -1,6 +1,6 @@
 # Foundation Review Checklist
 
-Status: **M1 FIRST APPLICATION SLICE GREEN — DRIVER ASSIGNMENT NEXT**
+Status: **M1 DRIVER ASSIGNMENT GREEN — PICKUP NEXT**
 
 ## Review Scope
 
@@ -99,7 +99,7 @@ Continue the Delivery vertical slice with TDD RED for Driver Assignment. Keep HT
 
 - First M1 application slice: **GREEN VERIFIED**.
 - CI evidence: run `36483288423` (#128), commit `7cb7f7cc099d3c84014449fe6d08c83ab50565de`, job `109133935990`; both `Test` and `Migration and recovery smoke test` passed.
-- Driver Assignment: **RED CONTRACT COMMITTED**.
-- RED artifacts: `DriverTests.cs` and `AssignDriverHandlerTests.cs`.
-- Driver assignment GREEN implementation has not started.
+- Driver Assignment: **GREEN VERIFIED**.
+- RED artifacts: `DriverTests.cs` and `AssignDriverHandlerTests.cs`, now satisfied by the implementation.
+- CI evidence: run `36596803406` (#152), commit `beddffa6a373ee0f59d8a98bd604354ccc97759b`, job `109503704013`; `Test` and `Migration and recovery smoke test` both passed.
 - API/HTTP implementation remains deferred.
