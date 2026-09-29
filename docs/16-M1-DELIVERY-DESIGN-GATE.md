@@ -1,6 +1,6 @@
 # M1 Delivery Vertical Slice Design Gate
 
-Status: **M1 FIRST APPLICATION SLICE GREEN VERIFIED — DRIVER ASSIGNMENT NEXT**
+Status: **M1 DRIVER ASSIGNMENT GREEN VERIFIED — PICKUP NEXT**
 
 ## Objective
 
@@ -497,9 +497,9 @@ GREEN the first application slice, then add the next RED contract for:
 API implementation remains intentionally deferred.
 
 
-## Updated Driver Assignment TDD RED Status — 2026-09-29
+## Updated Driver Assignment TDD Status — 2026-09-29
 
-**Status: RED CONTRACT COMMITTED — GREEN NOT STARTED.**
+**Status: GREEN VERIFIED.**
 
 The next application increment is intentionally limited to Driver Assignment.
 
@@ -525,7 +525,7 @@ Required behavior:
 - `tests/LocalCommerce.Domain.Tests/Delivery/DriverTests.cs`
 - `tests/LocalCommerce.Application.Tests/Delivery/AssignDriverHandlerTests.cs`
 
-The tests are deliberately ahead of the production Driver/application implementation. CI is expected to be RED until the minimum implementation is introduced.
+The Driver/application implementation is now present and verified against this contract.
 
 ### Scope boundary
 
@@ -538,4 +538,4 @@ Deferred from this increment:
 - driver location
 - HTTP/API endpoints
 
-The next implementation step is GREEN for the RED contract above, followed by pickup authorization and the remaining Delivery commands.
+GitHub Actions run `36596803406` (run #152), commit `beddffa6a373ee0f59d8a98bd604354ccc97759b`, job `109503704013` completed successfully. Both `Test` and `Migration and recovery smoke test` passed. The next TDD increment is Pickup authorization.
