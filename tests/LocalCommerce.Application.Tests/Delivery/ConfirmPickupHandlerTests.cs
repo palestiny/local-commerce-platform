@@ -186,7 +186,7 @@ public sealed class ConfirmPickupHandlerTests
             Guid actorId,
             DeliveryEntity delivery,
             CancellationToken cancellationToken) =>
-            Task.FromResult(Allowed);
+            Task.FromResult(Allowed && delivery.DriverId == actorId);
     }
 
     private sealed class FakeIdempotencyStore : IConfirmPickupIdempotencyStore
