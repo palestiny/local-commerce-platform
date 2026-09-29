@@ -171,7 +171,7 @@ public sealed class AssignDriverHandlerTests
         }
     }
 
-    private sealed class FakeDeliveryRepository(DeliveryEntity delivery) : IDeliveryRepository
+    private sealed class FakeDeliveryRepository(DeliveryEntity delivery) : IAssignDriverDeliveryRepository
     {
         public Task<DeliveryEntity?> GetAsync(Guid deliveryId, CancellationToken cancellationToken) =>
             Task.FromResult<DeliveryEntity?>(delivery.Id == deliveryId ? delivery : null);
