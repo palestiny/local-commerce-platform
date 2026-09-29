@@ -1,6 +1,6 @@
 # Foundation Review Checklist
 
-Status: **PERSISTENCE GREEN — DELIVERY NEXT**
+Status: **M1 FIRST APPLICATION SLICE GREEN — DRIVER ASSIGNMENT NEXT**
 
 ## Review Scope
 
@@ -60,6 +60,13 @@ This removes the previous overlap between Order and Delivery.
 - Migration/initialization path is version-controlled and repeatable.
 - PostgreSQL backup/restore smoke test: **passed** in CI run `36474156793`, job `109103551191`.
 
+## Verified M1 Delivery Evidence
+
+- Delivery domain lifecycle implementation is GREEN VERIFIED in CI.
+- First M1 application slice (`PREPARING -> READY_FOR_PICKUP` + Delivery creation) is GREEN VERIFIED.
+- GitHub Actions run `36483288423` (run #128), commit `7cb7f7cc099d3c84014449fe6d08c83ab50565de`, job `109133935990`: `Test` and `Migration and recovery smoke test` both passed.
+- The PR remains draft; API work remains deferred.
+
 ## Remaining M0 / M1 Work
 
 These are now implementation/integration concerns, not unresolved foundation semantics:
@@ -73,7 +80,7 @@ Persistence implementation is no longer a foundation blocker. Delivery semantics
 
 ## Next Step
 
-Create and pass the Delivery vertical-slice design gate before introducing Delivery production code. Keep HTTP/API implementation sequenced after the domain/application boundaries are proven.
+Continue the Delivery vertical slice with TDD RED for Driver Assignment. Keep HTTP/API implementation sequenced after the domain/application boundaries are proven.
 
 
 ## M1 Delivery Design Gate
