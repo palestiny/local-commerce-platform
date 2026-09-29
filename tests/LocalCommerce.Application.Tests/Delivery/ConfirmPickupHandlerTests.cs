@@ -63,6 +63,7 @@ public sealed class ConfirmPickupHandlerTests
     {
         var fixture = Fixture.Create();
         fixture.Delivery = DeliveryEntity.Create(Guid.NewGuid(), Guid.NewGuid());
+        fixture.Repository.SetDelivery(fixture.Delivery);
 
         var act = () => fixture.Handler.HandleAsync(
             new ConfirmPickupCommand(
@@ -90,7 +91,7 @@ public sealed class ConfirmPickupHandlerTests
     }
 
     [Fact]
-    public async Task Same_idempotency_key_with_different_driver_is_rejected()
+    public async Task Same_idempotency_key_with_different_request_is_rejected()
     {
         var fixture = Fixture.Create();
         var command = new ConfirmPickupCommand(
@@ -101,7 +102,7 @@ public sealed class ConfirmPickupHandlerTests
         await fixture.Handler.HandleAsync(command);
 
         var act = () => fixture.Handler.HandleAsync(
-            command with { ActorId = Guid.NewGuid() });
+            command with { DeliveryId = Guid.NewGuid() });
 
         await Assert.ThrowsAsync<ConfirmPickupRejectedException>(act);
     }
@@ -159,7 +160,7 @@ public sealed class ConfirmPickupHandlerTests
 
     private sealed class FakeDeliveryRepository : IConfirmPickupDeliveryRepository
     {
-        private readonly DeliveryEntity _delivery;
+        private DeliveryEntity _delivery;
 
         public FakeDeliveryRepository(DeliveryEntity delivery) => _delivery = delivery;
 
@@ -168,6 +169,8 @@ public sealed class ConfirmPickupHandlerTests
             CancellationToken cancellationToken) =>
             Task.FromResult<DeliveryEntity?>(
                 _delivery.Id == deliveryId ? _delivery : null);
+
+        public void SetDelivery(DeliveryEntity delivery) => _delivery = delivery;
 
         public Task SaveAsync(
             DeliveryEntity delivery,
