@@ -23,7 +23,7 @@ public sealed class AssignDriverRejectedException : Exception
     public AssignDriverRejectedException(string message) : base(message) { }
 }
 
-public interface IDeliveryRepository
+public interface IAssignDriverDeliveryRepository
 {
     Task<DeliveryEntity?> GetAsync(Guid deliveryId, CancellationToken cancellationToken);
     Task SaveAsync(DeliveryEntity delivery, CancellationToken cancellationToken);
@@ -77,7 +77,7 @@ public sealed class AssignDriverHandler
     private const string Operation = "AssignDriver";
 
     public AssignDriverHandler(
-        IDeliveryRepository deliveryRepository,
+        IAssignDriverDeliveryRepository deliveryRepository,
         IDriverRepository driverRepository,
         IAssignDriverAuthorization authorization,
         IAssignDriverIdempotencyStore idempotencyStore,
@@ -90,7 +90,7 @@ public sealed class AssignDriverHandler
         UnitOfWork = unitOfWork;
     }
 
-    private IDeliveryRepository DeliveryRepository { get; }
+    private IAssignDriverDeliveryRepository DeliveryRepository { get; }
     private IDriverRepository DriverRepository { get; }
     private IAssignDriverAuthorization Authorization { get; }
     private IAssignDriverIdempotencyStore IdempotencyStore { get; }
