@@ -495,3 +495,47 @@ GREEN the first application slice, then add the next RED contract for:
 7. persistence constraints/history and PostgreSQL concurrency verification.
 
 API implementation remains intentionally deferred.
+
+
+## Updated Driver Assignment TDD RED Status — 2026-09-29
+
+**Status: RED CONTRACT COMMITTED — GREEN NOT STARTED.**
+
+The next application increment is intentionally limited to Driver Assignment.
+
+### Approved M1 contract
+
+Command:
+
+`AssignDriverCommand(DeliveryId, DriverId, ActorId, IdempotencyKey)`
+
+Required behavior:
+
+- Delivery must exist and be `UNASSIGNED`.
+- Driver must exist and be Active.
+- Actor must be authorized to perform operational assignment.
+- Delivery domain remains responsible for the `UNASSIGNED -> ASSIGNED` transition.
+- Same idempotency key + same fingerprint returns the original result.
+- Same idempotency key + different request fingerprint is rejected.
+- A unit-of-work failure must not leave a partially assigned Delivery.
+- No Order state is mutated by assignment.
+
+### RED artifacts
+
+- `tests/LocalCommerce.Domain.Tests/Delivery/DriverTests.cs`
+- `tests/LocalCommerce.Application.Tests/Delivery/AssignDriverHandlerTests.cs`
+
+The tests are deliberately ahead of the production Driver/application implementation. CI is expected to be RED until the minimum implementation is introduced.
+
+### Scope boundary
+
+Deferred from this increment:
+
+- zone/store eligibility
+- dispatch optimization
+- capacity scoring
+- auto-dispatch
+- driver location
+- HTTP/API endpoints
+
+The next implementation step is GREEN for the RED contract above, followed by pickup authorization and the remaining Delivery commands.
