@@ -550,3 +550,22 @@ GitHub Actions run `36596803406` (run #152), commit `beddffa6a373ee0f59d8a98bd60
 GitHub Actions run `36599194263` (run #164), commit `8e3d8788724f30b0c0d4d1f505df03dbf9aa7bfd`, job `109511861790`: `Test` and `Migration and recovery smoke test` both passed.
 
 Next TDD increment: Start Delivery.
+
+
+## Updated Start Delivery TDD Status — 2026-09-30
+
+**Status: GREEN VERIFIED.**
+
+`StartDeliveryCommand(DeliveryId, ActorId, IdempotencyKey)` is implemented and verified for:
+
+- PICKED_UP precondition;
+- assigned-driver authorization;
+- rejection of non-assigned actors;
+- same-key replay;
+- fingerprint conflict;
+- unit-of-work boundary;
+- Delivery-only transition to OUT_FOR_DELIVERY.
+
+GitHub Actions run `36729575121` (run #171), commit `2dcc22349baee9918e39305453f7b656202f55ee`, job `109935288931`: `Test` and `Migration and recovery smoke test` both passed.
+
+Next TDD increment: Complete Delivery.
