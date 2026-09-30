@@ -1,6 +1,6 @@
 # Foundation Review Checklist
 
-Status: **M1 PICKUP GREEN — START DELIVERY NEXT**
+Status: **M1 CANCELLATION GREEN VERIFIED — NEXT: CUSTOMER COMPOSED READ**
 
 ## Review Scope
 
@@ -64,72 +64,87 @@ This removes the previous overlap between Order and Delivery.
 
 - Delivery domain lifecycle implementation is GREEN VERIFIED in CI.
 - First M1 application slice (`PREPARING -> READY_FOR_PICKUP` + Delivery creation) is GREEN VERIFIED.
-- GitHub Actions run `36483288423` (run #128), commit `7cb7f7cc099d3c84014449fe6d08c83ab50565de`, job `109133935990`: `Test` and `Migration and recovery smoke test` both passed.
-- The PR remains draft; API work remains deferred.
-
-## Remaining M0 / M1 Work
-
-These are now implementation/integration concerns, not unresolved foundation semantics:
-1. Delivery creation/assignment semantics.
-2. Customer-facing composed status/read model.
-3. Cancellation and Delivery FAILED semantics.
-4. API contracts/security and HTTP implementation.
-5. Operational control and pilot-readiness concerns.
-
-Persistence implementation is no longer a foundation blocker. Delivery semantics must now be designed and verified against ADR-007 before implementation.
-
-## Next Step
-
-Continue the Delivery vertical slice with TDD RED for Start Delivery. Keep HTTP/API implementation sequenced after the domain/application boundaries are proven.
-
+- Driver Assignment is GREEN VERIFIED.
+- Pickup is GREEN VERIFIED.
+- Start Delivery is GREEN VERIFIED.
+- Complete Delivery is GREEN VERIFIED.
+- Delivery Failure is GREEN VERIFIED.
+- Replacement Delivery is GREEN VERIFIED.
+- Cancellation coordination is GREEN VERIFIED.
+- API/HTTP implementation remains intentionally deferred.
 
 ## M1 Delivery Design Gate
 
-- **Status:** ACCEPTED — READY FOR TDD RED
+- **Status:** ACCEPTED — implementation increments verified through cancellation.
 - Delivery ownership remains separate from Order commercial lifecycle.
 - READY_FOR_PICKUP + Delivery creation uses one application-level PostgreSQL transaction.
 - FAILED is terminal per Delivery attempt; replacement Delivery is explicit.
-- Cancellation semantics before/after pickup are accepted.
+- Pre-pickup cancellation coordinates Order + active Delivery.
+- Post-pickup ordinary customer/merchant cancellation is rejected.
 - Minimal Driver eligibility is accepted for M1.
 - Customer read is a composed Order + Delivery response without duplicated mutable state.
 - Delivery history is append-only.
 
+## Current M1 Execution Status — 2026-09-30
 
-## Current M1 Execution Status — 2026-09-29
+### Driver Assignment
 
-- First M1 application slice: **GREEN VERIFIED**.
-- CI evidence: run `36483288423` (#128), commit `7cb7f7cc099d3c84014449fe6d08c83ab50565de`, job `109133935990`; both `Test` and `Migration and recovery smoke test` passed.
-- Driver Assignment: **GREEN VERIFIED**.
-- RED artifacts: `DriverTests.cs` and `AssignDriverHandlerTests.cs`, now satisfied by the implementation.
-- CI evidence: run `36596803406` (#152), commit `beddffa6a373ee0f59d8a98bd604354ccc97759b`, job `109503704013`; `Test` and `Migration and recovery smoke test` both passed.
-- API/HTTP implementation remains deferred.
+- **GREEN VERIFIED**
+- CI run `36596803406` (#152), commit `beddffa6a373ee0f59d8a98bd604354ccc97759b`, job `109503704013`.
+- `Test` and `Migration and recovery smoke test` both passed.
 
+### Pickup
 
-## M1 Pickup Verification — 2026-09-30
+- **GREEN VERIFIED**
+- CI run `36599194263` (#164), commit `8e3d8788724f30b0c0d4d1f505df03dbf9aa7bfd`, job `109511861790`.
+- `Test` and `Migration and recovery smoke test` both passed.
 
-- Pickup application contract: `ConfirmPickupCommand(DeliveryId, ActorId, IdempotencyKey)`.
-- Assigned-driver authorization, non-assigned actor rejection, assigned-state precondition, idempotent replay, fingerprint conflict, and unit-of-work failure boundary are covered by `ConfirmPickupHandlerTests.cs`.
-- GitHub Actions run `36599194263` (run #164), commit `8e3d8788724f30b0c0d4d1f505df03dbf9aa7bfd`, job `109511861790`: `Test` and `Migration and recovery smoke test` both passed.
-- API/HTTP remains deferred.
+### Start Delivery
 
-Next TDD increment: Start Delivery.
+- **GREEN VERIFIED**
+- CI run `36729575121` (#171), commit `2dcc22349baee9918e39305453f7b656202f55ee`, job `109935288931`.
+- `Test` and `Migration and recovery smoke test` both passed.
 
+### Complete Delivery
 
-## M1 Start Delivery Verification — 2026-09-30
+- **GREEN VERIFIED**
+- CI run `36737706814` (#178), job `109963659983`.
+- `Test` and `Migration and recovery smoke test` both passed.
 
-- `StartDeliveryCommand(DeliveryId, ActorId, IdempotencyKey)` is implemented.
-- PICKED_UP precondition, assigned-driver authorization, idempotent replay, fingerprint conflict, and transaction boundary are covered by application tests.
-- GitHub Actions run `36729575121` (#171), commit `2dcc22349baee9918e39305453f7b656202f55ee`, job `109935288931`: `Test` and `Migration and recovery smoke test` both passed.
-- API/HTTP remains deferred.
+### Delivery Failure
 
-Next TDD increment: Complete Delivery.
+- **GREEN VERIFIED**
+- CI run `36738000967` (#185), job `109964662755`.
+- `Test` and `Migration and recovery smoke test` both passed.
 
+### Replacement Delivery
 
-## M1 Complete Delivery Verification — 2026-09-30
+- **GREEN VERIFIED**
+- CI run `36739367541` (#191), job `109969385152`.
+- `Test` and `Migration and recovery smoke test` both passed.
 
-- `CompleteDeliveryCommand(DeliveryId, ActorId, IdempotencyKey)` is implemented.
-- OUT_FOR_DELIVERY precondition, assigned-driver authorization, idempotent replay, fingerprint conflict, and transaction boundary are covered by application tests.
-- GitHub Actions run `36737706814` (#178), job `109963659983`: `Test` and `Migration and recovery smoke test` both passed.
-- API/HTTP remains deferred.
+### Cancellation Coordination
 
-Next TDD increment: Delivery Failure.
+- **GREEN VERIFIED**
+- Latest verified commit: `ec4b1d2baa020c0fc85e224259976505758aa5a6`.
+- Push CI run `36743454949` (#205), job `109983538827`.
+- Pull-request CI run `36743462378` (#206), job `109983563672`.
+- Both runs completed successfully; `Test` and `Migration and recovery smoke test` passed in both.
+- Coverage includes pre-pickup coordinated cancellation, post-pickup rejection, no-Delivery cancellation, idempotent replay, fingerprint conflict, and unit-of-work failure boundary.
+- Domain cancellation distinguishes `CANCELLED` from `FAILED`.
+
+### Verification Boundary
+
+The cancellation GREEN result is domain/application verification using test doubles. It does **not** yet prove Delivery PostgreSQL persistence, Delivery history persistence, or real database concurrency for cancellation.
+
+## Remaining M1 Work
+
+1. Customer-facing composed status/read model.
+2. Delivery persistence/schema and Delivery history.
+3. PostgreSQL concurrency verification for Delivery commands.
+4. API contracts/security and HTTP implementation.
+5. Operational control and pilot-readiness concerns.
+
+## Next Step
+
+Start TDD RED for the Customer Composed Read. Keep HTTP/API implementation sequenced after the domain/application and persistence boundaries are proven.
