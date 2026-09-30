@@ -591,3 +591,14 @@ FailDelivery is implemented and verified for active-delivery failure, authorizat
 GitHub Actions run `36738000967` (#185), job `109964662755`: `Test` and `Migration and recovery smoke test` both passed.
 
 Next TDD increment: `CreateReplacementDelivery`.
+
+
+## Updated Replacement Delivery Verification — 2026-09-30
+
+**Status: GREEN VERIFIED.**
+
+`CreateReplacementDelivery` is implemented and verified for replacement after a failed attempt, active-delivery prevention, Order eligibility, idempotent replay, and request fingerprint conflict. The failed Delivery record remains terminal; replacement creates a new `UNASSIGNED` Delivery attempt.
+
+GitHub Actions run `36739367541` (#191), job `109969385152`: `Test` and `Migration and recovery smoke test` both passed.
+
+Next TDD increment: Delivery/Order cancellation coordination.
