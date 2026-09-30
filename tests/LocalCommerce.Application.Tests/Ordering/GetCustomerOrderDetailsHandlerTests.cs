@@ -1,4 +1,5 @@
 using LocalCommerce.Application.Ordering;
+using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
 using LocalCommerce.Domain.Delivery;
 using LocalCommerce.Domain.Ordering;
 using Xunit;
@@ -76,7 +77,7 @@ public sealed class GetCustomerOrderDetailsHandlerTests
 
     private sealed class Fixture
     {
-        private Fixture(Order order, Delivery? delivery, Guid customerId, string orderNumber)
+        private Fixture(Order order, DeliveryEntity? delivery, Guid customerId, string orderNumber)
         {
             Order = order;
             Delivery = delivery;
@@ -92,7 +93,7 @@ public sealed class GetCustomerOrderDetailsHandlerTests
         }
 
         public Order Order { get; }
-        public Delivery? Delivery { get; }
+        public DeliveryEntity? Delivery { get; }
         public Guid CustomerId { get; }
         public string OrderNumber { get; }
         public FakeOrderRepository OrderRepository { get; }
@@ -120,10 +121,10 @@ public sealed class GetCustomerOrderDetailsHandlerTests
             order.Prepare();
             order.MarkReadyForPickup();
 
-            Delivery? delivery = null;
+            DeliveryEntity? delivery = null;
             if (withDelivery)
             {
-                delivery = Delivery.Create(order.Id, storeId);
+                delivery = DeliveryEntity.Create(order.Id, storeId);
                 delivery.AssignDriver(Guid.NewGuid());
             }
 
@@ -153,11 +154,11 @@ public sealed class GetCustomerOrderDetailsHandlerTests
 
     private sealed class FakeDeliveryRepository : ICustomerOrderDetailsDeliveryRepository
     {
-        private readonly Delivery? _delivery;
+        private readonly DeliveryEntity? _delivery;
 
-        public FakeDeliveryRepository(Delivery? delivery) => _delivery = delivery;
+        public FakeDeliveryRepository(DeliveryEntity? delivery) => _delivery = delivery;
 
-        public Task<Delivery?> GetActiveByOrderIdAsync(
+        public Task<DeliveryEntity?> GetActiveByOrderIdAsync(
             Guid orderId,
             CancellationToken cancellationToken) =>
             Task.FromResult(
