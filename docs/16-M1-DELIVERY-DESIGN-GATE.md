@@ -569,3 +569,14 @@ Next TDD increment: Start Delivery.
 GitHub Actions run `36729575121` (run #171), commit `2dcc22349baee9918e39305453f7b656202f55ee`, job `109935288931`: `Test` and `Migration and recovery smoke test` both passed.
 
 Next TDD increment: Complete Delivery.
+
+
+## Updated Complete Delivery TDD Status — 2026-09-30
+
+**Status: GREEN VERIFIED.**
+
+`CompleteDeliveryCommand(DeliveryId, ActorId, IdempotencyKey)` is implemented and verified for OUT_FOR_DELIVERY precondition, assigned-driver authorization, rejection of non-assigned actors, same-key replay, fingerprint conflict, transaction boundary, and Delivery-only transition to DELIVERED.
+
+GitHub Actions run `36737706814` (run #178), job `109963659983`: `Test` and `Migration and recovery smoke test` both passed.
+
+Next TDD increment: Delivery Failure.
