@@ -1,6 +1,6 @@
 # Foundation Review Checklist
 
-Status: **M1 DRIVER ASSIGNMENT GREEN — PICKUP NEXT**
+Status: **M1 PICKUP GREEN — START DELIVERY NEXT**
 
 ## Review Scope
 
@@ -80,7 +80,7 @@ Persistence implementation is no longer a foundation blocker. Delivery semantics
 
 ## Next Step
 
-Continue the Delivery vertical slice with TDD RED for Driver Assignment. Keep HTTP/API implementation sequenced after the domain/application boundaries are proven.
+Continue the Delivery vertical slice with TDD RED for Start Delivery. Keep HTTP/API implementation sequenced after the domain/application boundaries are proven.
 
 
 ## M1 Delivery Design Gate
@@ -103,3 +103,13 @@ Continue the Delivery vertical slice with TDD RED for Driver Assignment. Keep HT
 - RED artifacts: `DriverTests.cs` and `AssignDriverHandlerTests.cs`, now satisfied by the implementation.
 - CI evidence: run `36596803406` (#152), commit `beddffa6a373ee0f59d8a98bd604354ccc97759b`, job `109503704013`; `Test` and `Migration and recovery smoke test` both passed.
 - API/HTTP implementation remains deferred.
+
+
+## M1 Pickup Verification — 2026-09-30
+
+- Pickup application contract: `ConfirmPickupCommand(DeliveryId, ActorId, IdempotencyKey)`.
+- Assigned-driver authorization, non-assigned actor rejection, assigned-state precondition, idempotent replay, fingerprint conflict, and unit-of-work failure boundary are covered by `ConfirmPickupHandlerTests.cs`.
+- GitHub Actions run `36599194263` (run #164), commit `8e3d8788724f30b0c0d4d1f505df03dbf9aa7bfd`, job `109511861790`: `Test` and `Migration and recovery smoke test` both passed.
+- API/HTTP remains deferred.
+
+Next TDD increment: Start Delivery.
