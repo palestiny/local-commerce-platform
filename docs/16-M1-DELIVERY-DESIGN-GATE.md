@@ -580,3 +580,14 @@ Next TDD increment: Complete Delivery.
 GitHub Actions run `36737706814` (run #178), job `109963659983`: `Test` and `Migration and recovery smoke test` both passed.
 
 Next TDD increment: Delivery Failure.
+
+
+## Updated Failure Verification — 2026-09-30
+
+**Status: GREEN VERIFIED.**
+
+FailDelivery is implemented and verified for active-delivery failure, authorization, terminal-state protection, required failure code/reason, idempotent replay, fingerprint conflict, and transaction boundary.
+
+GitHub Actions run `36738000967` (#185), job `109964662755`: `Test` and `Migration and recovery smoke test` both passed.
+
+Next TDD increment: `CreateReplacementDelivery`.
