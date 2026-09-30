@@ -123,3 +123,13 @@ Next TDD increment: Start Delivery.
 - API/HTTP remains deferred.
 
 Next TDD increment: Complete Delivery.
+
+
+## M1 Complete Delivery Verification — 2026-09-30
+
+- `CompleteDeliveryCommand(DeliveryId, ActorId, IdempotencyKey)` is implemented.
+- OUT_FOR_DELIVERY precondition, assigned-driver authorization, idempotent replay, fingerprint conflict, and transaction boundary are covered by application tests.
+- GitHub Actions run `36737706814` (#178), job `109963659983`: `Test` and `Migration and recovery smoke test` both passed.
+- API/HTTP remains deferred.
+
+Next TDD increment: Delivery Failure.
