@@ -1,6 +1,6 @@
 # M1 Delivery Vertical Slice Design Gate
 
-Status: **M1 DRIVER ASSIGNMENT GREEN VERIFIED — PICKUP NEXT**
+Status: **M1 PICKUP GREEN VERIFIED — START DELIVERY NEXT**
 
 ## Objective
 
@@ -538,4 +538,15 @@ Deferred from this increment:
 - driver location
 - HTTP/API endpoints
 
-GitHub Actions run `36596803406` (run #152), commit `beddffa6a373ee0f59d8a98bd604354ccc97759b`, job `109503704013` completed successfully. Both `Test` and `Migration and recovery smoke test` passed. The next TDD increment is Pickup authorization.
+GitHub Actions run `36596803406` (run #152), commit `beddffa6a373ee0f59d8a98bd604354ccc97759b`, job `109503704013` completed successfully. Both `Test` and `Migration and recovery smoke test` passed. The next TDD increment is Start Delivery authorization.
+
+
+## Updated Pickup TDD Status — 2026-09-30
+
+**Status: GREEN VERIFIED.**
+
+`ConfirmPickupCommand(DeliveryId, ActorId, IdempotencyKey)` is implemented and verified for assigned-driver authorization, non-assigned actor rejection, ASSIGNED precondition, same-key replay, fingerprint conflict, unit-of-work failure boundary, and Delivery-only fulfillment mutation.
+
+GitHub Actions run `36599194263` (run #164), commit `8e3d8788724f30b0c0d4d1f505df03dbf9aa7bfd`, job `109511861790`: `Test` and `Migration and recovery smoke test` both passed.
+
+Next TDD increment: Start Delivery.
