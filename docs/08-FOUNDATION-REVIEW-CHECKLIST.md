@@ -113,3 +113,13 @@ Continue the Delivery vertical slice with TDD RED for Start Delivery. Keep HTTP/
 - API/HTTP remains deferred.
 
 Next TDD increment: Start Delivery.
+
+
+## M1 Start Delivery Verification — 2026-09-30
+
+- `StartDeliveryCommand(DeliveryId, ActorId, IdempotencyKey)` is implemented.
+- PICKED_UP precondition, assigned-driver authorization, idempotent replay, fingerprint conflict, and transaction boundary are covered by application tests.
+- GitHub Actions run `36729575121` (#171), commit `2dcc22349baee9918e39305453f7b656202f55ee`, job `109935288931`: `Test` and `Migration and recovery smoke test` both passed.
+- API/HTTP remains deferred.
+
+Next TDD increment: Complete Delivery.
