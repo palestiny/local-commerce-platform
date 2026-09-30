@@ -9,7 +9,8 @@ public enum DeliveryStatus
     PickedUp,
     OutForDelivery,
     Delivered,
-    Failed
+    Failed,
+    Cancelled
 }
 
 public sealed class Delivery
@@ -87,6 +88,14 @@ public sealed class Delivery
 
         DeliveredAt = DateTimeOffset.UtcNow;
         Status = DeliveryStatus.Delivered;
+    }
+
+    public void CancelBeforePickup()
+    {
+        if (Status is DeliveryStatus.PickedUp or DeliveryStatus.OutForDelivery or DeliveryStatus.Delivered or DeliveryStatus.Failed or DeliveryStatus.Cancelled)
+            throw new DomainRuleViolationException("Delivery can only be cancelled before pickup.");
+
+        Status = DeliveryStatus.Cancelled;
     }
 
     public void Fail(string failureCode, string failureReason)
