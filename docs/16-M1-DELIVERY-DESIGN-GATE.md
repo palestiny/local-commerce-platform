@@ -1,13 +1,13 @@
 # M1 Delivery Vertical Slice Design Gate
 
-Status: **M1 PICKUP GREEN VERIFIED — START DELIVERY NEXT**
+Status: **M1 CANCELLATION GREEN VERIFIED — NEXT: CUSTOMER COMPOSED READ**
 
 ## Objective
 
 Define and verify the first Delivery vertical slice without violating ADR-007:
 
 - Order owns commercial state through `READY_FOR_PICKUP`.
-- Delivery owns fulfillment state from `UNASSIGNED` through `DELIVERED`, with `FAILED` as its exception state.
+- Delivery owns fulfillment state from `UNASSIGNED` through `DELIVERED`, with `FAILED` and `CANCELLED` as explicit exception states.
 - No duplicate mutable fulfillment state is added to Order.
 
 The gate must be passed before Delivery production implementation.
@@ -23,19 +23,9 @@ M1 first slice:
 5. Driver moves Delivery to `OUT_FOR_DELIVERY`.
 6. Driver completes Delivery as `DELIVERED`.
 7. Delivery can enter `FAILED` through explicitly defined failure semantics.
-8. Customer-facing read composes Order + Delivery state.
-
-Explicitly deferred:
-
-- driver location tracking
-- route optimization
-- batching
-- dynamic assignment
-- proof-of-delivery media
-- advanced dispatch scoring
-- live maps
-- push notification infrastructure
-- payment completion changes
+8. A failed attempt can be replaced explicitly when the Order remains eligible.
+9. Customer-facing read composes Order + Delivery state.
+10. Cancellation coordinates Order + active Delivery before pickup.
 
 ## State Authority
 
@@ -59,9 +49,10 @@ Order must never own or transition:
 
 `UNASSIGNED -> ASSIGNED -> PICKED_UP -> OUT_FOR_DELIVERY -> DELIVERED`
 
-Exception:
+Explicit exception states:
 
 - `FAILED`
+- `CANCELLED`
 
 Delivery is the sole mutable authority for fulfillment state.
 
@@ -106,8 +97,6 @@ The Delivery aggregate must not duplicate the Order commercial status.
 Use one application-level business operation for:
 
 `PREPARING -> READY_FOR_PICKUP` + Delivery creation.
-
-The application coordinates the two aggregates while each aggregate validates its own transition.
 
 Recommended M1 persistence behavior:
 
@@ -212,17 +201,32 @@ A FAILED Delivery is terminal for the current Delivery attempt in M1 unless a re
 
 The initial M1 design should therefore record the failure and expose it operationally rather than inventing automatic retry behavior.
 
+## Replacement Delivery
+
+A failed Delivery remains terminal.
+
+`CreateReplacementDelivery` is an explicit operational command that may create a new `UNASSIGNED` Delivery only when:
+
+- the Order remains eligible;
+- no active Delivery exists;
+- the request is authorized and idempotent.
+
+The failed attempt remains in history; the replacement is a new Delivery record.
+
 ## Cancellation
 
 Cancellation remains an Order commercial command.
 
-Rules to finalize in M1:
+Accepted M1 policy:
 
-- cancellation before Delivery creation affects Order only;
-- cancellation after Delivery creation must define whether active Delivery is cancelled/terminated through a coordinated application operation;
-- Delivery must not independently rewrite Order to CANCELLED.
+- before Delivery exists: normal Order cancellation;
+- after Delivery exists but before pickup: coordinated application cancellation atomically cancels the Order and terminates the active Delivery attempt;
+- after pickup: ordinary customer/merchant cancellation is rejected; only explicitly authorized operational intervention may handle the case;
+- Payment/refund behavior remains a separate Payment decision.
 
-The cancellation policy must be finalized before implementing cross-aggregate cancellation.
+Delivery does not independently rewrite Order to CANCELLED.
+
+The Delivery aggregate therefore has an explicit `CANCELLED` state for coordinated pre-pickup termination. Cancellation does not use `FAILED`, preserving the semantic distinction between operational failure and commercial cancellation.
 
 ## Customer-Facing Read Model
 
@@ -250,6 +254,7 @@ Idempotency is required for:
 - out-for-delivery transition
 - delivery completion
 - explicit delivery failure
+- replacement Delivery
 - coordinated cancellation where it spans aggregates
 
 Same key + same fingerprint must return the original result.
@@ -285,6 +290,7 @@ Before implementation, add failing tests for:
 - out-for-delivery requires PICKED_UP
 - delivered requires OUT_FOR_DELIVERY
 - failure rules
+- cancellation-before-pickup rules
 - no duplicate driver assignment effect
 
 ### Application
@@ -297,6 +303,8 @@ Before implementation, add failing tests for:
 - same-key replay is idempotent
 - fingerprint conflict is rejected
 - customer read composes Order + Delivery without duplicating state
+- pre-pickup cancellation coordinates Order + active Delivery
+- post-pickup cancellation is rejected
 
 ### Persistence
 
@@ -308,7 +316,7 @@ Before implementation, add failing tests for:
 
 ## Accepted M1 Decision Baseline — OWNER APPROVED
 
-The following baseline is recommended for the first vertical slice. These decisions are **ACCEPTED** by the project owner.
+The following baseline is **ACCEPTED** by the project owner.
 
 ### Decision matrix
 
@@ -333,6 +341,7 @@ The following baseline is recommended for the first vertical slice. These decisi
 | OUT_FOR_DELIVERY | CompleteDelivery | Assigned driver / authorized operator | DELIVERED | Payment remains independent |
 | UNASSIGNED / ASSIGNED / PICKED_UP / OUT_FOR_DELIVERY | FailDelivery | Authorized operational actor | FAILED | Explicit reason required |
 | FAILED | CreateReplacementDelivery | Authorized operational actor | new Delivery = UNASSIGNED | Only if Order is still eligible and no active Delivery exists |
+| UNASSIGNED / ASSIGNED | CancelOrder | Authorized customer/merchant actor | Delivery = CANCELLED | Coordinated with Order cancellation before pickup |
 
 `FAILED` remains terminal for that Delivery record. A replacement creates a new Delivery attempt rather than reopening the failed record.
 
@@ -344,8 +353,6 @@ Cancellation is still an Order command and never originates from Delivery.
 - After Delivery exists but before pickup: application-level cancellation may atomically cancel the Order and terminate the active Delivery attempt.
 - After pickup: ordinary customer/merchant cancellation is rejected; only an explicitly authorized operational intervention may handle the case.
 - Payment/refund behavior remains a separate Payment decision and is not silently inferred from Delivery state.
-
-This keeps commercial cancellation authoritative in Order while preventing an active fulfillment attempt from being left ambiguous.
 
 ### Proposed customer-facing DTO
 
@@ -369,7 +376,7 @@ No mutable `DeliveryStatus` field is added to Order.
 
 ### Approval boundary — CLOSED
 
-The project owner approved the proposed business-policy choices:
+The project owner approved the business-policy choices:
 
 1. cancellation after Delivery creation;
 2. replacement Delivery after FAILED;
@@ -379,12 +386,12 @@ The technical transaction boundary, state authority, idempotency, and no-duplica
 
 ## Design Decisions Still Open
 
-1. Exact Delivery failure recovery policy.
-2. Cancellation after Delivery creation.
-3. Minimal Driver/eligibility model for M1.
-4. Whether READY_FOR_PICKUP and Delivery creation must always be one command/transaction or whether an explicit asynchronous boundary is needed.
-5. Exact customer-facing composed DTO.
-6. Delivery history schema and retention policy.
+The original M1 business-policy questions are now closed. Remaining work is implementation/integration detail:
+
+1. Customer-facing composed DTO exact contract.
+2. Delivery history schema and retention policy.
+3. Delivery persistence schema/migration.
+4. PostgreSQL concurrency behavior for Delivery commands.
 
 ## Gate Exit Criteria
 
@@ -393,194 +400,98 @@ The gate becomes PASS when:
 1. Delivery aggregate ownership is explicit.
 2. Delivery lifecycle transition table is finalized.
 3. READY_FOR_PICKUP / Delivery creation boundary is decided.
-4. Assignment, pickup, transit, completion, and failure semantics are finalized.
-5. Cancellation semantics are finalized.
-6. Authorization rules are finalized.
-7. Idempotency requirements are finalized.
-8. Customer-facing composed read model is finalized.
-9. RED tests are written for the approved behavior.
-10. No rule requires Order to duplicate mutable Delivery state.
+4. Assignment, pickup, transit, completion, failure, replacement, and cancellation semantics are finalized.
+5. Authorization rules are finalized.
+6. Idempotency requirements are finalized.
+7. Customer-facing composed read model is finalized.
+8. RED tests are written for the approved behavior.
+9. No rule requires Order to duplicate mutable Delivery state.
 
 ## Current Evidence
 
 - ADR-007 is ACCEPTED: strict Order/Delivery state separation.
-- Order lifecycle document already reflects Delivery as a separate lifecycle.
+- Order lifecycle document reflects Delivery as a separate lifecycle.
 - PostgreSQL persistence foundation is GREEN VERIFIED.
-- M1 Delivery implementation has not started yet.
+- M1 Delivery domain/application increments through cancellation are implemented and verified by CI.
+- API/HTTP remains intentionally deferred.
 
 ## Next Step
 
-Finalize the open M1 decisions, then implement TDD RED tests before Delivery production code.
-
+Implement and verify the customer-facing composed read contract, then address Delivery persistence/history and real PostgreSQL concurrency before API/HTTP implementation.
 
 ## TDD RED execution status
 
 **Status: IN PROGRESS — Domain RED suite committed**
 
-Initial RED specification has been committed at:
+Initial RED specification was committed at:
+
 - `tests/LocalCommerce.Domain.Tests/Delivery/DeliveryTests.cs`
 
-The suite defines the first executable Delivery domain contract for:
-- initial UNASSIGNED state
-- driver assignment and duplicate-assignment rejection
-- assigned-driver-only pickup
-- pickup → out-for-delivery → delivered lifecycle
-- invalid lifecycle transitions
-- terminal FAILED semantics
-- terminal DELIVERED semantics
-- required Order/Store identity invariants
-
-Production Delivery implementation has **not** been added yet. The next implementation step is GREEN: introduce the minimum Delivery aggregate required to satisfy these tests without expanding M1 scope.
-
+The suite defines the first executable Delivery domain contract.
 
 ## Updated Implementation Status — 2026-09-28
 
 **Design approval: CLOSED.**
 
-The previously approved M1 business-policy baseline remains authoritative.
+The approved M1 business-policy baseline remains authoritative.
 
 ### Domain implementation
 
 **Implemented and GREEN VERIFIED.**
 
-src/LocalCommerce.Domain/Delivery/Delivery.cs now implements the minimum Delivery aggregate required by the approved RED contract:
+`src/LocalCommerce.Domain/Delivery/Delivery.cs` implements:
 
 - UNASSIGNED -> ASSIGNED
 - ASSIGNED -> PICKED_UP
 - PICKED_UP -> OUT_FOR_DELIVERY
 - OUT_FOR_DELIVERY -> DELIVERED
 - explicit FAILED terminal state
+- explicit CANCELLED pre-pickup state
 - assigned-driver validation for pickup
 - required Order/Store identity
 - terminal-state protection
 
 No mutable Delivery fulfillment state was added to Order.
 
-### Application TDD RED
+### First M1 application slice
 
-**Status: GREEN VERIFIED — first application slice.**
+**GREEN VERIFIED.**
 
-The first M1 application slice is now defined in:
+`PREPARING -> READY_FOR_PICKUP` + Delivery creation is implemented and verified as one application operation.
 
-- src/LocalCommerce.Application/Delivery/ReadyOrderForDeliveryApplication.cs
-- tests/LocalCommerce.Application.Tests/Delivery/ReadyOrderForDeliveryHandlerTests.cs
-
-The contract covers:
-
-- PREPARING -> READY_FOR_PICKUP + Delivery creation as one application operation
-- prevention of an existing active Delivery
-- authorization boundary for the actor marking the Order ready
-- same-key idempotent replay
-- same-key fingerprint conflict
-- unit-of-work failure boundary
-
-The current implementation is intentionally the next GREEN target; the application behavior must be verified before expanding into driver commands.
-
-### Verification state
-
-GREEN VERIFIED by GitHub Actions run `36483288423` (run #128) for commit `7cb7f7cc099d3c84014449fe6d08c83ab50565de`.
-
-The `build-and-test` job `109133935990` completed successfully. Both `Test` and `Migration and recovery smoke test` steps passed.
-
-### Next TDD increment
-
-GREEN the first application slice, then add the next RED contract for:
-
-1. active Driver validation and assignment;
-2. assigned-driver pickup authorization;
-3. pickup -> out-for-delivery -> delivered application commands;
-4. failure and replacement Delivery;
-5. coordinated cancellation;
-6. composed customer-facing Delivery read;
-7. persistence constraints/history and PostgreSQL concurrency verification.
-
-API implementation remains intentionally deferred.
-
+GitHub Actions run `36483288423` (#128), commit `7cb7f7cc099d3c84014449fe6d08c83ab50565de`, job `109133935990`: `Test` and `Migration and recovery smoke test` both passed.
 
 ## Updated Driver Assignment TDD Status — 2026-09-29
 
 **Status: GREEN VERIFIED.**
 
-The next application increment is intentionally limited to Driver Assignment.
+`AssignDriverCommand(DeliveryId, DriverId, ActorId, IdempotencyKey)` is implemented and verified for active-driver validation, authorization, lifecycle preconditions, replay, fingerprint conflict, and unit-of-work boundary.
 
-### Approved M1 contract
-
-Command:
-
-`AssignDriverCommand(DeliveryId, DriverId, ActorId, IdempotencyKey)`
-
-Required behavior:
-
-- Delivery must exist and be `UNASSIGNED`.
-- Driver must exist and be Active.
-- Actor must be authorized to perform operational assignment.
-- Delivery domain remains responsible for the `UNASSIGNED -> ASSIGNED` transition.
-- Same idempotency key + same fingerprint returns the original result.
-- Same idempotency key + different request fingerprint is rejected.
-- A unit-of-work failure must not leave a partially assigned Delivery.
-- No Order state is mutated by assignment.
-
-### RED artifacts
-
-- `tests/LocalCommerce.Domain.Tests/Delivery/DriverTests.cs`
-- `tests/LocalCommerce.Application.Tests/Delivery/AssignDriverHandlerTests.cs`
-
-The Driver/application implementation is now present and verified against this contract.
-
-### Scope boundary
-
-Deferred from this increment:
-
-- zone/store eligibility
-- dispatch optimization
-- capacity scoring
-- auto-dispatch
-- driver location
-- HTTP/API endpoints
-
-GitHub Actions run `36596803406` (run #152), commit `beddffa6a373ee0f59d8a98bd604354ccc97759b`, job `109503704013` completed successfully. Both `Test` and `Migration and recovery smoke test` passed. The next TDD increment is Start Delivery authorization.
-
+GitHub Actions run `36596803406` (#152), commit `beddffa6a373ee0f59d8a98bd604354ccc97759b`, job `109503704013`: `Test` and `Migration and recovery smoke test` both passed.
 
 ## Updated Pickup TDD Status — 2026-09-30
 
 **Status: GREEN VERIFIED.**
 
-`ConfirmPickupCommand(DeliveryId, ActorId, IdempotencyKey)` is implemented and verified for assigned-driver authorization, non-assigned actor rejection, ASSIGNED precondition, same-key replay, fingerprint conflict, unit-of-work failure boundary, and Delivery-only fulfillment mutation.
+`ConfirmPickupCommand(DeliveryId, ActorId, IdempotencyKey)` is implemented and verified.
 
-GitHub Actions run `36599194263` (run #164), commit `8e3d8788724f30b0c0d4d1f505df03dbf9aa7bfd`, job `109511861790`: `Test` and `Migration and recovery smoke test` both passed.
-
-Next TDD increment: Start Delivery.
-
+GitHub Actions run `36599194263` (#164), commit `8e3d8788724f30b0c0d4d1f505df03dbf9aa7bfd`, job `109511861790`: `Test` and `Migration and recovery smoke test` both passed.
 
 ## Updated Start Delivery TDD Status — 2026-09-30
 
 **Status: GREEN VERIFIED.**
 
-`StartDeliveryCommand(DeliveryId, ActorId, IdempotencyKey)` is implemented and verified for:
+`StartDeliveryCommand(DeliveryId, ActorId, IdempotencyKey)` is implemented and verified.
 
-- PICKED_UP precondition;
-- assigned-driver authorization;
-- rejection of non-assigned actors;
-- same-key replay;
-- fingerprint conflict;
-- unit-of-work boundary;
-- Delivery-only transition to OUT_FOR_DELIVERY.
-
-GitHub Actions run `36729575121` (run #171), commit `2dcc22349baee9918e39305453f7b656202f55ee`, job `109935288931`: `Test` and `Migration and recovery smoke test` both passed.
-
-Next TDD increment: Complete Delivery.
-
+GitHub Actions run `36729575121` (#171), commit `2dcc22349baee9918e39305453f7b656202f55ee`, job `109935288931`: `Test` and `Migration and recovery smoke test` both passed.
 
 ## Updated Complete Delivery TDD Status — 2026-09-30
 
 **Status: GREEN VERIFIED.**
 
-`CompleteDeliveryCommand(DeliveryId, ActorId, IdempotencyKey)` is implemented and verified for OUT_FOR_DELIVERY precondition, assigned-driver authorization, rejection of non-assigned actors, same-key replay, fingerprint conflict, transaction boundary, and Delivery-only transition to DELIVERED.
+`CompleteDeliveryCommand(DeliveryId, ActorId, IdempotencyKey)` is implemented and verified.
 
-GitHub Actions run `36737706814` (run #178), job `109963659983`: `Test` and `Migration and recovery smoke test` both passed.
-
-Next TDD increment: Delivery Failure.
-
+GitHub Actions run `36737706814` (#178), job `109963659983`: `Test` and `Migration and recovery smoke test` both passed.
 
 ## Updated Failure Verification — 2026-09-30
 
@@ -590,9 +501,6 @@ FailDelivery is implemented and verified for active-delivery failure, authorizat
 
 GitHub Actions run `36738000967` (#185), job `109964662755`: `Test` and `Migration and recovery smoke test` both passed.
 
-Next TDD increment: `CreateReplacementDelivery`.
-
-
 ## Updated Replacement Delivery Verification — 2026-09-30
 
 **Status: GREEN VERIFIED.**
@@ -601,4 +509,27 @@ Next TDD increment: `CreateReplacementDelivery`.
 
 GitHub Actions run `36739367541` (#191), job `109969385152`: `Test` and `Migration and recovery smoke test` both passed.
 
-Next TDD increment: Delivery/Order cancellation coordination.
+## Updated Cancellation Verification — 2026-09-30
+
+**Status: GREEN VERIFIED.**
+
+Cancellation coordination is implemented and verified for:
+
+- Order cancellation with an active pre-pickup Delivery;
+- explicit Delivery `CANCELLED` state rather than reusing `FAILED`;
+- `READY_FOR_PICKUP` Order cancellation;
+- rejection after pickup;
+- Order cancellation when no Delivery exists;
+- same-key idempotent replay;
+- fingerprint conflict;
+- unit-of-work failure boundary.
+
+Latest verified commit: `ec4b1d2baa020c0fc85e224259976505758aa5a6`.
+
+GitHub Actions push run `36743454949` (#205), job `109983538827`, and pull-request run `36743462378` (#206), job `109983563672`, both completed successfully. `Test` and `Migration and recovery smoke test` passed in both runs.
+
+### Verification boundary
+
+This is application/domain verification using test doubles. It does **not** yet prove Delivery PostgreSQL persistence, history persistence, or real database concurrency for cancellation.
+
+Next TDD increment: Customer Composed Read.
