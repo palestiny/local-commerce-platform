@@ -1,3 +1,4 @@
+using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
 using LocalCommerce.Domain.Delivery;
 using LocalCommerce.Domain.Ordering;
 
@@ -31,7 +32,7 @@ public interface ICustomerOrderDetailsOrderRepository
 
 public interface ICustomerOrderDetailsDeliveryRepository
 {
-    Task<Delivery?> GetActiveByOrderIdAsync(
+    Task<DeliveryEntity?> GetActiveByOrderIdAsync(
         Guid orderId,
         CancellationToken cancellationToken);
 }
