@@ -21,7 +21,7 @@ public sealed class GetCustomerOrderDetailsHandlerTests
         Assert.NotNull(result.Delivery);
         Assert.Equal(fixture.Delivery!.Id, result.Delivery!.DeliveryId);
         Assert.Equal(DeliveryStatus.Assigned, result.Delivery.Status);
-        Assert.Equal(fixture.Delivery.DriverId, result.Delivery.DriverId);
+        Assert.Equal(fixture.Delivery.AssignedAt, result.Delivery.AssignedAt);
     }
 
     [Fact]
