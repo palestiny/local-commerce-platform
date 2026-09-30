@@ -101,7 +101,8 @@ public sealed class Order
             OrderStatus.Cancelled,
             OrderStatus.PendingStoreConfirmation,
             OrderStatus.Accepted,
-            OrderStatus.Preparing);
+            OrderStatus.Preparing,
+            OrderStatus.ReadyForPickup);
 
     private void Transition(OrderStatus expectedCurrent, OrderStatus next)
     {
