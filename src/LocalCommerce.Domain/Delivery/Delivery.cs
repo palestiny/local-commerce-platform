@@ -23,7 +23,7 @@ public sealed class Delivery
         Status = DeliveryStatus.Unassigned;
     }
 
-    public Guid Id { get; }
+    public Guid Id { get; private set; }
     public Guid OrderId { get; }
     public Guid StoreId { get; }
     public DeliveryStatus Status { get; private set; }
@@ -35,6 +35,40 @@ public sealed class Delivery
     public DateTimeOffset? FailedAt { get; private set; }
     public string? FailureCode { get; private set; }
     public string? FailureReason { get; private set; }
+
+    public static Delivery Restore(
+        Guid id,
+        Guid orderId,
+        Guid storeId,
+        DeliveryStatus status,
+        Guid? driverId,
+        DateTimeOffset? assignedAt,
+        DateTimeOffset? pickedUpAt,
+        DateTimeOffset? outForDeliveryAt,
+        DateTimeOffset? deliveredAt,
+        DateTimeOffset? failedAt,
+        string? failureCode,
+        string? failureReason)
+    {
+        if (id == Guid.Empty)
+            throw new DomainRuleViolationException("A persisted Delivery requires an Id.");
+
+        var delivery = new Delivery(orderId, storeId)
+        {
+            Id = id,
+            Status = status,
+            DriverId = driverId,
+            AssignedAt = assignedAt,
+            PickedUpAt = pickedUpAt,
+            OutForDeliveryAt = outForDeliveryAt,
+            DeliveredAt = deliveredAt,
+            FailedAt = failedAt,
+            FailureCode = failureCode,
+            FailureReason = failureReason
+        };
+
+        return delivery;
+    }
 
     public static Delivery Create(Guid orderId, Guid storeId)
     {
