@@ -1,6 +1,6 @@
 # M1 Delivery Vertical Slice Design Gate
 
-Status: **M1 CANCELLATION GREEN VERIFIED — NEXT: CUSTOMER COMPOSED READ**
+Status: **CUSTOMER COMPOSED READ GREEN VERIFIED — NEXT: DELIVERY PERSISTENCE + HISTORY**
 
 ## Objective
 
@@ -532,4 +532,21 @@ GitHub Actions push run `36743454949` (#205), job `109983538827`, and pull-reque
 
 This is application/domain verification using test doubles. It does **not** yet prove Delivery PostgreSQL persistence, history persistence, or real database concurrency for cancellation.
 
-Next TDD increment: Customer Composed Read.
+Customer Composed Read is now GREEN VERIFIED. Next TDD increment: Delivery persistence + DeliveryStatusHistory.
+
+
+## Updated Customer Composed Read Verification — 2026-10-01
+
+**Status: GREEN VERIFIED.**
+
+The customer-facing composed read is implemented as a non-mutating application query composing Order commercial state with an optional active Delivery summary. Customer ownership is enforced through the application authorization boundary, and the response does not duplicate mutable Delivery state onto Order.
+
+Verified scenarios include: own Order with Delivery summary, own Order before Delivery exists, cross-customer rejection, missing Order rejection, and read non-mutation.
+
+GitHub Actions run `36785578476` (#220), job `110126060648`, commit `e630684b46b8b84dd7674a948db6444d3785519a`: `Test` and `Migration and recovery smoke test` both passed.
+
+### Verification boundary
+
+This proves the application/domain contract using the current test-double repositories. It does **not** yet prove the Delivery PostgreSQL read path, Delivery persistence schema, Delivery history persistence, or database concurrency.
+
+Next boundary: Delivery persistence + append-only DeliveryStatusHistory, followed by real PostgreSQL concurrency verification.
