@@ -1,4 +1,5 @@
 using LocalCommerce.Application.Delivery;
+using LocalCommerce.Application.Idempotency;
 using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
 using DeliveryEntityStatus = LocalCommerce.Domain.Delivery.DeliveryStatus;
 using Xunit;
@@ -77,6 +78,25 @@ public sealed class FailDeliveryHandlerTests
     }
     private sealed class FakeDeliveryRepository:IFailDeliveryDeliveryRepository{private DeliveryEntity _d;public FakeDeliveryRepository(DeliveryEntity d)=>_d=d;public Task<DeliveryEntity?> GetAsync(Guid id,CancellationToken ct)=>Task.FromResult<DeliveryEntity?>(_d.Id==id?_d:null);public void SetDelivery(DeliveryEntity d)=>_d=d;public Task SaveAsync(DeliveryEntity d,CancellationToken ct)=>Task.CompletedTask;}
     private sealed class FakeAuthorization:IFailDeliveryAuthorization{public bool Allowed{get;set;}=true;public Task<bool> CanFailDeliveryAsync(Guid actorId,DeliveryEntity d,CancellationToken ct)=>Task.FromResult(Allowed);}
-    private sealed class FakeIdempotencyStore:IFailDeliveryIdempotencyStore{private readonly Dictionary<string,FailDeliveryIdempotencyRecord> _r=new();private static string K(Guid a,string o,string k)=>$"{a:N}|{o}|{k}";public Task<FailDeliveryIdempotencyRecord?> GetAsync(Guid a,string o,string k,CancellationToken ct)=>Task.FromResult(_r.TryGetValue(K(a,o,k),out var x)?x:null);public Task<FailDeliveryIdempotencyRecord?> ReserveAsync(Guid a,string o,string k,string fp,CancellationToken ct){var key=K(a,o,k);if(_r.TryGetValue(key,out var x))return Task.FromResult<FailDeliveryIdempotencyRecord?>(x);_r[key]=new(k,fp,new FailDeliveryResult(Guid.Empty));return Task.FromResult<FailDeliveryIdempotencyRecord?>(null);}public Task CompleteAsync(Guid a,string o,string k,FailDeliveryResult result,CancellationToken ct){var key=K(a,o,k);_r[key]=_r[key] with{Result=result};return Task.CompletedTask;}}
+    private sealed class FakeIdempotencyStore : IIdempotencyStore
+    {
+        private readonly Dictionary<string, IdempotencyRecord> _records = new();
+        private static string Key(Guid scopeId, string operation, string key) => $"{scopeId:N}|{operation}|{key}";
+        public Task<IdempotencyRecord?> GetAsync(Guid scopeId,string operation,string key,CancellationToken ct) =>
+            Task.FromResult(_records.TryGetValue(Key(scopeId,operation,key),out var x)?x:null);
+        public Task<IdempotencyRecord?> ReserveAsync(Guid scopeId,string operation,string key,string fingerprint,CancellationToken ct)
+        {
+            var k=Key(scopeId,operation,key);
+            if(_records.TryGetValue(k,out var x)) return Task.FromResult<IdempotencyRecord?>(x);
+            _records[k]=new IdempotencyRecord(scopeId,operation,key,fingerprint,IdempotencyStatus.Reserved,null,null,null);
+            return Task.FromResult<IdempotencyRecord?>(null);
+        }
+        public Task CompleteAsync(Guid scopeId,string operation,string key,IdempotencyCompletion completion,CancellationToken ct)
+        {
+            var k=Key(scopeId,operation,key); var x=_records[k];
+            _records[k]=x with { Status=IdempotencyStatus.Completed, ResourceType=completion.ResourceType, ResourceId=completion.ResourceId, ResultPayload=completion.ResultPayload };
+            return Task.CompletedTask;
+        }
+    }
     private sealed class FakeUnitOfWork:IFailDeliveryUnitOfWork{public bool FailBeforeOperation{get;set;}public Task ExecuteAsync(Func<CancellationToken,Task> op,CancellationToken ct){if(FailBeforeOperation)throw new InvalidOperationException("Simulated transaction failure.");return op(ct);}}
 }
