@@ -1,4 +1,5 @@
 using LocalCommerce.Application.Delivery;
+using LocalCommerce.Application.Idempotency;
 using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
 using DeliveryEntityStatus = LocalCommerce.Domain.Delivery.DeliveryStatus;
 using Xunit;
@@ -113,14 +114,62 @@ public sealed class CompleteDeliveryHandlerTests
         public bool Allowed { get; set; } = true;
         public Task<bool> CanCompleteDeliveryAsync(Guid actorId, DeliveryEntity delivery, CancellationToken ct) => Task.FromResult(Allowed && delivery.DriverId == actorId);
     }
-    private sealed class FakeIdempotencyStore : ICompleteDeliveryIdempotencyStore
+    private sealed class FakeIdempotencyStore : IIdempotencyStore
     {
-        private readonly Dictionary<string, CompleteDeliveryIdempotencyRecord> _records = new();
-        public Task<CompleteDeliveryIdempotencyRecord?> GetAsync(Guid actorId, string operation, string key, CancellationToken ct) => Task.FromResult(_records.TryGetValue(Key(actorId, operation, key), out var x) ? x : null);
-        public Task<CompleteDeliveryIdempotencyRecord?> ReserveAsync(Guid actorId, string operation, string key, string fp, CancellationToken ct)
-        { var k=Key(actorId,operation,key); if(_records.TryGetValue(k,out var x)) return Task.FromResult<CompleteDeliveryIdempotencyRecord?>(x); _records[k]=new CompleteDeliveryIdempotencyRecord(key,fp,new CompleteDeliveryResult(Guid.Empty,Guid.Empty)); return Task.FromResult<CompleteDeliveryIdempotencyRecord?>(null); }
-        public Task CompleteAsync(Guid actorId,string operation,string key,CompleteDeliveryResult result,CancellationToken ct){var k=Key(actorId,operation,key);_records[k]=_records[k] with {Result=result};return Task.CompletedTask;}
-        private static string Key(Guid actorId,string operation,string key)=>$"{actorId:N}|{operation}|{key}";
+        private readonly Dictionary<string, IdempotencyRecord> _records = new();
+
+        private static string Key(Guid scopeId, string operation, string key) =>
+            $"{scopeId:N}|{operation}|{key}";
+
+        public Task<IdempotencyRecord?> GetAsync(
+            Guid scopeId,
+            string operation,
+            string key,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(_records.TryGetValue(Key(scopeId, operation, key), out var record) ? record : null);
+
+        public Task<IdempotencyRecord?> ReserveAsync(
+            Guid scopeId,
+            string operation,
+            string key,
+            string fingerprint,
+            CancellationToken cancellationToken)
+        {
+            var recordKey = Key(scopeId, operation, key);
+            if (_records.TryGetValue(recordKey, out var existing))
+                return Task.FromResult<IdempotencyRecord?>(existing);
+
+            _records[recordKey] = new IdempotencyRecord(
+                scopeId,
+                operation,
+                key,
+                fingerprint,
+                IdempotencyStatus.Reserved,
+                null,
+                null,
+                null);
+
+            return Task.FromResult<IdempotencyRecord?>(null);
+        }
+
+        public Task CompleteAsync(
+            Guid scopeId,
+            string operation,
+            string key,
+            IdempotencyCompletion completion,
+            CancellationToken cancellationToken)
+        {
+            var recordKey = Key(scopeId, operation, key);
+            var existing = _records[recordKey];
+            _records[recordKey] = existing with
+            {
+                Status = IdempotencyStatus.Completed,
+                ResourceType = completion.ResourceType,
+                ResourceId = completion.ResourceId,
+                ResultPayload = completion.ResultPayload
+            };
+            return Task.CompletedTask;
+        }
     }
     private sealed class FakeUnitOfWork : ICompleteDeliveryUnitOfWork
     { public bool FailBeforeOperation {get;set;} public Task ExecuteAsync(Func<CancellationToken,Task> operation,CancellationToken ct){if(FailBeforeOperation)throw new InvalidOperationException("Simulated transaction failure.");return operation(ct);} }
