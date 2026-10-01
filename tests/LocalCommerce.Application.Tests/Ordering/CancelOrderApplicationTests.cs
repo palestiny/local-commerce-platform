@@ -1,4 +1,5 @@
 using LocalCommerce.Application.Ordering;
+using LocalCommerce.Application.Idempotency;
 using LocalCommerce.Application.Delivery;
 using DeliveryEntity=LocalCommerce.Domain.Delivery.Delivery;
 using DeliveryEntityStatus=LocalCommerce.Domain.Delivery.DeliveryStatus;
@@ -24,6 +25,25 @@ public sealed class CancelOrderApplicationTests
     private sealed class FakeOrderRepo:IOrderCancellationOrderRepository{private readonly OrderEntity o;public FakeOrderRepo(OrderEntity x)=>o=x;public Task<OrderEntity?> GetAsync(Guid id,CancellationToken ct)=>Task.FromResult<OrderEntity?>(o.Id==id?o:null);public Task SaveAsync(OrderEntity order,CancellationToken ct)=>Task.CompletedTask;}
     private sealed class FakeDeliveryRepo:ICancelOrderDeliveryRepository{private readonly DeliveryEntity? d;public FakeDeliveryRepo(DeliveryEntity? x)=>d=x;public Task<DeliveryEntity?> GetActiveByOrderIdAsync(Guid id,CancellationToken ct)=>Task.FromResult(d is not null&&d.OrderId==id&&d.Status is not DeliveryEntityStatus.Failed and not DeliveryEntityStatus.Cancelled and not DeliveryEntityStatus.Delivered?d:null);public Task SaveAsync(DeliveryEntity x,CancellationToken ct)=>Task.CompletedTask;}
     private sealed class FakeAuth:ICancelOrderAuthorization{public Task<bool> CanCancelAsync(Guid actorId,OrderEntity order,CancellationToken ct)=>Task.FromResult(true);}
-    private sealed class FakeIdem:ICancelOrderIdempotencyStore{readonly Dictionary<string,CancelOrderIdempotencyRecord> d=new();public Task<CancelOrderIdempotencyRecord?> GetAsync(Guid a,string o,string k,CancellationToken ct)=>Task.FromResult(d.TryGetValue(k,out var x)?x:null);public Task<CancelOrderIdempotencyRecord?> ReserveAsync(Guid a,string o,string k,string fp,CancellationToken ct){if(d.TryGetValue(k,out var x))return Task.FromResult<CancelOrderIdempotencyRecord?>(x);d[k]=new(k,fp,new CancelOrderResult(Guid.Empty,null));return Task.FromResult<CancelOrderIdempotencyRecord?>(null);}public Task CompleteAsync(Guid a,string o,string k,CancelOrderResult r,CancellationToken ct){d[k]=d[k] with{Result=r};return Task.CompletedTask;}}
+    private sealed class FakeIdem : IIdempotencyStore
+    {
+        private readonly Dictionary<string, IdempotencyRecord> _records = new();
+        private static string Key(Guid scopeId, string operation, string key) => $"{scopeId:N}|{operation}|{key}";
+        public Task<IdempotencyRecord?> GetAsync(Guid scopeId,string operation,string key,CancellationToken ct) =>
+            Task.FromResult(_records.TryGetValue(Key(scopeId,operation,key),out var x)?x:null);
+        public Task<IdempotencyRecord?> ReserveAsync(Guid scopeId,string operation,string key,string fingerprint,CancellationToken ct)
+        {
+            var k=Key(scopeId,operation,key);
+            if(_records.TryGetValue(k,out var x)) return Task.FromResult<IdempotencyRecord?>(x);
+            _records[k]=new IdempotencyRecord(scopeId,operation,key,fingerprint,IdempotencyStatus.Reserved,null,null,null);
+            return Task.FromResult<IdempotencyRecord?>(null);
+        }
+        public Task CompleteAsync(Guid scopeId,string operation,string key,IdempotencyCompletion completion,CancellationToken ct)
+        {
+            var k=Key(scopeId,operation,key); var x=_records[k];
+            _records[k]=x with { Status=IdempotencyStatus.Completed, ResourceType=completion.ResourceType, ResourceId=completion.ResourceId, ResultPayload=completion.ResultPayload };
+            return Task.CompletedTask;
+        }
+    }
     private sealed class FakeUow:ICancelOrderUnitOfWork{public bool FailBeforeOperation{get;set;}public Task ExecuteAsync(Func<CancellationToken,Task> op,CancellationToken ct){if(FailBeforeOperation)throw new InvalidOperationException("Simulated transaction failure.");return op(ct);}}
 }
