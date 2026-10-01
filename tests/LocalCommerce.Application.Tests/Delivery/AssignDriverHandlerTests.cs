@@ -1,4 +1,5 @@
 using LocalCommerce.Application.Delivery;
+using LocalCommerce.Application.Idempotency;
 using LocalCommerce.Domain;
 using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
 using DriverEntity = LocalCommerce.Domain.Delivery.Driver;
@@ -204,47 +205,60 @@ public sealed class AssignDriverHandlerTests
             Task.FromResult(Allowed);
     }
 
-    private sealed class FakeIdempotencyStore : IAssignDriverIdempotencyStore
+    private sealed class FakeIdempotencyStore : IIdempotencyStore
     {
-        private readonly Dictionary<string, DriverAssignmentIdempotencyRecord> records = [];
+        private readonly Dictionary<string, IdempotencyRecord> _records = new();
 
-        public Task<DriverAssignmentIdempotencyRecord?> GetAsync(
-            Guid actorId,
+        private static string Key(Guid scopeId, string operation, string key) =>
+            $"{scopeId:N}|{operation}|{key}";
+
+        public Task<IdempotencyRecord?> GetAsync(
+            Guid scopeId,
             string operation,
             string key,
             CancellationToken cancellationToken) =>
-            Task.FromResult(
-                records.TryGetValue(key, out var record)
-                    ? record
-                    : null);
+            Task.FromResult(_records.TryGetValue(Key(scopeId, operation, key), out var record) ? record : null);
 
-        public Task<DriverAssignmentIdempotencyRecord?> ReserveAsync(
-            Guid actorId,
+        public Task<IdempotencyRecord?> ReserveAsync(
+            Guid scopeId,
             string operation,
             string key,
             string fingerprint,
             CancellationToken cancellationToken)
         {
-            if (records.TryGetValue(key, out var existing))
-                return Task.FromResult<DriverAssignmentIdempotencyRecord?>(existing);
+            var recordKey = Key(scopeId, operation, key);
+            if (_records.TryGetValue(recordKey, out var existing))
+                return Task.FromResult<IdempotencyRecord?>(existing);
 
-            records[key] = new DriverAssignmentIdempotencyRecord(
+            _records[recordKey] = new IdempotencyRecord(
+                scopeId,
+                operation,
                 key,
                 fingerprint,
-                new AssignDriverResult(Guid.Empty, Guid.Empty));
+                IdempotencyStatus.Reserved,
+                null,
+                null,
+                null);
 
-            return Task.FromResult<DriverAssignmentIdempotencyRecord?>(null);
+            return Task.FromResult<IdempotencyRecord?>(null);
         }
 
         public Task CompleteAsync(
-            Guid actorId,
+            Guid scopeId,
             string operation,
             string key,
-            AssignDriverResult result,
+            IdempotencyCompletion completion,
             CancellationToken cancellationToken)
         {
-            var existing = records[key];
-            records[key] = existing with { Result = result };
+            var recordKey = Key(scopeId, operation, key);
+            var existing = _records[recordKey];
+            _records[recordKey] = existing with
+            {
+                Status = IdempotencyStatus.Completed,
+                ResourceType = completion.ResourceType,
+                ResourceId = completion.ResourceId,
+                ResultPayload = completion.ResultPayload
+            };
             return Task.CompletedTask;
         }
     }
