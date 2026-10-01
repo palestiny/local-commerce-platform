@@ -1,3 +1,4 @@
+using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
 using LocalCommerce.Domain.Delivery;
 using LocalCommerce.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -26,7 +27,7 @@ public sealed class DeliveryPersistenceTests
         var storeId = Guid.NewGuid();
         var driverId = Guid.NewGuid();
 
-        var delivery = Delivery.Create(orderId, storeId);
+        var delivery = DeliveryEntity.Create(orderId, storeId);
         delivery.AssignDriver(driverId);
 
         await new EfDeliveryRepository(db).AddAsync(delivery, CancellationToken.None);
@@ -86,8 +87,8 @@ public sealed class DeliveryPersistenceTests
         var orderId = Guid.NewGuid();
         var storeId = Guid.NewGuid();
 
-        var first = Delivery.Create(orderId, storeId);
-        var second = Delivery.Create(orderId, storeId);
+        var first = DeliveryEntity.Create(orderId, storeId);
+        var second = DeliveryEntity.Create(orderId, storeId);
 
         await new EfDeliveryRepository(db).AddAsync(first, CancellationToken.None);
 
