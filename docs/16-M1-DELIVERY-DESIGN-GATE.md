@@ -584,3 +584,18 @@ ADR-009 accepts PostgreSQL row-level locking for M1 Delivery mutation commands.
 A real PostgreSQL persistence test now verifies that a second transactional Delivery load waits for the first writer and observes the committed state.
 
 Next: refactor command boundaries so mutable loads occur inside the Unit of Work, then verify concurrent assignment/state transitions, cancellation contention, and command idempotency against PostgreSQL.
+
+### PostgreSQL concurrency verification
+
+**Current status: PARTIAL GREEN — row-lock primitive verified; end-to-end command concurrency remains OPEN.**
+
+Verified after commit `e2bc8cf85878510f13dd5697a909b4876af98a10`:
+- CI run #264 (`36825487024`) completed successfully.
+- Delivery persistence test suite verifies a second PostgreSQL transaction waits while the first transaction holds the Delivery row lock, then observes the committed state.
+- Delivery mutation handlers now load mutable Delivery state inside the active Unit of Work for AssignDriver, ConfirmPickup, StartDelivery, CompleteDelivery, and FailDelivery.
+
+Still not proven GREEN:
+- concurrent execution of the application commands through real PostgreSQL persistence;
+- coordinated Order + Delivery cancellation contention and lock ordering;
+- replacement-delivery race behavior under PostgreSQL;
+- Delivery command idempotency persistence/concurrency boundary.
