@@ -72,6 +72,8 @@ public sealed class GeneralizedIdempotencyPersistenceTests
                 + "\"}"),
             default);
 
+        await db.SaveChangesAsync();
+
         var record = await store.GetAsync(scopeId, "AssignDriver", "key-2", default);
 
         Assert.NotNull(record);
