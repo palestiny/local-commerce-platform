@@ -1,4 +1,5 @@
 using LocalCommerce.Application.Delivery;
+using LocalCommerce.Application.Idempotency;
 using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
 using DeliveryEntityStatus = LocalCommerce.Domain.Delivery.DeliveryStatus;
 using Xunit;
@@ -189,55 +190,62 @@ public sealed class ConfirmPickupHandlerTests
             Task.FromResult(Allowed && delivery.DriverId == actorId);
     }
 
-    private sealed class FakeIdempotencyStore : IConfirmPickupIdempotencyStore
+    private sealed class FakeIdempotencyStore : IIdempotencyStore
     {
-        private readonly Dictionary<string, ConfirmPickupIdempotencyRecord> _records = new();
+        private readonly Dictionary<string, IdempotencyRecord> _records = new();
 
-        public Task<ConfirmPickupIdempotencyRecord?> GetAsync(
-            Guid actorId,
+        private static string Key(Guid scopeId, string operation, string key) =>
+            $"{scopeId:N}|{operation}|{key}";
+
+        public Task<IdempotencyRecord?> GetAsync(
+            Guid scopeId,
             string operation,
             string key,
             CancellationToken cancellationToken) =>
-            Task.FromResult(
-                _records.TryGetValue(BuildKey(actorId, operation, key), out var record)
-                    ? record
-                    : null);
+            Task.FromResult(_records.TryGetValue(Key(scopeId, operation, key), out var record) ? record : null);
 
-        public Task<ConfirmPickupIdempotencyRecord?> ReserveAsync(
-            Guid actorId,
+        public Task<IdempotencyRecord?> ReserveAsync(
+            Guid scopeId,
             string operation,
             string key,
             string fingerprint,
             CancellationToken cancellationToken)
         {
-            var recordKey = BuildKey(actorId, operation, key);
-
+            var recordKey = Key(scopeId, operation, key);
             if (_records.TryGetValue(recordKey, out var existing))
-                return Task.FromResult<ConfirmPickupIdempotencyRecord?>(existing);
+                return Task.FromResult<IdempotencyRecord?>(existing);
 
-            _records[recordKey] = new ConfirmPickupIdempotencyRecord(
+            _records[recordKey] = new IdempotencyRecord(
+                scopeId,
+                operation,
                 key,
                 fingerprint,
-                new ConfirmPickupResult(Guid.Empty, Guid.Empty));
+                IdempotencyStatus.Reserved,
+                null,
+                null,
+                null);
 
-            return Task.FromResult<ConfirmPickupIdempotencyRecord?>(null);
+            return Task.FromResult<IdempotencyRecord?>(null);
         }
 
         public Task CompleteAsync(
-            Guid actorId,
+            Guid scopeId,
             string operation,
             string key,
-            ConfirmPickupResult result,
+            IdempotencyCompletion completion,
             CancellationToken cancellationToken)
         {
-            var recordKey = BuildKey(actorId, operation, key);
-            var current = _records[recordKey];
-            _records[recordKey] = current with { Result = result };
+            var recordKey = Key(scopeId, operation, key);
+            var existing = _records[recordKey];
+            _records[recordKey] = existing with
+            {
+                Status = IdempotencyStatus.Completed,
+                ResourceType = completion.ResourceType,
+                ResourceId = completion.ResourceId,
+                ResultPayload = completion.ResultPayload
+            };
             return Task.CompletedTask;
         }
-
-        private static string BuildKey(Guid actorId, string operation, string key) =>
-            $"{actorId:N}|{operation}|{key}";
     }
 
     private sealed class FakeUnitOfWork : IConfirmPickupUnitOfWork
