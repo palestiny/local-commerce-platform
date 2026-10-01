@@ -3,6 +3,7 @@ using LocalCommerce.Domain.Delivery;
 using LocalCommerce.Domain.Ordering;
 using LocalCommerce.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Xunit;
 
 namespace LocalCommerce.Infrastructure.Tests.Delivery;
@@ -109,25 +110,19 @@ public sealed class DeliveryPersistenceTests
         locked!.AssignDriver(Guid.NewGuid());
         await firstRepository.SaveAsync(locked, CancellationToken.None);
 
-        var secondStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var secondRead = Task.Run(async () =>
-        {
-            await using var tx = await second.Database.BeginTransactionAsync();
-            secondStarted.SetResult();
-            var repository = new EfDeliveryRepository(second);
-            var observed = await repository.GetAsync(delivery.Id, CancellationToken.None);
-            await tx.CommitAsync();
-            return observed;
-        });
+        await second.Database.ExecuteSqlRawAsync("SET lock_timeout = '250ms'");
 
-        await secondStarted.Task;
-        await Task.Delay(50);
+        var secondRead = new EfDeliveryRepository(second);
+        var blockedRead = secondRead.GetAsync(delivery.Id, CancellationToken.None);
 
-        Assert.False(secondRead.IsCompleted);
+        await Assert.ThrowsAsync<Npgsql.PostgresException>(async () => await blockedRead);
 
         await firstTx.CommitAsync();
 
-        var reloaded = await secondRead;
+        await using var verifyTx = await second.Database.BeginTransactionAsync();
+        var reloaded = await secondRead.GetAsync(delivery.Id, CancellationToken.None);
+        await verifyTx.CommitAsync();
+
         Assert.NotNull(reloaded);
         Assert.Equal(DeliveryStatus.Assigned, reloaded!.Status);
     }
