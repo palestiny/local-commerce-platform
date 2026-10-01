@@ -43,5 +43,5 @@ public sealed class CancelOrderHandler{
   },ct);
   return result??throw new InvalidOperationException("Cancellation completed without a result.");
  }
- static CancelOrderResult Resolve(CancelOrderIdempotencyRecord x,string fp){if(x.Fingerprint!=fp)throw new CancelOrderRejectedException("Idempotency key was already used with a different request.");if(x.Result.OrderId==Guid.Empty)throw new CancelOrderRejectedException("Idempotency record is incomplete.");return x.Result;}
+ static CancelOrderResult Resolve(IdempotencyRecord x,string fp){if(!string.Equals(x.Fingerprint,fp,StringComparison.Ordinal))throw new CancelOrderRejectedException("Idempotency key was already used with a different request.");if(x.Status!=IdempotencyStatus.Completed||!string.Equals(x.ResourceType,"OrderCancellation",StringComparison.Ordinal)||x.ResourceId is null||string.IsNullOrWhiteSpace(x.ResultPayload))throw new CancelOrderRejectedException("Idempotency record is incomplete.");var result=System.Text.Json.JsonSerializer.Deserialize<CancelOrderResult>(x.ResultPayload);if(result is null||result.OrderId==Guid.Empty||result.OrderId!=x.ResourceId.Value)throw new CancelOrderRejectedException("Idempotency record is invalid.");return result;}
 }
