@@ -25,13 +25,6 @@ public interface IStartDeliveryAuthorization
     Task<bool> CanStartDeliveryAsync(Guid actorId, DeliveryEntity delivery, CancellationToken cancellationToken);
 }
 
-public interface IIdempotencyStore
-{
-    Task<StartDeliveryIdempotencyRecord?> GetAsync(Guid actorId, string operation, string key, CancellationToken cancellationToken);
-    Task<StartDeliveryIdempotencyRecord?> ReserveAsync(Guid actorId, string operation, string key, string fingerprint, CancellationToken cancellationToken);
-    Task CompleteAsync(Guid actorId, string operation, string key, StartDeliveryResult result, CancellationToken cancellationToken);
-}
-
 public interface IStartDeliveryUnitOfWork
 {
     Task ExecuteAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken);
