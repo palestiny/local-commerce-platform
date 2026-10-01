@@ -1,6 +1,6 @@
 # Foundation Review Checklist
 
-Status: **M1 CANCELLATION GREEN VERIFIED — NEXT: CUSTOMER COMPOSED READ**
+Status: **CUSTOMER COMPOSED READ GREEN VERIFIED — NEXT: DELIVERY PERSISTENCE + HISTORY**
 
 ## Review Scope
 
@@ -139,12 +139,25 @@ The cancellation GREEN result is domain/application verification using test doub
 
 ## Remaining M1 Work
 
-1. Customer-facing composed status/read model.
-2. Delivery persistence/schema and Delivery history.
-3. PostgreSQL concurrency verification for Delivery commands.
-4. API contracts/security and HTTP implementation.
-5. Operational control and pilot-readiness concerns.
+1. Delivery persistence/schema and Delivery history.
+2. PostgreSQL concurrency verification for Delivery commands.
+3. API contracts/security and HTTP implementation.
+4. Operational control and pilot-readiness concerns.
 
 ## Next Step
 
 Start TDD RED for the Customer Composed Read. Keep HTTP/API implementation sequenced after the domain/application and persistence boundaries are proven.
+
+
+### Customer Composed Read
+
+- **GREEN VERIFIED**
+- Commit `e630684b46b8b84dd7674a948db6444d3785519a`.
+- CI run `36785578476` (#220), job `110126060648`.
+- `Test` and `Migration and recovery smoke test` both passed.
+- Verification covers customer ownership, optional Delivery composition, missing Order behavior, and non-mutating read semantics.
+- Verification boundary: application/domain test doubles; Delivery PostgreSQL read/persistence/history/concurrency remain unproven.
+
+## Next M1 Boundary
+
+**Delivery persistence + append-only DeliveryStatusHistory** is now the next implementation boundary. HTTP/API remains deferred until persistence and concurrency semantics are proven.
