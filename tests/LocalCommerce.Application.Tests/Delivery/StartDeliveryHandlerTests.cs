@@ -1,4 +1,5 @@
 using LocalCommerce.Application.Delivery;
+using LocalCommerce.Application.Idempotency;
 using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
 using DeliveryEntityStatus = LocalCommerce.Domain.Delivery.DeliveryStatus;
 using Xunit;
@@ -156,35 +157,62 @@ public sealed class StartDeliveryHandlerTests
             Task.FromResult(Allowed && delivery.DriverId == actorId);
     }
 
-    private sealed class FakeIdempotencyStore : IStartDeliveryIdempotencyStore
+    private sealed class FakeIdempotencyStore : IIdempotencyStore
     {
-        private readonly Dictionary<string, StartDeliveryIdempotencyRecord> _records = new();
+        private readonly Dictionary<string, IdempotencyRecord> _records = new();
 
-        public Task<StartDeliveryIdempotencyRecord?> GetAsync(
-            Guid actorId, string operation, string key, CancellationToken cancellationToken) =>
-            Task.FromResult(_records.TryGetValue(Key(actorId, operation, key), out var record) ? record : null);
+        private static string Key(Guid scopeId, string operation, string key) =>
+            $"{scopeId:N}|{operation}|{key}";
 
-        public Task<StartDeliveryIdempotencyRecord?> ReserveAsync(
-            Guid actorId, string operation, string key, string fingerprint, CancellationToken cancellationToken)
+        public Task<IdempotencyRecord?> GetAsync(
+            Guid scopeId,
+            string operation,
+            string key,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(_records.TryGetValue(Key(scopeId, operation, key), out var record) ? record : null);
+
+        public Task<IdempotencyRecord?> ReserveAsync(
+            Guid scopeId,
+            string operation,
+            string key,
+            string fingerprint,
+            CancellationToken cancellationToken)
         {
-            var k = Key(actorId, operation, key);
-            if (_records.TryGetValue(k, out var existing))
-                return Task.FromResult<StartDeliveryIdempotencyRecord?>(existing);
+            var recordKey = Key(scopeId, operation, key);
+            if (_records.TryGetValue(recordKey, out var existing))
+                return Task.FromResult<IdempotencyRecord?>(existing);
 
-            _records[k] = new StartDeliveryIdempotencyRecord(
-                key, fingerprint, new StartDeliveryResult(Guid.Empty, Guid.Empty));
-            return Task.FromResult<StartDeliveryIdempotencyRecord?>(null);
+            _records[recordKey] = new IdempotencyRecord(
+                scopeId,
+                operation,
+                key,
+                fingerprint,
+                IdempotencyStatus.Reserved,
+                null,
+                null,
+                null);
+
+            return Task.FromResult<IdempotencyRecord?>(null);
         }
 
         public Task CompleteAsync(
-            Guid actorId, string operation, string key, StartDeliveryResult result, CancellationToken cancellationToken)
+            Guid scopeId,
+            string operation,
+            string key,
+            IdempotencyCompletion completion,
+            CancellationToken cancellationToken)
         {
-            var k = Key(actorId, operation, key);
-            _records[k] = _records[k] with { Result = result };
+            var recordKey = Key(scopeId, operation, key);
+            var existing = _records[recordKey];
+            _records[recordKey] = existing with
+            {
+                Status = IdempotencyStatus.Completed,
+                ResourceType = completion.ResourceType,
+                ResourceId = completion.ResourceId,
+                ResultPayload = completion.ResultPayload
+            };
             return Task.CompletedTask;
         }
-
-        private static string Key(Guid actorId, string operation, string key) => $"{actorId:N}|{operation}|{key}";
     }
 
     private sealed class FakeUnitOfWork : IStartDeliveryUnitOfWork
