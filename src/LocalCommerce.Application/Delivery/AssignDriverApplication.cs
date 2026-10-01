@@ -1,4 +1,5 @@
 using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
+using LocalCommerce.Application.Idempotency;
 using DriverEntity = LocalCommerce.Domain.Delivery.Driver;
 
 namespace LocalCommerce.Application.Delivery;
@@ -12,8 +13,6 @@ public sealed record AssignDriverCommand(
 public sealed record AssignDriverResult(
     Guid DeliveryId,
     Guid DriverId);
-
-public sealed record DriverAssignmentIdempotencyRecord(
     string Key,
     string Fingerprint,
     AssignDriverResult Result);
@@ -42,7 +41,7 @@ public interface IAssignDriverAuthorization
         CancellationToken cancellationToken);
 }
 
-public interface IAssignDriverIdempotencyStore
+public interface IIdempotencyStore
 {
     Task<DriverAssignmentIdempotencyRecord?> GetAsync(
         Guid actorId,
@@ -175,9 +174,7 @@ public sealed class AssignDriverHandler
             await IdempotencyStore.CompleteAsync(
                 command.ActorId,
                 Operation,
-                command.IdempotencyKey,
-                result,
-                transactionCancellationToken);
+                command.IdempotencyKey, new IdempotencyCompletion("DeliveryAssignment", result.DeliveryId, System.Text.Json.JsonSerializer.Serialize(result)), transactionCancellationToken);
         }, cancellationToken);
 
         return result ?? throw new InvalidOperationException(
@@ -190,14 +187,12 @@ public sealed class AssignDriverHandler
                 System.Text.Encoding.UTF8.GetBytes(
                     $"{command.DeliveryId:N}|{command.DriverId:N}|{command.ActorId:N}")));
 
-    private static AssignDriverResult ValidateExisting(
-        DriverAssignmentIdempotencyRecord existing,
-        string fingerprint)
+    private static AssignDriverResult ValidateExisting(IdempotencyRecord existing, string fingerprint)
     {
-        if (!string.Equals(existing.Fingerprint, fingerprint, StringComparison.Ordinal))
-            throw new AssignDriverRejectedException(
-                "The idempotency key was already used with a different request.");
-
-        return existing.Result;
+        if (!string.Equals(existing.Fingerprint, fingerprint, StringComparison.Ordinal)) throw new AssignDriverRejectedException("The idempotency key was already used with a different request.");
+        if (existing.Status != IdempotencyStatus.Completed || !string.Equals(existing.ResourceType, "DeliveryAssignment", StringComparison.Ordinal) || existing.ResourceId is null || string.IsNullOrWhiteSpace(existing.ResultPayload)) throw new AssignDriverRejectedException("Idempotency record is incomplete.");
+        var result = System.Text.Json.JsonSerializer.Deserialize<AssignDriverResult>(existing.ResultPayload);
+        if (result is null || result.DeliveryId == Guid.Empty || result.DriverId == Guid.Empty || result.DeliveryId != existing.ResourceId.Value) throw new AssignDriverRejectedException("Idempotency record is invalid.");
+        return result;
     }
 }
