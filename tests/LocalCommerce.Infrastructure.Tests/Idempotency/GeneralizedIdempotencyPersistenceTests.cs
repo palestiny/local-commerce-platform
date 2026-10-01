@@ -50,6 +50,27 @@ public sealed class GeneralizedIdempotencyPersistenceTests
     }
 
     [Fact]
+    public async Task Reusing_a_key_with_a_different_fingerprint_returns_the_original_record()
+    {
+        await using var db = CreateDb();
+        await DatabaseInitializer.InitializeAsync(db);
+        await ResetAsync(db);
+
+        var store = new EfGeneralizedIdempotencyStore(db);
+        var scopeId = Guid.NewGuid();
+
+        Assert.Null(await store.ReserveAsync(
+            scopeId, "AssignDriver", "fingerprint-key", "fingerprint-a", default));
+
+        var existing = await store.ReserveAsync(
+            scopeId, "AssignDriver", "fingerprint-key", "fingerprint-b", default);
+
+        Assert.NotNull(existing);
+        Assert.Equal("fingerprint-a", existing.Fingerprint);
+        Assert.Equal(IdempotencyStatus.Reserved, existing.Status);
+    }
+
+    [Fact]
     public async Task Completion_stores_resource_reference_and_result_payload()
     {
         await using var db = CreateDb();
