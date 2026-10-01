@@ -118,9 +118,22 @@ public sealed class GeneralizedIdempotencyPersistenceTests
         var a = new EfGeneralizedIdempotencyStore(db1);
         var b = new EfGeneralizedIdempotencyStore(db2);
 
-        var results = await Task.WhenAll(
-            a.ReserveAsync(scopeId, "CompleteDelivery", "race-key", "fingerprint", default),
-            b.ReserveAsync(scopeId, "CompleteDelivery", "race-key", "fingerprint", default));
+        await using var tx1 = await db1.Database.BeginTransactionAsync();
+        await using var tx2 = await db2.Database.BeginTransactionAsync();
+
+        var task1 = a.ReserveAsync(scopeId, "CompleteDelivery", "race-key", "fingerprint", default);
+        var task2 = b.ReserveAsync(scopeId, "CompleteDelivery", "race-key", "fingerprint", default);
+
+        var resultsTask = Task.WhenAll(task1, task2);
+
+        await Task.WhenAny(task1, task2);
+        Assert.False(resultsTask.IsCompleted);
+
+        await tx1.CommitAsync();
+
+        var results = await resultsTask;
+
+        await tx2.CommitAsync();
 
         Assert.Equal(1, results.Count(x => x is null));
         Assert.Equal(1, results.Count(x => x is not null));
