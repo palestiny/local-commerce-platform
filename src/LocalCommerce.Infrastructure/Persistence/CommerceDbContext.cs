@@ -9,7 +9,7 @@ public sealed class CommerceDbContext : DbContext
     public CommerceDbContext(DbContextOptions<CommerceDbContext> options) : base(options) { }
     public DbSet<OrderEntity> Orders => Set<OrderEntity>();
     public DbSet<OrderItemEntity> OrderItems => Set<OrderItemEntity>();
-    public DbSet<IdempotencyEntity> IdempotencyRecords => Set<IdempotencyEntity>();
+    public DbSet<GeneralizedIdempotencyEntity> IdempotencyRecords => Set<GeneralizedIdempotencyEntity>();
     public DbSet<StoreEntity> Stores => Set<StoreEntity>();
     public DbSet<ProductEntity> Products => Set<ProductEntity>();
     public DbSet<CartEntity> Carts => Set<CartEntity>();
@@ -43,16 +43,18 @@ public sealed class CommerceDbContext : DbContext
             e.Property(x => x.LineTotal).HasPrecision(18, 2).IsRequired();
         });
 
-        m.Entity<IdempotencyEntity>(e =>
+        m.Entity<GeneralizedIdempotencyEntity>(e =>
         {
             e.ToTable("IdempotencyRecords");
             e.HasKey(x => x.Id);
+            e.Property(x => x.ScopeId).IsRequired();
             e.Property(x => x.Operation).HasMaxLength(128).IsRequired();
             e.Property(x => x.IdempotencyKey).HasMaxLength(256).IsRequired();
             e.Property(x => x.RequestFingerprint).HasMaxLength(128).IsRequired();
-            e.Property(x => x.OrderNumber).HasMaxLength(64);
-            e.HasOne(x => x.Order).WithMany().HasForeignKey(x => x.OrderId).OnDelete(DeleteBehavior.Restrict);
-            e.HasIndex(x => new { x.CustomerId, x.Operation, x.IdempotencyKey }).IsUnique();
+            e.Property(x => x.Status).HasConversion<string>().HasMaxLength(32).IsRequired();
+            e.Property(x => x.ResourceType).HasMaxLength(128);
+            e.Property(x => x.ResultPayload);
+            e.HasIndex(x => new { x.ScopeId, x.Operation, x.IdempotencyKey }).IsUnique();
         });
 
         m.Entity<StoreEntity>(e =>
@@ -146,16 +148,17 @@ public sealed class OrderItemEntity
     public decimal LineTotal { get; set; }
 }
 
-public sealed class IdempotencyEntity
+public sealed class GeneralizedIdempotencyEntity
 {
     public Guid Id { get; set; }
-    public Guid CustomerId { get; set; }
+    public Guid ScopeId { get; set; }
     public string Operation { get; set; } = null!;
     public string IdempotencyKey { get; set; } = null!;
     public string RequestFingerprint { get; set; } = null!;
-    public Guid? OrderId { get; set; }
-    public OrderEntity? Order { get; set; }
-    public string? OrderNumber { get; set; }
+    public IdempotencyStatus Status { get; set; }
+    public string? ResourceType { get; set; }
+    public Guid? ResourceId { get; set; }
+    public string? ResultPayload { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? CompletedAt { get; set; }
 }
