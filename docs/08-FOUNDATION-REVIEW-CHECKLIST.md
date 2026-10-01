@@ -1,6 +1,6 @@
 # Foundation Review Checklist
 
-Status: **CUSTOMER COMPOSED READ GREEN VERIFIED — NEXT: DELIVERY PERSISTENCE + HISTORY**
+Status: **DELIVERY PERSISTENCE + HISTORY GREEN VERIFIED — NEXT: POSTGRESQL CONCURRENCY**
 
 ## Review Scope
 
@@ -139,8 +139,7 @@ The cancellation GREEN result is domain/application verification using test doub
 
 ## Remaining M1 Work
 
-1. Delivery persistence/schema and Delivery history.
-2. PostgreSQL concurrency verification for Delivery commands.
+1. PostgreSQL concurrency verification for Delivery commands.
 3. API contracts/security and HTTP implementation.
 4. Operational control and pilot-readiness concerns.
 
@@ -161,3 +160,20 @@ Start TDD RED for the Customer Composed Read. Keep HTTP/API implementation seque
 ## Next M1 Boundary
 
 **Delivery persistence + append-only DeliveryStatusHistory** is now the next implementation boundary. HTTP/API remains deferred until persistence and concurrency semantics are proven.
+
+
+### Delivery Persistence + History
+
+- **GREEN VERIFIED**
+- Commit `e3cc70567db20e0e051d01128eb569d9c282fcb4`.
+- CI run `36822196856` (#240), job `110239982378`.
+- `Test` and `Migration and recovery smoke test` both passed.
+- Delivery current-state persistence and reload verified.
+- DeliveryStatusHistory append/read verified with transition metadata.
+- PostgreSQL partial unique index verified by rejecting a second active Delivery for the same Order.
+- Database trigger enforces append-only DeliveryStatusHistory by rejecting UPDATE/DELETE.
+- Verification boundary: basic persistence only; command concurrency remains next.
+
+## Next M1 Boundary
+
+**PostgreSQL concurrency verification** is now the next implementation boundary. The target is real concurrent command behavior, not only application test doubles.
