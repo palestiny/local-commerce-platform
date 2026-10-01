@@ -1,6 +1,6 @@
 # M1 Delivery Vertical Slice Design Gate
 
-Status: **CUSTOMER COMPOSED READ GREEN VERIFIED — NEXT: DELIVERY PERSISTENCE + HISTORY**
+Status: **DELIVERY PERSISTENCE + HISTORY GREEN VERIFIED — NEXT: POSTGRESQL CONCURRENCY**
 
 ## Objective
 
@@ -550,3 +550,20 @@ GitHub Actions run `36785578476` (#220), job `110126060648`, commit `e630684b46b
 This proves the application/domain contract using the current test-double repositories. It does **not** yet prove the Delivery PostgreSQL read path, Delivery persistence schema, Delivery history persistence, or database concurrency.
 
 Next boundary: Delivery persistence + append-only DeliveryStatusHistory, followed by real PostgreSQL concurrency verification.
+
+
+## Updated Delivery Persistence + History Verification — 2026-10-01
+
+**Status: GREEN VERIFIED.**
+
+Delivery persistence is now implemented and verified against real PostgreSQL. The persistence boundary covers current Delivery state, active-Delivery lookup, append-only DeliveryStatusHistory, and the database-enforced rule that only one active Delivery can exist for an Order.
+
+The schema includes a partial unique index on active Delivery states. DeliveryStatusHistory is protected by a database trigger that rejects UPDATE/DELETE, preserving append-only semantics at the persistence boundary.
+
+GitHub Actions run `36822196856` (#240), job `110239982378`, commit `e3cc70567db20e0e051d01128eb569d9c282fcb4`: `Test` and `Migration and recovery smoke test` both passed.
+
+### Verification boundary
+
+This proves Delivery persistence/schema and basic history persistence against PostgreSQL. It does **not** yet prove concurrent Delivery commands, concurrent assignment, coordinated cancellation under database contention, or end-to-end history creation for every application command.
+
+Next boundary: PostgreSQL concurrency verification for Delivery commands and active-Delivery invariants under contention.
