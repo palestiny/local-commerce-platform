@@ -1,3 +1,4 @@
+using LocalCommerce.Application.Idempotency;
 using LocalCommerce.Domain.Ordering;
 
 namespace LocalCommerce.Application.Ordering.CreateOrder;
@@ -60,34 +61,6 @@ public interface IProductReader
 public interface IOrderWriter
 {
     Task AddAsync(Order order, string orderNumber, CancellationToken cancellationToken);
-}
-
-public sealed record IdempotencyRecord(
-    string Key,
-    string Fingerprint,
-    CreateOrderResult Result);
-
-public interface IIdempotencyStore
-{
-    Task<IdempotencyRecord?> GetAsync(
-        Guid customerId,
-        string operation,
-        string key,
-        CancellationToken cancellationToken);
-
-    Task<IdempotencyRecord?> ReserveAsync(
-        Guid customerId,
-        string operation,
-        string key,
-        string fingerprint,
-        CancellationToken cancellationToken);
-
-    Task CompleteAsync(
-        Guid customerId,
-        string operation,
-        string key,
-        CreateOrderResult result,
-        CancellationToken cancellationToken);
 }
 
 public interface ICreateOrderUnitOfWork
@@ -256,7 +229,10 @@ public sealed class CreateOrderHandler
                 command.CustomerId,
                 Operation,
                 command.IdempotencyKey,
-                result,
+                new IdempotencyCompletion(
+                    "Order",
+                    result.OrderId,
+                    System.Text.Json.JsonSerializer.Serialize(result)),
                 transactionCancellationToken);
         }, cancellationToken);
 
