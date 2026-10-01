@@ -5,7 +5,6 @@ public sealed record CreateReplacementDeliveryCommand(Guid OrderId,Guid StoreId,
 public sealed record CreateReplacementDeliveryResult(Guid DeliveryId);public sealed class CreateReplacementDeliveryRejectedException:Exception{public CreateReplacementDeliveryRejectedException(string m):base(m){}}
 public interface ICreateReplacementDeliveryRepository{Task<DeliveryEntity?> GetActiveByOrderIdAsync(Guid orderId,CancellationToken ct);Task AddAsync(DeliveryEntity delivery,CancellationToken ct);}
 public interface IReplacementDeliveryEligibility{Task<bool> IsOrderEligibleAsync(Guid orderId,CancellationToken ct);}
-public interface IIdempotencyStore{Task<CreateReplacementDeliveryIdempotencyRecord?> GetAsync(Guid actorId,string operation,string key,CancellationToken ct);Task<CreateReplacementDeliveryIdempotencyRecord?> ReserveAsync(Guid actorId,string operation,string key,string fingerprint,CancellationToken ct);Task CompleteAsync(Guid actorId,string operation,string key,CreateReplacementDeliveryResult result,CancellationToken ct);}
 public interface ICreateReplacementDeliveryUnitOfWork{Task ExecuteAsync(Func<CancellationToken,Task> operation,CancellationToken ct);}
 public sealed class CreateReplacementDeliveryHandler{
  const string Operation="CreateReplacementDelivery";readonly ICreateReplacementDeliveryRepository _r;readonly IReplacementDeliveryEligibility _e;readonly ICreateReplacementDeliveryIdempotencyStore _i;readonly ICreateReplacementDeliveryUnitOfWork _u;
