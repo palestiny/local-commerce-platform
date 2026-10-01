@@ -32,18 +32,16 @@ public sealed class EfOrderWriter(CommerceDbContext db) : IOrderWriter
     }
 }
 
-public sealed class EfIdempotencyStore(
-    CommerceDbContext db,
-    LocalCommerce.Infrastructure.Persistence.EfGeneralizedIdempotencyStore generalized)
-    : IIdempotencyStore
+public sealed class EfIdempotencyStore(CommerceDbContext db) : IIdempotencyStore
 {
+    private EfGeneralizedIdempotencyStore Generalized => new(db);
     public async Task<IdempotencyRecord?> GetAsync(
         Guid customerId,
         string operation,
         string key,
         CancellationToken cancellationToken)
     {
-        var record = await generalized.GetAsync(customerId, operation, key, cancellationToken);
+        var record = await Generalized.GetAsync(customerId, operation, key, cancellationToken);
 
         if (record is null || record.Status != LocalCommerce.Application.Idempotency.IdempotencyStatus.Completed)
             return null;
@@ -58,7 +56,7 @@ public sealed class EfIdempotencyStore(
         string fingerprint,
         CancellationToken cancellationToken)
     {
-        var record = await generalized.ReserveAsync(
+        var record = await Generalized.ReserveAsync(
             customerId, operation, key, fingerprint, cancellationToken);
 
         if (record is null)
@@ -80,7 +78,7 @@ public sealed class EfIdempotencyStore(
     {
         var payload = System.Text.Json.JsonSerializer.Serialize(result);
 
-        return generalized.CompleteAsync(
+        return Generalized.CompleteAsync(
             customerId,
             operation,
             key,
