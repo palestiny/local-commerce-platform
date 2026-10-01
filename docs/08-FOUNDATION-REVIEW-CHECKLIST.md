@@ -204,3 +204,12 @@ Still not proven GREEN:
 - coordinated Order + Delivery cancellation contention and lock ordering;
 - replacement-delivery race behavior under PostgreSQL;
 - Delivery command idempotency persistence/concurrency boundary.
+
+
+## ADR-010 Acceptance Boundary
+
+**Status: ACCEPTED — implementation next**
+
+Generalized command idempotency persistence is now approved. The next implementation slice must evolve the Order-specific persistence model into a resource-neutral record before claiming PostgreSQL Delivery command concurrency GREEN.
+
+Required verification: reservation race, replay, fingerprint conflict, transactional completion, rollback, concurrent mutation, and migration/recovery smoke test.
