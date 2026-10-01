@@ -49,7 +49,7 @@ public sealed class DeliveryPersistenceTests
         await using var db = CreateDb();
         await DatabaseInitializer.InitializeAsync(db);
 
-        var delivery = Delivery.Create(Guid.NewGuid(), Guid.NewGuid());
+        var delivery = DeliveryEntity.Create(Guid.NewGuid(), Guid.NewGuid());
         await new EfDeliveryRepository(db).AddAsync(delivery, CancellationToken.None);
 
         var history = new DeliveryStatusHistoryEntry(
