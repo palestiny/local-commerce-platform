@@ -253,6 +253,18 @@ public sealed class CreateOrderHandler
             throw new CreateOrderRejectedException(
                 "The idempotency key was already used with a different request.");
 
-        return existing.Result;
+        if (existing.Status != IdempotencyStatus.Completed
+            || existing.ResourceType != "Order"
+            || existing.ResourceId is null
+            || string.IsNullOrWhiteSpace(existing.ResultPayload))
+            throw new CreateOrderRejectedException(
+                "The idempotency key is currently reserved and has no completed result.");
+
+        var result = System.Text.Json.JsonSerializer.Deserialize<CreateOrderResult>(
+            existing.ResultPayload);
+
+        return result
+            ?? throw new InvalidOperationException(
+                "Completed Create Order idempotency result is invalid.");
     }
 }
