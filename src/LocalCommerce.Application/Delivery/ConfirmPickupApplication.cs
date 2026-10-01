@@ -34,29 +34,6 @@ public interface IConfirmPickupAuthorization
         CancellationToken cancellationToken);
 }
 
-public interface IIdempotencyStore
-{
-    Task<ConfirmPickupIdempotencyRecord?> GetAsync(
-        Guid actorId,
-        string operation,
-        string key,
-        CancellationToken cancellationToken);
-
-    Task<ConfirmPickupIdempotencyRecord?> ReserveAsync(
-        Guid actorId,
-        string operation,
-        string key,
-        string fingerprint,
-        CancellationToken cancellationToken);
-
-    Task CompleteAsync(
-        Guid actorId,
-        string operation,
-        string key,
-        ConfirmPickupResult result,
-        CancellationToken cancellationToken);
-}
-
 public interface IConfirmPickupUnitOfWork
 {
     Task ExecuteAsync(
