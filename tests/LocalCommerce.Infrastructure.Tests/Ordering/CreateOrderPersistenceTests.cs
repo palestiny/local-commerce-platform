@@ -1,3 +1,4 @@
+using LocalCommerce.Application.Idempotency;
 using LocalCommerce.Application.Ordering.CreateOrder;
 using LocalCommerce.Domain.Ordering;
 using LocalCommerce.Infrastructure;
@@ -39,7 +40,7 @@ public sealed class CreateOrderPersistenceTests
 
     private static CreateOrderHandler Handler(CommerceDbContext db, ICartCheckout? checkout=null, IOrderWriter? writer=null, IOrderNumberGenerator? generator=null)
         => new(new EfCartReader(db),checkout??new EfCartCheckout(db),new EfStoreReader(db),new EfProductReader(db),
-            writer??new EfOrderWriter(db),new EfIdempotencyStore(db),new EfCreateOrderUnitOfWork(db),
+            writer??new EfOrderWriter(db),new EfGeneralizedIdempotencyStore(db),new EfCreateOrderUnitOfWork(db),
             generator??new SequentialOrderNumberGenerator());
 
     [Fact]
