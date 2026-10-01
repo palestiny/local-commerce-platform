@@ -91,7 +91,25 @@ public sealed class EfDeliveryRepository(CommerceDbContext db) : IDeliveryReposi
 
     public async Task<Delivery?> GetAsync(Guid deliveryId, CancellationToken cancellationToken)
     {
-        var entity = await db.Deliveries.AsNoTracking().SingleOrDefaultAsync(x => x.Id == deliveryId, cancellationToken);
+        IQueryable<DeliveryEntity> query = db.Deliveries.AsNoTracking();
+
+        // Mutable command loads occur inside an active transaction. In that case
+        // serialize competing state transitions at the PostgreSQL row boundary.
+        if (db.Database.CurrentTransaction is not null)
+        {
+            query = query.FromSqlInterpolated($"""
+                SELECT *
+                FROM "Deliveries"
+                WHERE "Id" = {deliveryId}
+                FOR UPDATE
+                """);
+        }
+        else
+        {
+            query = query.Where(x => x.Id == deliveryId);
+        }
+
+        var entity = await query.SingleOrDefaultAsync(cancellationToken);
         return entity is null ? null : ToDomain(entity);
     }
 
