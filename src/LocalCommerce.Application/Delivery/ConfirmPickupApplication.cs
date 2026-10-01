@@ -71,7 +71,7 @@ public sealed class ConfirmPickupHandler
     public ConfirmPickupHandler(
         IConfirmPickupDeliveryRepository deliveryRepository,
         IConfirmPickupAuthorization authorization,
-        IConfirmPickupIdempotencyStore idempotencyStore,
+        IIdempotencyStore idempotencyStore,
         IConfirmPickupUnitOfWork unitOfWork)
     {
         DeliveryRepository = deliveryRepository;
@@ -82,7 +82,7 @@ public sealed class ConfirmPickupHandler
 
     private IConfirmPickupDeliveryRepository DeliveryRepository { get; }
     private IConfirmPickupAuthorization Authorization { get; }
-    private IConfirmPickupIdempotencyStore IdempotencyStore { get; }
+    private IIdempotencyStore IdempotencyStore { get; }
     private IConfirmPickupUnitOfWork UnitOfWork { get; }
 
     public async Task<ConfirmPickupResult> HandleAsync(
