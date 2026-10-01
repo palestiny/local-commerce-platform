@@ -10,6 +10,7 @@
 | ADR-006 | Availability-based MVP inventory | ACCEPTED | Avoids building ERP before validating commerce transaction. |
 | ADR-007 | Strict separation of Order and Delivery state authority | ACCEPTED | Order owns commercial state; Delivery owns fulfillment state, avoiding duplicate mutable sources of truth. |
 | ADR-008 | EF Core + PostgreSQL for M0 persistence | ACCEPTED | Reliable relational transactions, constraints, migrations, and concurrency verification without unnecessary infrastructure complexity. |
+| ADR-009 | PostgreSQL row-level locking for Delivery command concurrency | ACCEPTED | Short Delivery state-transition transactions are serialized at the database row boundary; optimistic concurrency remains deferred until measured need. |
 
 ## Required Decision Record
 For every significant decision record:
