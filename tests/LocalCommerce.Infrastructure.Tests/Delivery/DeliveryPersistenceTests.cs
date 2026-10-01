@@ -110,12 +110,18 @@ public sealed class DeliveryPersistenceTests
         locked!.AssignDriver(Guid.NewGuid());
         await firstRepository.SaveAsync(locked, CancellationToken.None);
 
-        await second.Database.ExecuteSqlRawAsync("SET lock_timeout = '250ms'");
         await using var secondTx = await second.Database.BeginTransactionAsync();
+        await second.Database.ExecuteSqlRawAsync("SET LOCAL lock_timeout = '250ms'");
+        second.Database.SetCommandTimeout(2);
 
         var secondRead = new EfDeliveryRepository(second);
-        await Assert.ThrowsAsync<Npgsql.PostgresException>(() =>
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             secondRead.GetAsync(delivery.Id, CancellationToken.None));
+
+        Assert.Contains(
+            "Timeout",
+            exception.ToString(),
+            StringComparison.OrdinalIgnoreCase);
 
         await secondTx.RollbackAsync();
         await firstTx.CommitAsync();
