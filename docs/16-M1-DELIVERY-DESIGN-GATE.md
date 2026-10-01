@@ -567,3 +567,20 @@ GitHub Actions run `36822196856` (#240), job `110239982378`, commit `e3cc70567db
 This proves Delivery persistence/schema and basic history persistence against PostgreSQL. It does **not** yet prove concurrent Delivery commands, concurrent assignment, coordinated cancellation under database contention, or end-to-end history creation for every application command.
 
 Next boundary: PostgreSQL concurrency verification for Delivery commands and active-Delivery invariants under contention.
+
+
+## Updated Delivery Concurrency Strategy — 2026-10-01
+
+**Status: STRATEGY ACCEPTED — END-TO-END COMMAND CONCURRENCY STILL OPEN.**
+
+ADR-009 accepts PostgreSQL row-level locking for M1 Delivery mutation commands.
+
+- Mutable Delivery loads inside an active mutation transaction use `SELECT FOR UPDATE`.
+- The transaction must begin before the mutable Delivery load.
+- Read-only customer queries remain non-locking.
+- The existing active-Delivery partial unique index remains the database backstop.
+- End-to-end command concurrency is not yet GREEN because current application handlers still contain pre-transaction Delivery loads and Delivery command idempotency persistence is not yet proven against PostgreSQL.
+
+A real PostgreSQL persistence test now verifies that a second transactional Delivery load waits for the first writer and observes the committed state.
+
+Next: refactor command boundaries so mutable loads occur inside the Unit of Work, then verify concurrent assignment/state transitions, cancellation contention, and command idempotency against PostgreSQL.
