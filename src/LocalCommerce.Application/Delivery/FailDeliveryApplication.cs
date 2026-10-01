@@ -5,7 +5,6 @@ public sealed record FailDeliveryCommand(Guid DeliveryId,Guid ActorId,string Fai
 public sealed record FailDeliveryResult(Guid DeliveryId);public sealed class FailDeliveryRejectedException:Exception{public FailDeliveryRejectedException(string message):base(message){}}
 public interface IFailDeliveryDeliveryRepository{Task<DeliveryEntity?> GetAsync(Guid id,CancellationToken ct);Task SaveAsync(DeliveryEntity d,CancellationToken ct);}
 public interface IFailDeliveryAuthorization{Task<bool> CanFailDeliveryAsync(Guid actorId,DeliveryEntity d,CancellationToken ct);}
-public interface IIdempotencyStore{Task<FailDeliveryIdempotencyRecord?> GetAsync(Guid a,string o,string k,CancellationToken ct);Task<FailDeliveryIdempotencyRecord?> ReserveAsync(Guid a,string o,string k,string fp,CancellationToken ct);Task CompleteAsync(Guid a,string o,string k,FailDeliveryResult result,CancellationToken ct);}
 public interface IFailDeliveryUnitOfWork{Task ExecuteAsync(Func<CancellationToken,Task> operation,CancellationToken ct);}
 public sealed class FailDeliveryHandler{
  const string Operation="FailDelivery"; readonly IFailDeliveryDeliveryRepository _d;readonly IFailDeliveryAuthorization _a;readonly IFailDeliveryIdempotencyStore _i;readonly IFailDeliveryUnitOfWork _u;
