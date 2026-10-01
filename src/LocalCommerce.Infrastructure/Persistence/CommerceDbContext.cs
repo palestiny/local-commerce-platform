@@ -1,4 +1,5 @@
 using LocalCommerce.Domain.Ordering;
+using LocalCommerce.Domain.Delivery;
 using Microsoft.EntityFrameworkCore;
 
 namespace LocalCommerce.Infrastructure.Persistence;
@@ -13,6 +14,8 @@ public sealed class CommerceDbContext : DbContext
     public DbSet<ProductEntity> Products => Set<ProductEntity>();
     public DbSet<CartEntity> Carts => Set<CartEntity>();
     public DbSet<CartLineEntity> CartLines => Set<CartLineEntity>();
+    public DbSet<DeliveryEntity> Deliveries => Set<DeliveryEntity>();
+    public DbSet<DeliveryStatusHistoryEntity> DeliveryStatusHistory => Set<DeliveryStatusHistoryEntity>();
 
     protected override void OnModelCreating(ModelBuilder m)
     {
@@ -82,6 +85,38 @@ public sealed class CommerceDbContext : DbContext
             e.HasKey(x => x.Id);
             e.Property(x => x.VariantName).HasMaxLength(256);
             e.HasOne<ProductEntity>().WithMany().HasForeignKey(x => x.ProductId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        m.Entity<DeliveryEntity>(e =>
+        {
+            e.ToTable("Deliveries");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Status).HasConversion<string>().HasMaxLength(64).IsRequired();
+            e.Property(x => x.FailureCode).HasMaxLength(128);
+            e.Property(x => x.FailureReason).HasMaxLength(1024);
+            e.Property(x => x.CreatedAt).IsRequired();
+            e.Property(x => x.UpdatedAt).IsRequired();
+            e.HasOne<OrderEntity>().WithMany().HasForeignKey(x => x.OrderId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<StoreEntity>().WithMany().HasForeignKey(x => x.StoreId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => x.OrderId)
+                .HasDatabaseName("IX_Deliveries_Active_Order")
+                .HasFilter(""" "Status" IN ('Unassigned','Assigned','PickedUp','OutForDelivery') """)
+                .IsUnique();
+        });
+
+        m.Entity<DeliveryStatusHistoryEntity>(e =>
+        {
+            e.ToTable("DeliveryStatusHistory");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.ActorType).HasMaxLength(64).IsRequired();
+            e.Property(x => x.CommandName).HasMaxLength(128).IsRequired();
+            e.Property(x => x.CorrelationId).HasMaxLength(128).IsRequired();
+            e.Property(x => x.PreviousStatus).HasConversion<string>().HasMaxLength(64).IsRequired();
+            e.Property(x => x.NewStatus).HasConversion<string>().HasMaxLength(64).IsRequired();
+            e.Property(x => x.FailureCode).HasMaxLength(128);
+            e.Property(x => x.FailureReason).HasMaxLength(1024);
+            e.HasOne<DeliveryEntity>().WithMany().HasForeignKey(x => x.DeliveryId).OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(x => new { x.DeliveryId, x.OccurredAt });
         });
     }
 }
