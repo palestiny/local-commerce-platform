@@ -1,6 +1,6 @@
 # ADR-010 — Generalized Command Idempotency Persistence
 
-Status: PROPOSED
+Status: ACCEPTED
 
 ## Context
 
@@ -38,7 +38,9 @@ Costs:
 
 ## Decision
 
-No final decision is recorded by this ADR yet. The project owner must explicitly approve the direction before schema/code changes are made.
+Adopt Option A — Generalized idempotency record.
+
+The project owner explicitly approved this direction. The idempotency persistence model is a cross-cutting reliability capability and must remain resource-neutral rather than being coupled to Order.
 
 ## Consequences
 
