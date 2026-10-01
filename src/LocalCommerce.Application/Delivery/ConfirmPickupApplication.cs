@@ -1,4 +1,5 @@
 using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
+using LocalCommerce.Application.Idempotency;
 
 namespace LocalCommerce.Application.Delivery;
 
@@ -10,8 +11,6 @@ public sealed record ConfirmPickupCommand(
 public sealed record ConfirmPickupResult(
     Guid DeliveryId,
     Guid DriverId);
-
-public sealed record ConfirmPickupIdempotencyRecord(
     string Key,
     string Fingerprint,
     ConfirmPickupResult Result);
@@ -35,7 +34,7 @@ public interface IConfirmPickupAuthorization
         CancellationToken cancellationToken);
 }
 
-public interface IConfirmPickupIdempotencyStore
+public interface IIdempotencyStore
 {
     Task<ConfirmPickupIdempotencyRecord?> GetAsync(
         Guid actorId,
@@ -160,9 +159,7 @@ public sealed class ConfirmPickupHandler
             await IdempotencyStore.CompleteAsync(
                 command.ActorId,
                 Operation,
-                command.IdempotencyKey,
-                result,
-                transactionCancellationToken);
+                command.IdempotencyKey, new IdempotencyCompletion("Delivery", result.DeliveryId, System.Text.Json.JsonSerializer.Serialize(result)), transactionCancellationToken);
         }, cancellationToken);
 
         return result ?? throw new InvalidOperationException(
@@ -175,14 +172,12 @@ public sealed class ConfirmPickupHandler
                 System.Text.Encoding.UTF8.GetBytes(
                     $"{command.DeliveryId:N}|{command.ActorId:N}")));
 
-    private static ConfirmPickupResult ValidateExisting(
-        ConfirmPickupIdempotencyRecord existing,
-        string fingerprint)
+    private static ConfirmPickupResult ValidateExisting(IdempotencyRecord existing, string fingerprint)
     {
-        if (!string.Equals(existing.Fingerprint, fingerprint, StringComparison.Ordinal))
-            throw new ConfirmPickupRejectedException(
-                "The idempotency key was already used with a different request.");
-
-        return existing.Result;
+        if (!string.Equals(existing.Fingerprint, fingerprint, StringComparison.Ordinal)) throw new ConfirmPickupRejectedException("The idempotency key was already used with a different request.");
+        if (existing.Status != IdempotencyStatus.Completed || !string.Equals(existing.ResourceType, "Delivery", StringComparison.Ordinal) || existing.ResourceId is null || string.IsNullOrWhiteSpace(existing.ResultPayload)) throw new ConfirmPickupRejectedException("Idempotency record is incomplete.");
+        var result = System.Text.Json.JsonSerializer.Deserialize<ConfirmPickupResult>(existing.ResultPayload);
+        if (result is null || result.DeliveryId == Guid.Empty || result.DriverId == Guid.Empty || result.DeliveryId != existing.ResourceId.Value) throw new ConfirmPickupRejectedException("Idempotency record is invalid.");
+        return result;
     }
 }
