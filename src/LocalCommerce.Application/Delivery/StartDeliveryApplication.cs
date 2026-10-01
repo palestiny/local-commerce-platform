@@ -80,18 +80,6 @@ public sealed class StartDeliveryHandler
         if (existing is not null)
             return ResolveExisting(existing, fingerprint);
 
-        var delivery = await _deliveries.GetAsync(command.DeliveryId, cancellationToken);
-
-        if (delivery is null)
-            throw new StartDeliveryRejectedException("Delivery was not found.");
-
-        if (delivery.Status != DeliveryEntityStatus.PickedUp)
-            throw new StartDeliveryRejectedException("Delivery must be PICKED_UP.");
-
-        if (!await _authorization.CanStartDeliveryAsync(
-                command.ActorId, delivery, cancellationToken))
-            throw new StartDeliveryRejectedException("Actor is not authorized to start delivery.");
-
         StartDeliveryResult? result = null;
 
         await _unitOfWork.ExecuteAsync(async ct =>
@@ -104,6 +92,17 @@ public sealed class StartDeliveryHandler
                 result = ResolveExisting(reserved, fingerprint);
                 return;
             }
+
+            var delivery = await _deliveries.GetAsync(command.DeliveryId, ct);
+
+            if (delivery is null)
+                throw new StartDeliveryRejectedException("Delivery was not found.");
+
+            if (delivery.Status != DeliveryEntityStatus.PickedUp)
+                throw new StartDeliveryRejectedException("Delivery must be PICKED_UP.");
+
+            if (!await _authorization.CanStartDeliveryAsync(command.ActorId, delivery, ct))
+                throw new StartDeliveryRejectedException("Actor is not authorized to start delivery.");
 
             var driverId = delivery.DriverId;
             if (driverId is null || driverId == Guid.Empty)
