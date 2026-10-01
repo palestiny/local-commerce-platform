@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using LocalCommerce.Application.Idempotency;
 using System.Text;
 using LocalCommerce.Domain;
 using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
@@ -8,8 +9,6 @@ namespace LocalCommerce.Application.Delivery;
 
 public sealed record StartDeliveryCommand(Guid DeliveryId, Guid ActorId, string IdempotencyKey);
 public sealed record StartDeliveryResult(Guid DeliveryId, Guid DriverId);
-public sealed record StartDeliveryIdempotencyRecord(string Key, string Fingerprint, StartDeliveryResult Result);
-
 public sealed class StartDeliveryRejectedException : Exception
 {
     public StartDeliveryRejectedException(string message) : base(message) { }
@@ -26,7 +25,7 @@ public interface IStartDeliveryAuthorization
     Task<bool> CanStartDeliveryAsync(Guid actorId, DeliveryEntity delivery, CancellationToken cancellationToken);
 }
 
-public interface IStartDeliveryIdempotencyStore
+public interface IIdempotencyStore
 {
     Task<StartDeliveryIdempotencyRecord?> GetAsync(Guid actorId, string operation, string key, CancellationToken cancellationToken);
     Task<StartDeliveryIdempotencyRecord?> ReserveAsync(Guid actorId, string operation, string key, string fingerprint, CancellationToken cancellationToken);
@@ -115,25 +114,19 @@ public sealed class StartDeliveryHandler
             result = new StartDeliveryResult(delivery.Id, driverId.Value);
 
             await _idempotency.CompleteAsync(
-                command.ActorId, Operation, command.IdempotencyKey, result, ct);
+                command.ActorId, Operation, command.IdempotencyKey, new IdempotencyCompletion("Delivery", result.DeliveryId, System.Text.Json.JsonSerializer.Serialize(result)), ct);
         }, cancellationToken);
 
         return result!;
     }
 
-    private static StartDeliveryResult ResolveExisting(
-        StartDeliveryIdempotencyRecord existing,
-        string fingerprint)
+    private static StartDeliveryResult ResolveExisting(IdempotencyRecord existing, string fingerprint)
     {
-        if (!string.Equals(existing.Fingerprint, fingerprint, StringComparison.Ordinal))
-            throw new StartDeliveryRejectedException(
-                "Idempotency key was already used with a different request.");
-
-        if (existing.Result.DeliveryId == Guid.Empty || existing.Result.DriverId == Guid.Empty)
-            throw new StartDeliveryRejectedException(
-                "Idempotency record is incomplete.");
-
-        return existing.Result;
+        if (!string.Equals(existing.Fingerprint, fingerprint, StringComparison.Ordinal)) throw new StartDeliveryRejectedException("Idempotency key was already used with a different request.");
+        if (existing.Status != IdempotencyStatus.Completed || !string.Equals(existing.ResourceType, "Delivery", StringComparison.Ordinal) || existing.ResourceId is null || string.IsNullOrWhiteSpace(existing.ResultPayload)) throw new StartDeliveryRejectedException("Idempotency record is incomplete.");
+        var result = System.Text.Json.JsonSerializer.Deserialize<StartDeliveryResult>(existing.ResultPayload);
+        if (result is null || result.DeliveryId == Guid.Empty || result.DriverId == Guid.Empty || result.DeliveryId != existing.ResourceId.Value) throw new StartDeliveryRejectedException("Idempotency record is invalid.");
+        return result;
     }
 
     private static string BuildFingerprint(StartDeliveryCommand command)
