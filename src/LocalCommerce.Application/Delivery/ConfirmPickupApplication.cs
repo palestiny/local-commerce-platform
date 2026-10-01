@@ -110,24 +110,6 @@ public sealed class ConfirmPickupHandler
         if (existing is not null)
             return ValidateExisting(existing, fingerprint);
 
-        var delivery = await DeliveryRepository.GetAsync(
-            command.DeliveryId,
-            cancellationToken);
-
-        if (delivery is null)
-            throw new ConfirmPickupRejectedException("Delivery was not found.");
-
-        if (delivery.Status != LocalCommerce.Domain.Delivery.DeliveryStatus.Assigned)
-            throw new ConfirmPickupRejectedException(
-                "Pickup can only be confirmed for an assigned Delivery.");
-
-        if (!await Authorization.CanConfirmPickupAsync(
-                command.ActorId,
-                delivery,
-                cancellationToken))
-            throw new ConfirmPickupRejectedException(
-                "Actor is not authorized to confirm pickup.");
-
         ConfirmPickupResult? result = null;
 
         await UnitOfWork.ExecuteAsync(async transactionCancellationToken =>
@@ -144,6 +126,24 @@ public sealed class ConfirmPickupHandler
                 result = ValidateExisting(reserved, fingerprint);
                 return;
             }
+
+            var delivery = await DeliveryRepository.GetAsync(
+                command.DeliveryId,
+                transactionCancellationToken);
+
+            if (delivery is null)
+                throw new ConfirmPickupRejectedException("Delivery was not found.");
+
+            if (delivery.Status != LocalCommerce.Domain.Delivery.DeliveryStatus.Assigned)
+                throw new ConfirmPickupRejectedException(
+                    "Pickup can only be confirmed for an assigned Delivery.");
+
+            if (!await Authorization.CanConfirmPickupAsync(
+                    command.ActorId,
+                    delivery,
+                    transactionCancellationToken))
+                throw new ConfirmPickupRejectedException(
+                    "Actor is not authorized to confirm pickup.");
 
             var driverId = delivery.DriverId
                 ?? throw new ConfirmPickupRejectedException(
