@@ -111,12 +111,13 @@ public sealed class DeliveryPersistenceTests
         await firstRepository.SaveAsync(locked, CancellationToken.None);
 
         await second.Database.ExecuteSqlRawAsync("SET lock_timeout = '250ms'");
+        await using var secondTx = await second.Database.BeginTransactionAsync();
 
         var secondRead = new EfDeliveryRepository(second);
-        var blockedRead = secondRead.GetAsync(delivery.Id, CancellationToken.None);
+        await Assert.ThrowsAsync<Npgsql.PostgresException>(() =>
+            secondRead.GetAsync(delivery.Id, CancellationToken.None));
 
-        await Assert.ThrowsAsync<Npgsql.PostgresException>(async () => await blockedRead);
-
+        await secondTx.RollbackAsync();
         await firstTx.CommitAsync();
 
         await using var verifyTx = await second.Database.BeginTransactionAsync();
