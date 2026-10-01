@@ -21,3 +21,5 @@ For every significant decision record:
 - decision
 - consequences
 - verification
+
+| ADR-010 | Generalized command idempotency persistence | PROPOSED | Cross-cutting idempotency should be resource-neutral; implementation is blocked until the project owner approves the direction. |
