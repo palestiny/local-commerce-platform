@@ -1,5 +1,6 @@
 using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
 using LocalCommerce.Domain.Delivery;
+using LocalCommerce.Domain.Ordering;
 using LocalCommerce.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
@@ -25,6 +26,8 @@ public sealed class DeliveryPersistenceTests
 
         var orderId = Guid.NewGuid();
         var storeId = Guid.NewGuid();
+        await SeedOrderAndStoreAsync(db, orderId, storeId);
+
         var driverId = Guid.NewGuid();
 
         var delivery = DeliveryEntity.Create(orderId, storeId);
@@ -49,7 +52,11 @@ public sealed class DeliveryPersistenceTests
         await using var db = CreateDb();
         await DatabaseInitializer.InitializeAsync(db);
 
-        var delivery = DeliveryEntity.Create(Guid.NewGuid(), Guid.NewGuid());
+        var orderId = Guid.NewGuid();
+        var storeId = Guid.NewGuid();
+        await SeedOrderAndStoreAsync(db, orderId, storeId);
+
+        var delivery = DeliveryEntity.Create(orderId, storeId);
         await new EfDeliveryRepository(db).AddAsync(delivery, CancellationToken.None);
 
         var history = new DeliveryStatusHistoryEntry(
@@ -86,6 +93,7 @@ public sealed class DeliveryPersistenceTests
 
         var orderId = Guid.NewGuid();
         var storeId = Guid.NewGuid();
+        await SeedOrderAndStoreAsync(db, orderId, storeId);
 
         var first = DeliveryEntity.Create(orderId, storeId);
         var second = DeliveryEntity.Create(orderId, storeId);
@@ -94,5 +102,29 @@ public sealed class DeliveryPersistenceTests
 
         await Assert.ThrowsAsync<DbUpdateException>(() =>
             new EfDeliveryRepository(db).AddAsync(second, CancellationToken.None));
+    }
+
+    private static async Task SeedOrderAndStoreAsync(
+        CommerceDbContext db,
+        Guid orderId,
+        Guid storeId)
+    {
+        db.Stores.Add(new StoreEntity
+        {
+            Id = storeId,
+            IsActive = true
+        });
+
+        db.Orders.Add(new OrderEntity
+        {
+            Id = orderId,
+            StoreId = storeId,
+            OrderNumber = $"ORD-{Guid.NewGuid():N}",
+            Status = OrderStatus.ReadyForPickup,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow
+        });
+
+        await db.SaveChangesAsync();
     }
 }
