@@ -8,7 +8,6 @@ public sealed record CompleteDeliveryCommand(Guid DeliveryId, Guid ActorId, stri
 public sealed record CompleteDeliveryResult(Guid DeliveryId, Guid DriverId);public sealed class CompleteDeliveryRejectedException:Exception{public CompleteDeliveryRejectedException(string message):base(message){}}
 public interface ICompleteDeliveryDeliveryRepository{Task<DeliveryEntity?> GetAsync(Guid id,CancellationToken ct);Task SaveAsync(DeliveryEntity delivery,CancellationToken ct);}
 public interface ICompleteDeliveryAuthorization{Task<bool> CanCompleteDeliveryAsync(Guid actorId,DeliveryEntity delivery,CancellationToken ct);}
-public interface IIdempotencyStore{Task<CompleteDeliveryIdempotencyRecord?> GetAsync(Guid actorId,string operation,string key,CancellationToken ct);Task<CompleteDeliveryIdempotencyRecord?> ReserveAsync(Guid actorId,string operation,string key,string fingerprint,CancellationToken ct);Task CompleteAsync(Guid actorId,string operation,string key,CompleteDeliveryResult result,CancellationToken ct);}
 public interface ICompleteDeliveryUnitOfWork{Task ExecuteAsync(Func<CancellationToken,Task> operation,CancellationToken ct);}
 public sealed class CompleteDeliveryHandler
 {
