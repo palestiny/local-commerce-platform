@@ -1,24 +1,15 @@
-using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
+using System.Security.Cryptography;
+using System.Text;
 using LocalCommerce.Application.Idempotency;
+using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
+using LocalCommerce.Domain.Delivery;
 
 namespace LocalCommerce.Application.Delivery;
 
-public sealed record ConfirmPickupCommand(
-    Guid DeliveryId,
-    Guid ActorId,
-    string IdempotencyKey);
+public sealed record ConfirmPickupCommand(Guid DeliveryId, Guid ActorId, string IdempotencyKey);
+public sealed record ConfirmPickupResult(Guid DeliveryId, Guid DriverId);
 
-public sealed record ConfirmPickupResult(
-    Guid DeliveryId,
-    Guid DriverId);
-    string Key,
-    string Fingerprint,
-    ConfirmPickupResult Result);
-
-public sealed class ConfirmPickupRejectedException : Exception
-{
-    public ConfirmPickupRejectedException(string message) : base(message) { }
-}
+public sealed class ConfirmPickupRejectedException(string message) : Exception(message);
 
 public interface IConfirmPickupDeliveryRepository
 {
@@ -28,74 +19,40 @@ public interface IConfirmPickupDeliveryRepository
 
 public interface IConfirmPickupAuthorization
 {
-    Task<bool> CanConfirmPickupAsync(
-        Guid actorId,
-        DeliveryEntity delivery,
-        CancellationToken cancellationToken);
+    Task<bool> CanConfirmPickupAsync(Guid actorId, DeliveryEntity delivery, CancellationToken cancellationToken);
 }
 
 public interface IConfirmPickupUnitOfWork
 {
-    Task ExecuteAsync(
-        Func<CancellationToken, Task> operation,
-        CancellationToken cancellationToken);
+    Task ExecuteAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken);
 }
 
-public sealed class ConfirmPickupHandler
+public sealed class ConfirmPickupHandler(
+    IConfirmPickupDeliveryRepository deliveryRepository,
+    IConfirmPickupAuthorization authorization,
+    IIdempotencyStore idempotencyStore,
+    IConfirmPickupUnitOfWork unitOfWork)
 {
     private const string Operation = "ConfirmPickup";
-
-    public ConfirmPickupHandler(
-        IConfirmPickupDeliveryRepository deliveryRepository,
-        IConfirmPickupAuthorization authorization,
-        IIdempotencyStore idempotencyStore,
-        IConfirmPickupUnitOfWork unitOfWork)
-    {
-        DeliveryRepository = deliveryRepository;
-        Authorization = authorization;
-        IdempotencyStore = idempotencyStore;
-        UnitOfWork = unitOfWork;
-    }
-
-    private IConfirmPickupDeliveryRepository DeliveryRepository { get; }
-    private IConfirmPickupAuthorization Authorization { get; }
-    private IIdempotencyStore IdempotencyStore { get; }
-    private IConfirmPickupUnitOfWork UnitOfWork { get; }
 
     public async Task<ConfirmPickupResult> HandleAsync(
         ConfirmPickupCommand command,
         CancellationToken cancellationToken = default)
     {
-        if (command.DeliveryId == Guid.Empty)
-            throw new ConfirmPickupRejectedException("Delivery is required.");
-
-        if (command.ActorId == Guid.Empty)
-            throw new ConfirmPickupRejectedException("Actor is required.");
-
-        if (string.IsNullOrWhiteSpace(command.IdempotencyKey))
-            throw new ConfirmPickupRejectedException("Idempotency key is required.");
+        if (command.DeliveryId == Guid.Empty) throw new ConfirmPickupRejectedException("Delivery is required.");
+        if (command.ActorId == Guid.Empty) throw new ConfirmPickupRejectedException("Actor is required.");
+        if (string.IsNullOrWhiteSpace(command.IdempotencyKey)) throw new ConfirmPickupRejectedException("Idempotency key is required.");
 
         var fingerprint = BuildFingerprint(command);
-
-        var existing = await IdempotencyStore.GetAsync(
-            command.ActorId,
-            Operation,
-            command.IdempotencyKey,
-            cancellationToken);
-
-        if (existing is not null)
-            return ValidateExisting(existing, fingerprint);
+        var existing = await idempotencyStore.GetAsync(command.ActorId, Operation, command.IdempotencyKey, cancellationToken);
+        if (existing is not null) return ValidateExisting(existing, fingerprint);
 
         ConfirmPickupResult? result = null;
 
-        await UnitOfWork.ExecuteAsync(async transactionCancellationToken =>
+        await unitOfWork.ExecuteAsync(async transactionCancellationToken =>
         {
-            var reserved = await IdempotencyStore.ReserveAsync(
-                command.ActorId,
-                Operation,
-                command.IdempotencyKey,
-                fingerprint,
-                transactionCancellationToken);
+            var reserved = await idempotencyStore.ReserveAsync(
+                command.ActorId, Operation, command.IdempotencyKey, fingerprint, transactionCancellationToken);
 
             if (reserved is not null)
             {
@@ -103,58 +60,56 @@ public sealed class ConfirmPickupHandler
                 return;
             }
 
-            var delivery = await DeliveryRepository.GetAsync(
-                command.DeliveryId,
-                transactionCancellationToken);
+            var delivery = await deliveryRepository.GetAsync(command.DeliveryId, transactionCancellationToken)
+                ?? throw new ConfirmPickupRejectedException("Delivery was not found.");
 
-            if (delivery is null)
-                throw new ConfirmPickupRejectedException("Delivery was not found.");
+            if (delivery.Status != DeliveryStatus.Assigned)
+                throw new ConfirmPickupRejectedException("Pickup can only be confirmed for an assigned Delivery.");
 
-            if (delivery.Status != LocalCommerce.Domain.Delivery.DeliveryStatus.Assigned)
-                throw new ConfirmPickupRejectedException(
-                    "Pickup can only be confirmed for an assigned Delivery.");
-
-            if (!await Authorization.CanConfirmPickupAsync(
-                    command.ActorId,
-                    delivery,
-                    transactionCancellationToken))
-                throw new ConfirmPickupRejectedException(
-                    "Actor is not authorized to confirm pickup.");
+            if (!await authorization.CanConfirmPickupAsync(command.ActorId, delivery, transactionCancellationToken))
+                throw new ConfirmPickupRejectedException("Actor is not authorized to confirm pickup.");
 
             var driverId = delivery.DriverId
-                ?? throw new ConfirmPickupRejectedException(
-                    "Assigned Delivery must have a Driver.");
+                ?? throw new ConfirmPickupRejectedException("Assigned Delivery must have a Driver.");
 
             delivery.ConfirmPickup(driverId);
-
-            await DeliveryRepository.SaveAsync(
-                delivery,
-                transactionCancellationToken);
+            await deliveryRepository.SaveAsync(delivery, transactionCancellationToken);
 
             result = new ConfirmPickupResult(delivery.Id, driverId);
-
-            await IdempotencyStore.CompleteAsync(
+            await idempotencyStore.CompleteAsync(
                 command.ActorId,
                 Operation,
-                command.IdempotencyKey, new IdempotencyCompletion("Delivery", result.DeliveryId, System.Text.Json.JsonSerializer.Serialize(result)), transactionCancellationToken);
+                command.IdempotencyKey,
+                new IdempotencyCompletion(
+                    "Delivery",
+                    result.DeliveryId,
+                    System.Text.Json.JsonSerializer.Serialize(result)),
+                transactionCancellationToken);
         }, cancellationToken);
 
-        return result ?? throw new InvalidOperationException(
-            "Pickup confirmation completed without a result.");
+        return result ?? throw new InvalidOperationException("Pickup confirmation completed without a result.");
     }
 
     private static string BuildFingerprint(ConfirmPickupCommand command) =>
-        Convert.ToHexString(
-            System.Security.Cryptography.SHA256.HashData(
-                System.Text.Encoding.UTF8.GetBytes(
-                    $"{command.DeliveryId:N}|{command.ActorId:N}")));
+        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(
+            $"{command.DeliveryId:N}|{command.ActorId:N}")));
 
     private static ConfirmPickupResult ValidateExisting(IdempotencyRecord existing, string fingerprint)
     {
-        if (!string.Equals(existing.Fingerprint, fingerprint, StringComparison.Ordinal)) throw new ConfirmPickupRejectedException("The idempotency key was already used with a different request.");
-        if (existing.Status != IdempotencyStatus.Completed || !string.Equals(existing.ResourceType, "Delivery", StringComparison.Ordinal) || existing.ResourceId is null || string.IsNullOrWhiteSpace(existing.ResultPayload)) throw new ConfirmPickupRejectedException("Idempotency record is incomplete.");
+        if (!string.Equals(existing.Fingerprint, fingerprint, StringComparison.Ordinal))
+            throw new ConfirmPickupRejectedException("The idempotency key was already used with a different request.");
+
+        if (existing.Status != IdempotencyStatus.Completed ||
+            !string.Equals(existing.ResourceType, "Delivery", StringComparison.Ordinal) ||
+            existing.ResourceId is null ||
+            string.IsNullOrWhiteSpace(existing.ResultPayload))
+            throw new ConfirmPickupRejectedException("Idempotency record is incomplete.");
+
         var result = System.Text.Json.JsonSerializer.Deserialize<ConfirmPickupResult>(existing.ResultPayload);
-        if (result is null || result.DeliveryId == Guid.Empty || result.DriverId == Guid.Empty || result.DeliveryId != existing.ResourceId.Value) throw new ConfirmPickupRejectedException("Idempotency record is invalid.");
+        if (result is null || result.DeliveryId == Guid.Empty || result.DriverId == Guid.Empty ||
+            result.DeliveryId != existing.ResourceId.Value)
+            throw new ConfirmPickupRejectedException("Idempotency record is invalid.");
+
         return result;
     }
 }
