@@ -123,30 +123,6 @@ public sealed class AssignDriverHandler
         if (existing is not null)
             return ValidateExisting(existing, fingerprint);
 
-        var delivery = await DeliveryRepository.GetAsync(
-            command.DeliveryId,
-            cancellationToken);
-
-        if (delivery is null)
-            throw new AssignDriverRejectedException("Delivery was not found.");
-
-        var driver = await DriverRepository.GetAsync(
-            command.DriverId,
-            cancellationToken);
-
-        if (driver is null)
-            throw new AssignDriverRejectedException("Driver was not found.");
-
-        if (!driver.IsActive)
-            throw new AssignDriverRejectedException("Driver is inactive.");
-
-        if (!await Authorization.CanAssignAsync(
-                command.ActorId,
-                delivery,
-                cancellationToken))
-            throw new AssignDriverRejectedException(
-                "Actor is not authorized to assign a Driver.");
-
         AssignDriverResult? result = null;
 
         await UnitOfWork.ExecuteAsync(async transactionCancellationToken =>
@@ -163,6 +139,30 @@ public sealed class AssignDriverHandler
                 result = ValidateExisting(reserved, fingerprint);
                 return;
             }
+
+            var delivery = await DeliveryRepository.GetAsync(
+                command.DeliveryId,
+                transactionCancellationToken);
+
+            if (delivery is null)
+                throw new AssignDriverRejectedException("Delivery was not found.");
+
+            var driver = await DriverRepository.GetAsync(
+                command.DriverId,
+                transactionCancellationToken);
+
+            if (driver is null)
+                throw new AssignDriverRejectedException("Driver was not found.");
+
+            if (!driver.IsActive)
+                throw new AssignDriverRejectedException("Driver is inactive.");
+
+            if (!await Authorization.CanAssignAsync(
+                    command.ActorId,
+                    delivery,
+                    transactionCancellationToken))
+                throw new AssignDriverRejectedException(
+                    "Actor is not authorized to assign a Driver.");
 
             delivery.AssignDriver(driver.Id);
 
