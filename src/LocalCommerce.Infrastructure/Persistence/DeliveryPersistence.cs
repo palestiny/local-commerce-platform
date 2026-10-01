@@ -115,8 +115,25 @@ public sealed class EfDeliveryRepository(CommerceDbContext db) : IDeliveryReposi
 
     public async Task<Delivery?> GetActiveByOrderIdAsync(Guid orderId, CancellationToken cancellationToken)
     {
-        var entity = await db.Deliveries.AsNoTracking()
-            .SingleOrDefaultAsync(x => x.OrderId == orderId && IsActive(x.Status), cancellationToken);
+        IQueryable<DeliveryEntity> query;
+
+        if (db.Database.CurrentTransaction is not null)
+        {
+            query = db.Deliveries.FromSqlInterpolated($"""
+                SELECT *
+                FROM "Deliveries"
+                WHERE "OrderId" = {orderId}
+                  AND "Status" IN ('Unassigned', 'Assigned', 'PickedUp', 'OutForDelivery')
+                FOR UPDATE
+                """);
+        }
+        else
+        {
+            query = db.Deliveries.AsNoTracking()
+                .Where(x => x.OrderId == orderId && IsActive(x.Status));
+        }
+
+        var entity = await query.SingleOrDefaultAsync(cancellationToken);
         return entity is null ? null : ToDomain(entity);
     }
 
