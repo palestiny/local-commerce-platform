@@ -97,7 +97,7 @@ public sealed class EfDeliveryRepository(CommerceDbContext db) : IDeliveryReposi
         // serialize competing state transitions at the PostgreSQL row boundary.
         if (db.Database.CurrentTransaction is not null)
         {
-            query = query.FromSqlInterpolated($"""
+            query = db.Deliveries.FromSqlInterpolated($"""
                 SELECT *
                 FROM "Deliveries"
                 WHERE "Id" = {deliveryId}
