@@ -32,44 +32,82 @@ public sealed class EfOrderWriter(CommerceDbContext db) : IOrderWriter
     }
 }
 
-public sealed class EfIdempotencyStore(CommerceDbContext db) : IIdempotencyStore
+public sealed class EfIdempotencyStore(
+    CommerceDbContext db,
+    LocalCommerce.Infrastructure.Persistence.EfGeneralizedIdempotencyStore generalized)
+    : IIdempotencyStore
 {
-    public Task<IdempotencyRecord?> GetAsync(Guid customerId,string operation,string key,CancellationToken ct)
-        => Read(customerId,operation,key,ct);
-
-    public async Task<IdempotencyRecord?> ReserveAsync(Guid customerId,string operation,string key,string fingerprint,CancellationToken ct)
+    public async Task<IdempotencyRecord?> GetAsync(
+        Guid customerId,
+        string operation,
+        string key,
+        CancellationToken cancellationToken)
     {
-        var affected=await db.Database.ExecuteSqlInterpolatedAsync($"""
-            INSERT INTO "IdempotencyRecords"
-            ("Id","CustomerId","Operation","IdempotencyKey","RequestFingerprint","CreatedAt")
-            VALUES ({Guid.NewGuid()},{customerId},{operation},{key},{fingerprint},{DateTimeOffset.UtcNow})
-            ON CONFLICT ("CustomerId","Operation","IdempotencyKey") DO NOTHING
-            """,ct);
-        if(affected==1) return null;
-        return await Read(customerId,operation,key,ct)
-            ?? throw new InvalidOperationException("Idempotency record exists but is not completed.");
+        var record = await generalized.GetAsync(customerId, operation, key, cancellationToken);
+
+        if (record is null || record.Status != LocalCommerce.Application.Idempotency.IdempotencyStatus.Completed)
+            return null;
+
+        return ToCreateOrderRecord(record);
     }
 
-    public async Task CompleteAsync(Guid customerId,string operation,string key,CreateOrderResult result,CancellationToken ct)
+    public async Task<IdempotencyRecord?> ReserveAsync(
+        Guid customerId,
+        string operation,
+        string key,
+        string fingerprint,
+        CancellationToken cancellationToken)
     {
-        var row=await db.IdempotencyRecords.SingleOrDefaultAsync(
-            x=>x.CustomerId==customerId && x.Operation==operation && x.IdempotencyKey==key,ct);
+        var record = await generalized.ReserveAsync(
+            customerId, operation, key, fingerprint, cancellationToken);
 
-        if(row is null) throw new InvalidOperationException("Idempotency reservation was not found.");
-        if(row.CompletedAt is not null) throw new InvalidOperationException("Idempotency record is already completed.");
+        if (record is null)
+            return null;
 
-        row.OrderId=result.OrderId;
-        row.Order = db.Orders.Local.SingleOrDefault(x => x.Id == result.OrderId)
-            ?? throw new InvalidOperationException("Order to complete idempotency was not found in the current unit of work.");
-        row.OrderNumber=result.OrderNumber;
-        row.CompletedAt=DateTimeOffset.UtcNow;
+        if (record.Status != LocalCommerce.Application.Idempotency.IdempotencyStatus.Completed)
+            throw new InvalidOperationException(
+                "Idempotency record exists but is not completed.");
+
+        return ToCreateOrderRecord(record);
     }
 
-    private async Task<IdempotencyRecord?> Read(Guid customerId,string operation,string key,CancellationToken ct)
+    public Task CompleteAsync(
+        Guid customerId,
+        string operation,
+        string key,
+        CreateOrderResult result,
+        CancellationToken cancellationToken)
     {
-        var row=await db.IdempotencyRecords.AsNoTracking().SingleOrDefaultAsync(
-            x=>x.CustomerId==customerId && x.Operation==operation && x.IdempotencyKey==key,ct);
-        if(row?.OrderId is null || row.OrderNumber is null) return null;
-        return new IdempotencyRecord(row.IdempotencyKey,row.RequestFingerprint,new CreateOrderResult(row.OrderId.Value,row.OrderNumber));
+        var payload = System.Text.Json.JsonSerializer.Serialize(result);
+
+        return generalized.CompleteAsync(
+            customerId,
+            operation,
+            key,
+            new LocalCommerce.Application.Idempotency.IdempotencyCompletion(
+                "Order",
+                result.OrderId,
+                payload),
+            cancellationToken);
+    }
+
+    private static IdempotencyRecord ToCreateOrderRecord(
+        LocalCommerce.Application.Idempotency.IdempotencyRecord record)
+    {
+        if (record.ResourceType != "Order"
+            || record.ResourceId is null
+            || string.IsNullOrWhiteSpace(record.ResultPayload))
+            throw new InvalidOperationException(
+                "Completed Create Order idempotency record is missing its Order result.");
+
+        var result = System.Text.Json.JsonSerializer.Deserialize<CreateOrderResult>(
+            record.ResultPayload)
+            ?? throw new InvalidOperationException(
+                "Completed Create Order idempotency result is invalid.");
+
+        return new IdempotencyRecord(
+            record.Key,
+            record.Fingerprint,
+            result);
     }
 }
