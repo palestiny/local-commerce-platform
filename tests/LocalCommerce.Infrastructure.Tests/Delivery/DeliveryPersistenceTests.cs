@@ -86,6 +86,53 @@ public sealed class DeliveryPersistenceTests
     }
 
     [Fact]
+    public async Task Transactional_delivery_load_waits_for_previous_writer_and_reads_committed_state()
+    {
+        await using var setup = CreateDb();
+        await DatabaseInitializer.InitializeAsync(setup);
+
+        var orderId = Guid.NewGuid();
+        var storeId = Guid.NewGuid();
+        await SeedOrderAndStoreAsync(setup, orderId, storeId);
+
+        var delivery = DeliveryEntity.Create(orderId, storeId);
+        await new EfDeliveryRepository(setup).AddAsync(delivery, CancellationToken.None);
+
+        await using var first = CreateDb();
+        await using var second = CreateDb();
+        await using var firstTx = await first.Database.BeginTransactionAsync();
+
+        var firstRepository = new EfDeliveryRepository(first);
+        var locked = await firstRepository.GetAsync(delivery.Id, CancellationToken.None);
+
+        Assert.NotNull(locked);
+        locked!.AssignDriver(Guid.NewGuid());
+        await firstRepository.SaveAsync(locked, CancellationToken.None);
+
+        var secondStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var secondRead = Task.Run(async () =>
+        {
+            await using var tx = await second.Database.BeginTransactionAsync();
+            secondStarted.SetResult();
+            var repository = new EfDeliveryRepository(second);
+            var observed = await repository.GetAsync(delivery.Id, CancellationToken.None);
+            await tx.CommitAsync();
+            return observed;
+        });
+
+        await secondStarted.Task;
+        await Task.Delay(50);
+
+        Assert.False(secondRead.IsCompleted);
+
+        await firstTx.CommitAsync();
+
+        var reloaded = await secondRead;
+        Assert.NotNull(reloaded);
+        Assert.Equal(DeliveryStatus.Assigned, reloaded!.Status);
+    }
+
+    [Fact]
     public async Task Only_one_active_delivery_can_exist_for_an_order()
     {
         await using var db = CreateDb();
