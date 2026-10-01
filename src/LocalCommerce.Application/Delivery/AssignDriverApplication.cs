@@ -41,29 +41,6 @@ public interface IAssignDriverAuthorization
         CancellationToken cancellationToken);
 }
 
-public interface IIdempotencyStore
-{
-    Task<DriverAssignmentIdempotencyRecord?> GetAsync(
-        Guid actorId,
-        string operation,
-        string key,
-        CancellationToken cancellationToken);
-
-    Task<DriverAssignmentIdempotencyRecord?> ReserveAsync(
-        Guid actorId,
-        string operation,
-        string key,
-        string fingerprint,
-        CancellationToken cancellationToken);
-
-    Task CompleteAsync(
-        Guid actorId,
-        string operation,
-        string key,
-        AssignDriverResult result,
-        CancellationToken cancellationToken);
-}
-
 public interface IAssignDriverUnitOfWork
 {
     Task ExecuteAsync(
