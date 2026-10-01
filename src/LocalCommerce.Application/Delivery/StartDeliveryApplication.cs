@@ -43,13 +43,13 @@ public sealed class StartDeliveryHandler
 
     private readonly IStartDeliveryDeliveryRepository _deliveries;
     private readonly IStartDeliveryAuthorization _authorization;
-    private readonly IStartDeliveryIdempotencyStore _idempotency;
+    private readonly IIdempotencyStore _idempotency;
     private readonly IStartDeliveryUnitOfWork _unitOfWork;
 
     public StartDeliveryHandler(
         IStartDeliveryDeliveryRepository deliveries,
         IStartDeliveryAuthorization authorization,
-        IStartDeliveryIdempotencyStore idempotency,
+        IIdempotencyStore idempotency,
         IStartDeliveryUnitOfWork unitOfWork)
     {
         _deliveries = deliveries;
