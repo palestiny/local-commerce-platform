@@ -79,7 +79,7 @@ public sealed class AssignDriverHandler
         IAssignDriverDeliveryRepository deliveryRepository,
         IDriverRepository driverRepository,
         IAssignDriverAuthorization authorization,
-        IAssignDriverIdempotencyStore idempotencyStore,
+        IIdempotencyStore idempotencyStore,
         IAssignDriverUnitOfWork unitOfWork)
     {
         DeliveryRepository = deliveryRepository;
@@ -92,7 +92,7 @@ public sealed class AssignDriverHandler
     private IAssignDriverDeliveryRepository DeliveryRepository { get; }
     private IDriverRepository DriverRepository { get; }
     private IAssignDriverAuthorization Authorization { get; }
-    private IAssignDriverIdempotencyStore IdempotencyStore { get; }
+    private IIdempotencyStore IdempotencyStore { get; }
     private IAssignDriverUnitOfWork UnitOfWork { get; }
 
     public async Task<AssignDriverResult> HandleAsync(
