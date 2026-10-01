@@ -177,3 +177,15 @@ Start TDD RED for the Customer Composed Read. Keep HTTP/API implementation seque
 ## Next M1 Boundary
 
 **PostgreSQL concurrency verification** is now the next implementation boundary. The target is real concurrent command behavior, not only application test doubles.
+
+
+## PostgreSQL Concurrency Strategy
+
+- **ADR-009 ACCEPTED:** PostgreSQL row-level locking for M1 Delivery mutation commands.
+- Mutable Delivery command loads inside a transaction use `SELECT FOR UPDATE`.
+- A real PostgreSQL test verifies the second transactional load waits for the first transaction and reads the committed Delivery state.
+- **Not yet GREEN:** end-to-end command concurrency, cancellation contention, and Delivery command idempotency at the PostgreSQL boundary.
+
+## Next M1 Boundary
+
+Refactor Delivery command transaction boundaries, then run real PostgreSQL concurrency tests for assignment/state transitions and coordinated cancellation before API/HTTP implementation.
