@@ -24,7 +24,6 @@ public sealed class DeliveryPersistenceTests
 
         var orderId = Guid.NewGuid();
         var storeId = Guid.NewGuid();
-        var deliveryId = Guid.NewGuid();
         var driverId = Guid.NewGuid();
 
         var delivery = Delivery.Create(orderId, storeId);
@@ -34,7 +33,7 @@ public sealed class DeliveryPersistenceTests
 
         await using var verify = CreateDb();
         var reloaded = await new EfDeliveryRepository(verify)
-            .GetAsync(deliveryId, CancellationToken.None);
+            .GetAsync(delivery.Id, CancellationToken.None);
 
         Assert.NotNull(reloaded);
         Assert.Equal(orderId, reloaded!.OrderId);
