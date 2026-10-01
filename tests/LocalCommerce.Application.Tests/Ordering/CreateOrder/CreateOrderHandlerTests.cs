@@ -1,3 +1,4 @@
+using LocalCommerce.Application.Idempotency;
 using LocalCommerce.Application.Ordering.CreateOrder;
 using LocalCommerce.Domain.Ordering;
 using Xunit;
@@ -299,7 +300,7 @@ public sealed class CreateOrderHandlerTests
             private readonly Dictionary<string, IdempotencyRecord> records = [];
 
             public Task<IdempotencyRecord?> GetAsync(
-                Guid customerId,
+                Guid scopeId,
                 string operation,
                 string key,
                 CancellationToken cancellationToken) =>
@@ -309,7 +310,7 @@ public sealed class CreateOrderHandlerTests
                         : null);
 
             public Task<IdempotencyRecord?> ReserveAsync(
-                Guid customerId,
+                Guid scopeId,
                 string operation,
                 string key,
                 string fingerprint,
@@ -319,24 +320,36 @@ public sealed class CreateOrderHandlerTests
                     return Task.FromResult<IdempotencyRecord?>(existing);
 
                 records[key] = new IdempotencyRecord(
+                    scopeId,
+                    operation,
                     key,
                     fingerprint,
-                    new CreateOrderResult(Guid.Empty, string.Empty));
+                    IdempotencyStatus.Reserved,
+                    null,
+                    null,
+                    null);
 
                 return Task.FromResult<IdempotencyRecord?>(null);
             }
 
             public Task CompleteAsync(
-                Guid customerId,
+                Guid scopeId,
                 string operation,
                 string key,
-                CreateOrderResult result,
+                IdempotencyCompletion completion,
                 CancellationToken cancellationToken)
             {
                 if (!records.TryGetValue(key, out var existing))
                     throw new InvalidOperationException("Idempotency reservation was not created.");
 
-                records[key] = existing with { Result = result };
+                records[key] = existing with
+                {
+                    Status = IdempotencyStatus.Completed,
+                    ResourceType = completion.ResourceType,
+                    ResourceId = completion.ResourceId,
+                    ResultPayload = completion.ResultPayload
+                };
+
                 return Task.CompletedTask;
             }
         }
