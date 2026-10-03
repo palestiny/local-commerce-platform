@@ -1,4 +1,6 @@
 using LocalCommerce.Domain.Delivery;
+using ReadyDeliveryRepository = LocalCommerce.Application.Delivery.IDeliveryRepository;
+using CancellationDeliveryRepository = LocalCommerce.Application.Ordering.ICancelOrderDeliveryRepository;
 using Microsoft.EntityFrameworkCore;
 
 namespace LocalCommerce.Infrastructure.Persistence;
@@ -62,7 +64,7 @@ public interface IDeliveryStatusHistoryRepository
     Task<IReadOnlyList<DeliveryStatusHistoryEntry>> GetByDeliveryIdAsync(Guid deliveryId, CancellationToken cancellationToken);
 }
 
-public sealed class EfDeliveryRepository(CommerceDbContext db) : IDeliveryRepository
+public sealed class EfDeliveryRepository(CommerceDbContext db) : IDeliveryRepository, ReadyDeliveryRepository, CancellationDeliveryRepository
 {
     public async Task AddAsync(Delivery delivery, CancellationToken cancellationToken)
     {
