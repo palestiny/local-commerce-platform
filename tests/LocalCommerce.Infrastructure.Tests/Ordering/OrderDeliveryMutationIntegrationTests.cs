@@ -110,6 +110,9 @@ public sealed class OrderDeliveryMutationIntegrationTests
         order.MarkReadyForPickup();
         await SeedOrderAsync(setup, order, storeId);
 
+        var delivery = LocalCommerce.Domain.Delivery.Delivery.Create(order.Id, storeId);
+        await new EfDeliveryRepository(setup).AddAsync(delivery, CancellationToken.None);
+
         var firstTask = RunCancellationAsync(order.Id);
         var secondTask = RunCancellationAsync(order.Id);
 
