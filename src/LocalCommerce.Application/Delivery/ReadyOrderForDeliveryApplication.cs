@@ -76,34 +76,19 @@ public sealed class ReadyOrderForDeliveryHandler
     {
         if (command.OrderId == Guid.Empty)
             throw new ReadyOrderForDeliveryRejectedException("Order is required.");
-
         if (command.ActorId == Guid.Empty)
             throw new ReadyOrderForDeliveryRejectedException("Actor is required.");
-
         if (string.IsNullOrWhiteSpace(command.IdempotencyKey))
             throw new ReadyOrderForDeliveryRejectedException("Idempotency key is required.");
 
         var fingerprint = BuildFingerprint(command);
-
         var existing = await IdempotencyStore.GetAsync(
             command.ActorId,
             Operation,
             command.IdempotencyKey,
             cancellationToken);
-
         if (existing is not null)
             return ValidateExisting(existing, fingerprint);
-
-        var order = await OrderRepository.GetAsync(command.OrderId, cancellationToken);
-
-        if (order is null)
-            throw new ReadyOrderForDeliveryRejectedException("Order was not found.");
-
-        if (!await Authorization.CanMarkReadyAsync(
-                command.ActorId,
-                order,
-                cancellationToken))
-            throw new ReadyOrderForDeliveryRejectedException("Actor is not authorized to mark this Order ready.");
 
         ReadyOrderForDeliveryResult? result = null;
 
@@ -121,6 +106,21 @@ public sealed class ReadyOrderForDeliveryHandler
                 result = ValidateExisting(reserved, fingerprint);
                 return;
             }
+
+            // Cross-aggregate mutation lock order is Order first, then Delivery.
+            // Cancellation follows the same order to avoid lock inversion.
+            var order = await OrderRepository.GetAsync(
+                command.OrderId,
+                transactionCancellationToken);
+
+            if (order is null)
+                throw new ReadyOrderForDeliveryRejectedException("Order was not found.");
+
+            if (!await Authorization.CanMarkReadyAsync(
+                    command.ActorId,
+                    order,
+                    transactionCancellationToken))
+                throw new ReadyOrderForDeliveryRejectedException("Actor is not authorized to mark this Order ready.");
 
             var activeDelivery = await DeliveryRepository.GetActiveByOrderIdAsync(
                 order.Id,
