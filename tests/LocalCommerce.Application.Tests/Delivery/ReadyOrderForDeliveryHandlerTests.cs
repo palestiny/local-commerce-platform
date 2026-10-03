@@ -1,4 +1,6 @@
 using LocalCommerce.Application.Delivery;
+using LocalCommerce.Application.Idempotency;
+using System.Text.Json;
 using LocalCommerce.Domain;
 using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
 using LocalCommerce.Domain.Delivery;
@@ -241,12 +243,12 @@ public sealed class ReadyOrderForDeliveryHandlerTests
             Task.FromResult(Allowed);
     }
 
-    private sealed class FakeIdempotencyStore : IReadyForDeliveryIdempotencyStore
+    private sealed class FakeIdempotencyStore : IIdempotencyStore
     {
-        private readonly Dictionary<string, DeliveryIdempotencyRecord> records = [];
+        private readonly Dictionary<string, IdempotencyRecord> records = [];
 
-        public Task<DeliveryIdempotencyRecord?> GetAsync(
-            Guid actorId,
+        public Task<IdempotencyRecord?> GetAsync(
+            Guid scopeId,
             string operation,
             string key,
             CancellationToken cancellationToken) =>
@@ -255,33 +257,44 @@ public sealed class ReadyOrderForDeliveryHandlerTests
                     ? record
                     : null);
 
-        public Task<DeliveryIdempotencyRecord?> ReserveAsync(
-            Guid actorId,
+        public Task<IdempotencyRecord?> ReserveAsync(
+            Guid scopeId,
             string operation,
             string key,
             string fingerprint,
             CancellationToken cancellationToken)
         {
             if (records.TryGetValue(key, out var existing))
-                return Task.FromResult<DeliveryIdempotencyRecord?>(existing);
+                return Task.FromResult<IdempotencyRecord?>(existing);
 
-            records[key] = new DeliveryIdempotencyRecord(
+            records[key] = new IdempotencyRecord(
+                scopeId,
+                operation,
                 key,
                 fingerprint,
-                new ReadyOrderForDeliveryResult(Guid.Empty, Guid.Empty));
+                IdempotencyStatus.Reserved,
+                null,
+                null,
+                null);
 
-            return Task.FromResult<DeliveryIdempotencyRecord?>(null);
+            return Task.FromResult<IdempotencyRecord?>(null);
         }
 
         public Task CompleteAsync(
-            Guid actorId,
+            Guid scopeId,
             string operation,
             string key,
-            ReadyOrderForDeliveryResult result,
+            IdempotencyCompletion completion,
             CancellationToken cancellationToken)
         {
             var existing = records[key];
-            records[key] = existing with { Result = result };
+            records[key] = existing with
+            {
+                Status = IdempotencyStatus.Completed,
+                ResourceType = completion.ResourceType,
+                ResourceId = completion.ResourceId,
+                ResultPayload = completion.ResultPayload
+            };
             return Task.CompletedTask;
         }
     }
