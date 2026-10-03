@@ -48,17 +48,41 @@ public sealed class OrderItem
 public sealed class Order
 {
     private Order(Guid storeId, IReadOnlyCollection<OrderItem> items)
+        : this(Guid.NewGuid(), storeId, items, OrderStatus.Created) { }
+
+    private Order(Guid id, Guid storeId, IReadOnlyCollection<OrderItem> items, OrderStatus status)
     {
-        Id = Guid.NewGuid();
+        Id = id;
         StoreId = storeId;
         Items = items;
-        Status = OrderStatus.Created;
+        Status = status;
     }
+
 
     public Guid Id { get; }
     public Guid StoreId { get; }
     public IReadOnlyCollection<OrderItem> Items { get; }
     public OrderStatus Status { get; private set; }
+
+    public static Order Restore(
+        Guid id,
+        Guid storeId,
+        IReadOnlyCollection<OrderItem> items,
+        OrderStatus status)
+    {
+        if (id == Guid.Empty)
+            throw new DomainRuleViolationException("An Order must have an identity.");
+
+        if (items is null || items.Count == 0)
+            throw new DomainRuleViolationException("An Order must contain at least one item.");
+
+        if (items.Any(item => item.StoreId != storeId))
+            throw new DomainRuleViolationException("All Order items must belong to the Order store.");
+
+        return new Order(id, storeId, items.Select(item => new OrderItem(
+            item.ProductId, item.StoreId, item.ProductName, item.VariantName,
+            item.UnitPrice, item.Quantity, item.LineDiscount, item.LineTotal)).ToArray(), status);
+    }
 
     public static Order Create(Guid storeId, IReadOnlyCollection<OrderItem> items)
     {
