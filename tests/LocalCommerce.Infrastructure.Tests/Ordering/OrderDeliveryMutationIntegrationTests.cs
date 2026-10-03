@@ -1,4 +1,5 @@
 using LocalCommerce.Application.Delivery;
+using LocalCommerce.Domain;
 using LocalCommerce.Application.Idempotency;
 using LocalCommerce.Application.Ordering;
 using LocalCommerce.Domain.Delivery;
@@ -114,7 +115,7 @@ public sealed class OrderDeliveryMutationIntegrationTests
 
         var results = await Task.WhenAll(firstTask, secondTask);
         Assert.Equal(1, results.Count(x => x.Success));
-        Assert.Equal(1, results.Count(x => x.Failure is DomainRuleViolationException));
+        Assert.Equal(1, results.Count(x => x.Failure is CancelOrderRejectedException));
 
         await using var verify = CreateDb();
         var status = await verify.Orders.Where(x => x.Id == order.Id).Select(x => x.Status).SingleAsync();
