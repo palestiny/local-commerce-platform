@@ -69,7 +69,7 @@ public sealed class OrderDeliveryMutationIntegrationTests
         order.MarkReadyForPickup();
         await SeedOrderAsync(db, order, storeId);
 
-        var delivery = Delivery.Create(order.Id, storeId);
+        var delivery = LocalCommerce.Domain.Delivery.Delivery.Create(order.Id, storeId);
         await new EfDeliveryRepository(db).AddAsync(delivery, CancellationToken.None);
 
         var actorId = Guid.NewGuid();
