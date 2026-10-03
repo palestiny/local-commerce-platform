@@ -95,6 +95,54 @@ public sealed class OrderDeliveryMutationIntegrationTests
         Assert.Equal(IdempotencyStatus.Completed, idempotency.Status);
     }
 
+    [Fact]
+    public async Task Concurrent_cancellations_serialize_on_the_order_and_only_one_mutation_succeeds()
+    {
+        await using var setup = CreateDb();
+        await DatabaseInitializer.InitializeAsync(setup);
+
+        var storeId = Guid.NewGuid();
+        var order = CreateOrder(storeId);
+        order.SubmitForStoreConfirmation();
+        order.Accept();
+        order.Prepare();
+        order.MarkReadyForPickup();
+        await SeedOrderAsync(setup, order, storeId);
+
+        var firstTask = RunCancellationAsync(order.Id);
+        var secondTask = RunCancellationAsync(order.Id);
+
+        var results = await Task.WhenAll(firstTask, secondTask);
+        Assert.Equal(1, results.Count(x => x.Success));
+        Assert.Equal(1, results.Count(x => x.Failure is DomainRuleViolationException));
+
+        await using var verify = CreateDb();
+        var status = await verify.Orders.Where(x => x.Id == order.Id).Select(x => x.Status).SingleAsync();
+        Assert.Equal(OrderStatus.Cancelled, status);
+    }
+
+    private static async Task<(bool Success, Exception? Failure)> RunCancellationAsync(Guid orderId)
+    {
+        await using var db = CreateDb();
+        var actorId = Guid.NewGuid();
+        var handler = new CancelOrderHandler(
+            new EfOrderForDeliveryRepository(db),
+            new EfDeliveryRepository(db),
+            new AllowCancelAuthorization(),
+            new EfGeneralizedIdempotencyStore(db),
+            new EfOrderDeliveryUnitOfWork(db));
+
+        try
+        {
+            await handler.HandleAsync(new CancelOrderCommand(orderId, actorId, $"cancel-{Guid.NewGuid():N}"));
+            return (true, null);
+        }
+        catch (Exception exception)
+        {
+            return (false, exception);
+        }
+    }
+
     private static async Task SeedOrderAsync(CommerceDbContext db, Order order, Guid storeId)
     {
         db.Stores.Add(new StoreEntity { Id = storeId, IsActive = true });
