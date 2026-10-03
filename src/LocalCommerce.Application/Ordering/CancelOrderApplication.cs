@@ -30,9 +30,9 @@ public sealed class CancelOrderHandler{
   await _uow.ExecuteAsync(async tx=>{
    var reserved=await _idem.ReserveAsync(c.ActorId,Operation,c.IdempotencyKey,fp,tx);if(reserved is not null){result=Resolve(reserved,fp);return;}
    // Cross-aggregate mutation lock order: Order first, then Delivery.
-   order=await _orders.GetAsync(c.OrderId,tx)??throw new CancelOrderRejectedException("Order was not found.");
+   var order=await _orders.GetAsync(c.OrderId,tx)??throw new CancelOrderRejectedException("Order was not found.");
    if(!await _auth.CanCancelAsync(c.ActorId,order,tx))throw new CancelOrderRejectedException("Actor is not authorized to cancel this Order.");
-   active=await _deliveries.GetActiveByOrderIdAsync(c.OrderId,tx);
+   var active=await _deliveries.GetActiveByOrderIdAsync(c.OrderId,tx);
    if(active is not null&&active.Status is DeliveryEntityStatus.PickedUp or DeliveryEntityStatus.OutForDelivery)throw new CancelOrderRejectedException("Order cancellation is not allowed after pickup.");
    order.Cancel();await _orders.SaveAsync(order,tx);
    if(active is not null){active.CancelBeforePickup();await _deliveries.SaveAsync(active,tx);}
