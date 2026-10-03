@@ -26,13 +26,10 @@ public sealed class CancelOrderHandler{
   if(string.IsNullOrWhiteSpace(c.IdempotencyKey))throw new CancelOrderRejectedException("Idempotency key is required.");
   var fp=Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes($"{c.OrderId:N}|{c.ActorId:N}")));
   var existing=await _idem.GetAsync(c.ActorId,Operation,c.IdempotencyKey,ct);if(existing is not null)return Resolve(existing,fp);
-  var order=await _orders.GetAsync(c.OrderId,ct)??throw new CancelOrderRejectedException("Order was not found.");
-  if(!await _auth.CanCancelAsync(c.ActorId,order,ct))throw new CancelOrderRejectedException("Actor is not authorized to cancel this Order.");
-  var active=await _deliveries.GetActiveByOrderIdAsync(c.OrderId,ct);
-  if(active is not null&&active.Status is DeliveryEntityStatus.PickedUp or DeliveryEntityStatus.OutForDelivery)throw new CancelOrderRejectedException("Order cancellation is not allowed after pickup.");
   CancelOrderResult? result=null;
   await _uow.ExecuteAsync(async tx=>{
    var reserved=await _idem.ReserveAsync(c.ActorId,Operation,c.IdempotencyKey,fp,tx);if(reserved is not null){result=Resolve(reserved,fp);return;}
+   // Cross-aggregate mutation lock order: Order first, then Delivery.
    order=await _orders.GetAsync(c.OrderId,tx)??throw new CancelOrderRejectedException("Order was not found.");
    if(!await _auth.CanCancelAsync(c.ActorId,order,tx))throw new CancelOrderRejectedException("Actor is not authorized to cancel this Order.");
    active=await _deliveries.GetActiveByOrderIdAsync(c.OrderId,tx);
