@@ -34,8 +34,8 @@ public sealed class CancelOrderHandler{
    if(!await _auth.CanCancelAsync(c.ActorId,order,tx))throw new CancelOrderRejectedException("Actor is not authorized to cancel this Order.");
    var active=await _deliveries.GetActiveByOrderIdAsync(c.OrderId,tx);
    if(active is not null&&active.Status is DeliveryEntityStatus.PickedUp or DeliveryEntityStatus.OutForDelivery)throw new CancelOrderRejectedException("Order cancellation is not allowed after pickup.");
-   order.Cancel();await _orders.SaveAsync(order,tx);
-   if(active is not null){active.CancelBeforePickup();await _deliveries.SaveAsync(active,tx);}
+   try\n   {\n    order.Cancel();\n    if(active is not null) active.CancelBeforePickup();\n   }\n   catch(DomainRuleViolationException exception)\n   {\n    throw new CancelOrderRejectedException(exception.Message);\n   }\n   await _orders.SaveAsync(order,tx);
+   if(active is not null) await _deliveries.SaveAsync(active,tx);
    result=new CancelOrderResult(order.Id,active?.Id);await _idem.CompleteAsync(c.ActorId,Operation,c.IdempotencyKey,new IdempotencyCompletion("OrderCancellation",result.OrderId,System.Text.Json.JsonSerializer.Serialize(result)),tx);
   },ct);
   return result??throw new InvalidOperationException("Cancellation completed without a result.");
