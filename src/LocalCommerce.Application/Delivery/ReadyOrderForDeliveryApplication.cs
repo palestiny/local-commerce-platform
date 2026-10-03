@@ -1,3 +1,7 @@
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using LocalCommerce.Application.Idempotency;
 using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
 using LocalCommerce.Domain.Delivery;
 using LocalCommerce.Domain.Ordering;
@@ -12,54 +16,6 @@ public sealed record ReadyOrderForDeliveryCommand(
 public sealed record ReadyOrderForDeliveryResult(
     Guid OrderId,
     Guid DeliveryId);
-
-public sealed record DeliveryIdempotencyRecord(
-    string Key,
-    string Fingerprint,
-    ReadyOrderForDeliveryResult Result);
-
-public interface IOrderForDeliveryRepository
-{
-    Task<Order?> GetAsync(Guid orderId, CancellationToken cancellationToken);
-    Task SaveAsync(Order order, CancellationToken cancellationToken);
-}
-
-public interface IDeliveryRepository
-{
-    Task<DeliveryEntity?> GetActiveByOrderIdAsync(Guid orderId, CancellationToken cancellationToken);
-    Task AddAsync(DeliveryEntity delivery, CancellationToken cancellationToken);
-}
-
-public interface IReadyForDeliveryAuthorization
-{
-    Task<bool> CanMarkReadyAsync(
-        Guid actorId,
-        Order order,
-        CancellationToken cancellationToken);
-}
-
-public interface IReadyForDeliveryIdempotencyStore
-{
-    Task<DeliveryIdempotencyRecord?> GetAsync(
-        Guid actorId,
-        string operation,
-        string key,
-        CancellationToken cancellationToken);
-
-    Task<DeliveryIdempotencyRecord?> ReserveAsync(
-        Guid actorId,
-        string operation,
-        string key,
-        string fingerprint,
-        CancellationToken cancellationToken);
-
-    Task CompleteAsync(
-        Guid actorId,
-        string operation,
-        string key,
-        ReadyOrderForDeliveryResult result,
-        CancellationToken cancellationToken);
-}
 
 public interface IReadyForDeliveryUnitOfWork
 {
@@ -81,7 +37,7 @@ public sealed class ReadyOrderForDeliveryHandler
         IOrderForDeliveryRepository orderRepository,
         IDeliveryRepository deliveryRepository,
         IReadyForDeliveryAuthorization authorization,
-        IReadyForDeliveryIdempotencyStore idempotencyStore,
+        IIdempotencyStore idempotencyStore,
         IReadyForDeliveryUnitOfWork unitOfWork)
     {
         OrderRepository = orderRepository;
@@ -94,7 +50,7 @@ public sealed class ReadyOrderForDeliveryHandler
     private IOrderForDeliveryRepository OrderRepository { get; }
     private IDeliveryRepository DeliveryRepository { get; }
     private IReadyForDeliveryAuthorization Authorization { get; }
-    private IReadyForDeliveryIdempotencyStore IdempotencyStore { get; }
+    private IIdempotencyStore IdempotencyStore { get; }
     private IReadyForDeliveryUnitOfWork UnitOfWork { get; }
 
     public async Task<ReadyOrderForDeliveryResult> HandleAsync(
@@ -170,7 +126,10 @@ public sealed class ReadyOrderForDeliveryHandler
                 command.ActorId,
                 Operation,
                 command.IdempotencyKey,
-                result,
+                new IdempotencyCompletion(
+                    "Delivery",
+                    result.DeliveryId,
+                    JsonSerializer.Serialize(result)),
                 transactionCancellationToken);
         }, cancellationToken);
 
@@ -180,18 +139,35 @@ public sealed class ReadyOrderForDeliveryHandler
 
     private static string BuildFingerprint(ReadyOrderForDeliveryCommand command) =>
         Convert.ToHexString(
-            System.Security.Cryptography.SHA256.HashData(
-                System.Text.Encoding.UTF8.GetBytes(
+            SHA256.HashData(
+                Encoding.UTF8.GetBytes(
                     $"{command.OrderId:N}|{command.ActorId:N}")));
 
     private static ReadyOrderForDeliveryResult ValidateExisting(
-        DeliveryIdempotencyRecord existing,
+        IdempotencyRecord existing,
         string fingerprint)
     {
         if (!string.Equals(existing.Fingerprint, fingerprint, StringComparison.Ordinal))
             throw new ReadyOrderForDeliveryRejectedException(
                 "The idempotency key was already used with a different request.");
 
-        return existing.Result;
+        if (existing.Status != IdempotencyStatus.Completed ||
+            !string.Equals(existing.ResourceType, "Delivery", StringComparison.Ordinal) ||
+            existing.ResourceId is null ||
+            string.IsNullOrWhiteSpace(existing.ResultPayload))
+            throw new ReadyOrderForDeliveryRejectedException(
+                "The idempotency record is incomplete.");
+
+        var result = JsonSerializer.Deserialize<ReadyOrderForDeliveryResult>(
+            existing.ResultPayload);
+
+        if (result is null ||
+            result.OrderId == Guid.Empty ||
+            result.DeliveryId == Guid.Empty ||
+            result.DeliveryId != existing.ResourceId.Value)
+            throw new ReadyOrderForDeliveryRejectedException(
+                "The idempotency record is invalid.");
+
+        return result;
     }
 }
