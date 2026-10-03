@@ -17,6 +17,23 @@ public sealed record ReadyOrderForDeliveryResult(
     Guid OrderId,
     Guid DeliveryId);
 
+public interface IOrderForDeliveryRepository
+{
+    Task<Order?> GetAsync(Guid orderId, CancellationToken cancellationToken);
+    Task SaveAsync(Order order, CancellationToken cancellationToken);
+}
+
+public interface IDeliveryRepository
+{
+    Task<DeliveryEntity?> GetActiveByOrderIdAsync(Guid orderId, CancellationToken cancellationToken);
+    Task AddAsync(DeliveryEntity delivery, CancellationToken cancellationToken);
+}
+
+public interface IReadyForDeliveryAuthorization
+{
+    Task<bool> CanMarkReadyAsync(Guid actorId, Order order, CancellationToken cancellationToken);
+}
+
 public interface IReadyForDeliveryUnitOfWork
 {
     Task ExecuteAsync(
