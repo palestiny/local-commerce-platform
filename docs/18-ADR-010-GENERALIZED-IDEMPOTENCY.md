@@ -44,9 +44,19 @@ The project owner explicitly approved this direction. The idempotency persistenc
 
 ## Consequences
 
-Until accepted, Delivery command idempotency remains an open concurrency gate item. No claim of full PostgreSQL command-concurrency GREEN should be made.
+Persistence implementation is now GREEN VERIFIED against real PostgreSQL. Delivery command concurrency remains open because the application handlers and coordinated cross-aggregate operations still require end-to-end contention tests.
 
-## Verification Required After Decision
+## Verification Evidence
+
+CI run `36903751445` (#385), commit `78453abcc7fce887d0e11b60eca2d8d565ba5097`, completed successfully and verified:
+
+- reservation race against real PostgreSQL
+- replay/fingerprint persistence semantics
+- same-transaction completion
+- rollback behavior
+- migration/recovery smoke test
+
+## Remaining Verification Required
 
 - RED tests for reserve/replay/fingerprint conflict.
 - Unique-key race against real PostgreSQL.
