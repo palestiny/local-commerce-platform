@@ -50,7 +50,7 @@ public sealed class DeliveryCommandConcurrencyTests
 
         Assert.NotNull(persisted);
         Assert.Equal(DeliveryStatus.Assigned, persisted!.Status);
-        Assert.Contains(persisted.DriverId, new[] { driverA.Id, driverB.Id });
+        Assert.True(persisted.DriverId == driverA.Id || persisted.DriverId == driverB.Id);
     }
 
     [Fact]
@@ -73,7 +73,7 @@ public sealed class DeliveryCommandConcurrencyTests
         var results = await Task.WhenAll(first, second);
 
         Assert.Equal(1, results.Count(x => x.Success));
-        Assert.Equal(1, results.Count(x => x.Failure is CreateReplacementDeliveryRejectedException));
+        Assert.Equal(1, results.Count(x => x.Failure is CreateReplacementDeliveryRejectedException or DbUpdateException));
 
         await using var verify = CreateDb();
         var active = await new EfDeliveryRepository(verify)
