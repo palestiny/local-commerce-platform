@@ -42,7 +42,8 @@ public sealed class CancelOrderHandler{
    catch(DomainRuleViolationException exception)
    {
     throw new CancelOrderRejectedException(exception.Message);
-   }\n   await _orders.SaveAsync(order,tx);
+   }
+   await _orders.SaveAsync(order,tx);
    if(active is not null) await _deliveries.SaveAsync(active,tx);
    result=new CancelOrderResult(order.Id,active?.Id);await _idem.CompleteAsync(c.ActorId,Operation,c.IdempotencyKey,new IdempotencyCompletion("OrderCancellation",result.OrderId,System.Text.Json.JsonSerializer.Serialize(result)),tx);
   },ct);
