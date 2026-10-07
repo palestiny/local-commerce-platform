@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using LocalCommerce.Application.Idempotency;
+using LocalCommerce.Domain;
 using DeliveryEntity=LocalCommerce.Domain.Delivery.Delivery;
 using DeliveryEntityStatus=LocalCommerce.Domain.Delivery.DeliveryStatus;
 using OrderEntity=LocalCommerce.Domain.Ordering.Order;
