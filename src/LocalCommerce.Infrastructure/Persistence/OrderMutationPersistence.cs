@@ -63,6 +63,28 @@ public sealed class EfOrderForDeliveryRepository(CommerceDbContext db) :
     }
 }
 
+public sealed class EfReplacementDeliveryOrderLock(CommerceDbContext db)
+    : LocalCommerce.Application.Delivery.IReplacementDeliveryOrderLock
+{
+    public async Task<bool> LockOrderForMutationAsync(Guid orderId, CancellationToken cancellationToken)
+    {
+        if (db.Database.CurrentTransaction is null)
+            throw new InvalidOperationException("Order mutation locks require an active transaction.");
+
+        var lockedOrderId = await db.Orders
+            .FromSqlInterpolated($"""
+                SELECT *
+                FROM "Orders"
+                WHERE "Id" = {orderId}
+                FOR UPDATE
+                """)
+            .Select(x => (Guid?)x.Id)
+            .SingleOrDefaultAsync(cancellationToken);
+
+        return lockedOrderId is not null;
+    }
+}
+
 public sealed class EfOrderDeliveryUnitOfWork(CommerceDbContext db) :
     IReadyForDeliveryUnitOfWork,
     ICancelOrderUnitOfWork
