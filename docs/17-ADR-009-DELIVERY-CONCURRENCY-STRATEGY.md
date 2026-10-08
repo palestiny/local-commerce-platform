@@ -82,7 +82,7 @@ Rules:
 
 ## Verification
 
-Verified on PostgreSQL in CI at commit `c9e399db481c17803096464252bc4ab72e6587ff`'s predecessor, `c9e399db481c178030964377ab0d1bd2863d66c1`:
+Verified on PostgreSQL in CI at commit `c9e399db481c178030964377ab0d1bd2863d66c1`:
 
 - Competing driver assignments produce one successful transition and one domain rejection.
 - Competing replacement-delivery creations converge to one active Delivery.
