@@ -37,9 +37,13 @@ public sealed class DeliveryCommandConcurrencyTests
         var actorA = Guid.NewGuid();
         var actorB = Guid.NewGuid();
 
-        var first = RunAssignAsync(delivery.Id, actorA, driverA);
-        var second = RunAssignAsync(delivery.Id, actorB, driverB);
+        var start = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var ready = new CountdownEvent(2);
+        var first = RunAssignAsync(delivery.Id, actorA, driverA, ready, start.Task);
+        var second = RunAssignAsync(delivery.Id, actorB, driverB, ready, start.Task);
 
+        Assert.True(ready.Wait(TimeSpan.FromSeconds(5)), "Both assignment commands must reach the start gate.");
+        start.SetResult(true);
         var results = await Task.WhenAll(first, second);
 
         Assert.Equal(1, results.Count(x => x.Success));
@@ -68,9 +72,13 @@ public sealed class DeliveryCommandConcurrencyTests
         failed.Fail("CUSTOMER_UNAVAILABLE", "Customer unavailable");
         await new EfDeliveryRepository(setup).AddAsync(failed, CancellationToken.None);
 
-        var first = RunReplacementAsync(orderId, storeId);
-        var second = RunReplacementAsync(orderId, storeId);
+        var start = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var ready = new CountdownEvent(2);
+        var first = RunReplacementAsync(orderId, storeId, ready, start.Task);
+        var second = RunReplacementAsync(orderId, storeId, ready, start.Task);
 
+        Assert.True(ready.Wait(TimeSpan.FromSeconds(5)), "Both replacement commands must reach the start gate.");
+        start.SetResult(true);
         var results = await Task.WhenAll(first, second);
 
         Assert.Equal(1, results.Count(x => x.Success));
@@ -87,8 +95,12 @@ public sealed class DeliveryCommandConcurrencyTests
     private static async Task<(bool Success, Exception? Failure)> RunAssignAsync(
         Guid deliveryId,
         Guid actorId,
-        Driver driver)
+        Driver driver,
+        CountdownEvent ready,
+        Task startTask)
     {
+        ready.Signal();
+        await startTask;
         await using var db = CreateDb();
 
         var handler = new AssignDriverHandler(
@@ -117,8 +129,12 @@ public sealed class DeliveryCommandConcurrencyTests
 
     private static async Task<(bool Success, Exception? Failure)> RunReplacementAsync(
         Guid orderId,
-        Guid storeId)
+        Guid storeId,
+        CountdownEvent ready,
+        Task startTask)
     {
+        ready.Signal();
+        await startTask;
         await using var db = CreateDb();
 
         var handler = new CreateReplacementDeliveryHandler(
