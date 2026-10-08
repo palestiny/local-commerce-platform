@@ -256,14 +256,6 @@ public sealed class DeliveryCommandConcurrencyTests
             _inner.AddAsync(delivery, cancellationToken);
     }
 
-    private sealed class EligibleReplacementOrder : IReplacementDeliveryEligibility
-    {
-        public Task<bool> IsOrderEligibleAsync(
-            Guid orderId,
-            CancellationToken cancellationToken) =>
-            Task.FromResult(true);
-    }
-
     private sealed class EfReplacementUnitOfWork(CommerceDbContext db)
         : ICreateReplacementDeliveryUnitOfWork
     {
