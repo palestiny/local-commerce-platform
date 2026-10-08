@@ -127,6 +127,151 @@ public sealed class DeliveryCommandConcurrencyTests
         Assert.Null(active);
     }
 
+    [Theory]
+    [InlineData("ConfirmPickup")]
+    [InlineData("StartDelivery")]
+    [InlineData("CompleteDelivery")]
+    [InlineData("FailDelivery")]
+    public async Task Concurrent_delivery_state_transitions_allow_only_one_winner(string operation)
+    {
+        await using var setup = CreateDb();
+        await DatabaseInitializer.InitializeAsync(setup);
+
+        var orderId = Guid.NewGuid();
+        var storeId = Guid.NewGuid();
+        await SeedOrderAndStoreAsync(setup, orderId, storeId);
+
+        var driverId = Guid.NewGuid();
+        var delivery = LocalCommerce.Domain.Delivery.Delivery.Create(orderId, storeId);
+        delivery.AssignDriver(driverId);
+        if (operation is "StartDelivery" or "CompleteDelivery" or "FailDelivery")
+            delivery.ConfirmPickup(driverId);
+        if (operation is "CompleteDelivery" or "FailDelivery")
+            delivery.StartDelivery();
+        await new EfDeliveryRepository(setup).AddAsync(delivery, CancellationToken.None);
+
+        var start = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var ready = new CountdownEvent(2);
+        var first = RunTransitionAsync(operation, delivery.Id, driverId, ready, start.Task);
+        var second = RunTransitionAsync(operation, delivery.Id, driverId, ready, start.Task);
+
+        Assert.True(ready.Wait(TimeSpan.FromSeconds(5)), "Both transition commands must reach the start gate.");
+        start.SetResult(true);
+        var results = await Task.WhenAll(first, second);
+
+        Assert.Equal(1, results.Count(x => x.Success));
+        Assert.Equal(1, results.Count(x => !x.Success));
+
+        await using var verify = CreateDb();
+        var persisted = await new EfDeliveryRepository(verify).GetAsync(delivery.Id, CancellationToken.None);
+        Assert.NotNull(persisted);
+        Assert.Equal(operation switch
+        {
+            "ConfirmPickup" => DeliveryStatus.PickedUp,
+            "StartDelivery" => DeliveryStatus.OutForDelivery,
+            "CompleteDelivery" => DeliveryStatus.Delivered,
+            "FailDelivery" => DeliveryStatus.Failed,
+            _ => throw new ArgumentOutOfRangeException(nameof(operation))
+        }, persisted!.Status);
+    }
+
+    private static async Task<(bool Success, Exception? Failure)> RunTransitionAsync(
+        string operation,
+        Guid deliveryId,
+        Guid driverId,
+        CountdownEvent ready,
+        Task startTask)
+    {
+        ready.Signal();
+        await startTask;
+        await using var db = CreateDb();
+        var repository = new EfTransitionDeliveryRepository(db);
+        var idempotency = new EfGeneralizedIdempotencyStore(db);
+        var unitOfWork = new EfTransitionUnitOfWork(db);
+        var authorization = new AllowTransitionAuthorization();
+
+        try
+        {
+            switch (operation)
+            {
+                case "ConfirmPickup":
+                    await new ConfirmPickupHandler(repository, authorization, idempotency, unitOfWork)
+                        .HandleAsync(new ConfirmPickupCommand(deliveryId, driverId, $"pickup-{Guid.NewGuid():N}"));
+                    break;
+                case "StartDelivery":
+                    await new StartDeliveryHandler(repository, authorization, idempotency, unitOfWork)
+                        .HandleAsync(new StartDeliveryCommand(deliveryId, driverId, $"start-{Guid.NewGuid():N}"));
+                    break;
+                case "CompleteDelivery":
+                    await new CompleteDeliveryHandler(repository, authorization, idempotency, unitOfWork)
+                        .HandleAsync(new CompleteDeliveryCommand(deliveryId, driverId, $"complete-{Guid.NewGuid():N}"));
+                    break;
+                case "FailDelivery":
+                    await new FailDeliveryHandler(repository, authorization, idempotency, unitOfWork)
+                        .HandleAsync(new FailDeliveryCommand(deliveryId, driverId, "RACE_TEST", "Concurrent failure transition", $"fail-{Guid.NewGuid():N}"));
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(operation));
+            }
+
+            return (true, null);
+        }
+        catch (Exception exception)
+        {
+            return (false, exception);
+        }
+    }
+
+    private sealed class EfTransitionDeliveryRepository(CommerceDbContext db) :
+        IConfirmPickupDeliveryRepository,
+        IStartDeliveryDeliveryRepository,
+        ICompleteDeliveryDeliveryRepository,
+        IFailDeliveryDeliveryRepository
+    {
+        private readonly EfDeliveryRepository _inner = new(db);
+        public Task<LocalCommerce.Domain.Delivery.Delivery?> GetAsync(Guid id, CancellationToken ct) => _inner.GetAsync(id, ct);
+        public Task SaveAsync(LocalCommerce.Domain.Delivery.Delivery delivery, CancellationToken ct) => _inner.SaveAsync(delivery, ct);
+    }
+
+    private sealed class AllowTransitionAuthorization :
+        IConfirmPickupAuthorization,
+        IStartDeliveryAuthorization,
+        ICompleteDeliveryAuthorization,
+        IFailDeliveryAuthorization
+    {
+        public Task<bool> CanConfirmPickupAsync(Guid actorId, LocalCommerce.Domain.Delivery.Delivery delivery, CancellationToken ct) =>
+            Task.FromResult(delivery.DriverId == actorId);
+        public Task<bool> CanStartDeliveryAsync(Guid actorId, LocalCommerce.Domain.Delivery.Delivery delivery, CancellationToken ct) =>
+            Task.FromResult(delivery.DriverId == actorId);
+        public Task<bool> CanCompleteDeliveryAsync(Guid actorId, LocalCommerce.Domain.Delivery.Delivery delivery, CancellationToken ct) =>
+            Task.FromResult(delivery.DriverId == actorId);
+        public Task<bool> CanFailDeliveryAsync(Guid actorId, LocalCommerce.Domain.Delivery.Delivery delivery, CancellationToken ct) =>
+            Task.FromResult(delivery.DriverId == actorId);
+    }
+
+    private sealed class EfTransitionUnitOfWork(CommerceDbContext db) :
+        IConfirmPickupUnitOfWork,
+        IStartDeliveryUnitOfWork,
+        ICompleteDeliveryUnitOfWork,
+        IFailDeliveryUnitOfWork
+    {
+        public async Task ExecuteAsync(Func<CancellationToken, Task> operation, CancellationToken ct)
+        {
+            await using var transaction = await db.Database.BeginTransactionAsync(ct);
+            try
+            {
+                await operation(ct);
+                await db.SaveChangesAsync(ct);
+                await transaction.CommitAsync(ct);
+            }
+            catch
+            {
+                await transaction.RollbackAsync(ct);
+                throw;
+            }
+        }
+    }
+
     private static async Task<(bool Success, Exception? Failure)> RunCancellationAsync(
         Guid orderId,
         CountdownEvent ready,
