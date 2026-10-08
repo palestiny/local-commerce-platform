@@ -33,6 +33,7 @@ public interface ICreateReplacementDeliveryUnitOfWork
 
 public sealed class CreateReplacementDeliveryHandler(
     ICreateReplacementDeliveryRepository repository,
+    IReplacementDeliveryOrderLock orderLock,
     IReplacementDeliveryEligibility eligibility,
     IIdempotencyStore idempotencyStore,
     ICreateReplacementDeliveryUnitOfWork unitOfWork)
