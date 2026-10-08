@@ -132,7 +132,11 @@ public sealed class EfDeliveryRepository(CommerceDbContext db) : IDeliveryReposi
         else
         {
             query = db.Deliveries.AsNoTracking()
-                .Where(x => x.OrderId == orderId && IsActive(x.Status));
+                .Where(x => x.OrderId == orderId &&
+                    (x.Status == DeliveryStatus.Unassigned ||
+                     x.Status == DeliveryStatus.Assigned ||
+                     x.Status == DeliveryStatus.PickedUp ||
+                     x.Status == DeliveryStatus.OutForDelivery));
         }
 
         var entity = await query.SingleOrDefaultAsync(cancellationToken);
