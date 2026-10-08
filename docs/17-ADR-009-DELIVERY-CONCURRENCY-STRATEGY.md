@@ -82,17 +82,15 @@ Rules:
 
 ## Verification
 
-Verified on PostgreSQL in CI at commit `c9e399db481c178030964377ab0d1bd2863d66c1`:
+Verified on PostgreSQL in GitHub Actions CI at commit `fdba8b7524b8550ef707fc80780327c9a8dce189`, run [37861612028](https://github.com/palestiny/local-commerce-platform/actions/runs/37861612028):
 
 - Competing driver assignments produce one successful transition and one domain rejection.
 - Competing replacement-delivery creations converge to one active Delivery.
 - Concurrent order cancellations serialize on the Order row.
+- A cancellation-versus-replacement race does not leave an active Delivery for a cancelled Order.
+- Replacement eligibility is evaluated against persisted Order state while the Order row lock is held; only `ReadyForPickup` is eligible.
+- Concurrent `ConfirmPickup`, `StartDelivery`, `CompleteDelivery`, and `FailDelivery` commands each produce exactly one winner; the losing command must raise its operation-specific rejection exception rather than being counted as a failure for any arbitrary exception.
 - Idempotency reservation, completion, and rollback persistence tests pass.
 - Migration and recovery smoke test passes.
 
-Additional verification is in progress on the newer commit:
-
-- Race order cancellation against replacement-delivery creation, asserting a cancelled Order never retains an active Delivery.
-- Check replacement eligibility against the persisted Order state while the Order row lock is held; only `ReadyForPickup` is eligible.
-
-The gate remains **OPEN** until CI passes on the newest commit and the remaining Delivery transitions (ConfirmPickup, StartDelivery, CompleteDelivery, and FailDelivery) have explicit PostgreSQL concurrency coverage or a documented reason why their existing row-lock path is sufficient.
+The CI run completed successfully, including restore, test, and migration/recovery smoke-test steps. This closes the verification gate defined in this ADR for the listed M1 Delivery concurrency scenarios. This is not a claim that every possible cross-command interleaving or production-load behavior has been exhaustively tested; additional races should be added when new mutation paths are introduced or the command model changes.
