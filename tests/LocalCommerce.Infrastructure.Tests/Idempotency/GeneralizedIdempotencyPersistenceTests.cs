@@ -121,22 +121,29 @@ public sealed class GeneralizedIdempotencyPersistenceTests
         await using var tx1 = await db1.Database.BeginTransactionAsync();
         await using var tx2 = await db2.Database.BeginTransactionAsync();
 
-        var task1 = a.ReserveAsync(scopeId, "CompleteDelivery", "race-key", "fingerprint", default);
-        var task2 = b.ReserveAsync(scopeId, "CompleteDelivery", "race-key", "fingerprint", default);
+        // Hold the first reservation uncommitted so the second independent
+        // transaction must wait on the unique key instead of relying on a
+        // scheduler-dependent race between two inserts.
+        var firstResult = await a.ReserveAsync(
+            scopeId, "CompleteDelivery", "race-key", "fingerprint", default);
+        Assert.Null(firstResult);
 
-        var resultsTask = Task.WhenAll(task1, task2);
+        var secondTask = b.ReserveAsync(
+            scopeId, "CompleteDelivery", "race-key", "fingerprint", default);
 
-        await Task.WhenAny(task1, task2);
-        Assert.False(resultsTask.IsCompleted);
+        await Task.Delay(100);
+        Assert.False(secondTask.IsCompleted);
 
+        // The first reservation command has finished, so committing tx1 does
+        // not race a still-running command on db1's connection.
         await tx1.CommitAsync();
 
-        var results = await resultsTask;
+        var secondResult = await secondTask;
+        Assert.NotNull(secondResult);
+        Assert.Equal(IdempotencyStatus.Reserved, secondResult.Status);
+        Assert.Equal("fingerprint", secondResult.Fingerprint);
 
         await tx2.CommitAsync();
-
-        Assert.Equal(1, results.Count(x => x is null));
-        Assert.Equal(1, results.Count(x => x is not null));
     }
 
     [Fact]
