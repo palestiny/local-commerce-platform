@@ -139,6 +139,7 @@ public sealed class DeliveryCommandConcurrencyTests
 
         var handler = new CreateReplacementDeliveryHandler(
             new EfReplacementDeliveryRepository(db),
+            new EfReplacementDeliveryOrderLock(db),
             new EligibleReplacementOrder(),
             new EfGeneralizedIdempotencyStore(db),
             new EfReplacementUnitOfWork(db));
