@@ -1,5 +1,6 @@
 using LocalCommerce.Application.Delivery;
 using LocalCommerce.Application.Idempotency;
+using LocalCommerce.Domain;
 using LocalCommerce.Domain.Delivery;
 using LocalCommerce.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
