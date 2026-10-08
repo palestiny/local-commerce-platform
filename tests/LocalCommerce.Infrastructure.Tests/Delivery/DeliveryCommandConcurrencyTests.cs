@@ -241,7 +241,23 @@ public sealed class DeliveryCommandConcurrencyTests
             OrderNumber = $"ORD-{Guid.NewGuid():N}",
             Status = LocalCommerce.Domain.Ordering.OrderStatus.ReadyForPickup,
             CreatedAt = DateTimeOffset.UtcNow,
-            UpdatedAt = DateTimeOffset.UtcNow
+            UpdatedAt = DateTimeOffset.UtcNow,
+            Items =
+            [
+                new OrderItemEntity
+                {
+                    Id = Guid.NewGuid(),
+                    OrderId = orderId,
+                    ProductId = Guid.NewGuid(),
+                    StoreId = storeId,
+                    ProductName = "Concurrency test item",
+                    VariantName = null,
+                    UnitPrice = 10m,
+                    Quantity = 1,
+                    LineDiscount = 0m,
+                    LineTotal = 10m
+                }
+            ]
         });
 
         await db.SaveChangesAsync();
