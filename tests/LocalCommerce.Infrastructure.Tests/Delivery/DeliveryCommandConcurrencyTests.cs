@@ -162,6 +162,25 @@ public sealed class DeliveryCommandConcurrencyTests
         Assert.Equal(1, results.Count(x => x.Success));
         Assert.Equal(1, results.Count(x => !x.Success));
 
+        var failure = results.Single(x => !x.Success).Failure;
+        switch (operation)
+        {
+            case "ConfirmPickup":
+                Assert.IsType<ConfirmPickupRejectedException>(failure);
+                break;
+            case "StartDelivery":
+                Assert.IsType<StartDeliveryRejectedException>(failure);
+                break;
+            case "CompleteDelivery":
+                Assert.IsType<CompleteDeliveryRejectedException>(failure);
+                break;
+            case "FailDelivery":
+                Assert.IsType<FailDeliveryRejectedException>(failure);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(operation));
+        }
+
         await using var verify = CreateDb();
         var persisted = await new EfDeliveryRepository(verify).GetAsync(delivery.Id, CancellationToken.None);
         Assert.NotNull(persisted);
