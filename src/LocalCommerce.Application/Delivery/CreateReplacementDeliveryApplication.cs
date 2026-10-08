@@ -16,6 +16,11 @@ public interface ICreateReplacementDeliveryRepository
     Task AddAsync(DeliveryEntity delivery, CancellationToken ct);
 }
 
+public interface IReplacementDeliveryOrderLock
+{
+    Task<bool> LockOrderForMutationAsync(Guid orderId, CancellationToken ct);
+}
+
 public interface IReplacementDeliveryEligibility
 {
     Task<bool> IsOrderEligibleAsync(Guid orderId, CancellationToken ct);
