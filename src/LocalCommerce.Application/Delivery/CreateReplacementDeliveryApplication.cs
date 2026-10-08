@@ -68,6 +68,11 @@ public sealed class CreateReplacementDeliveryHandler(
                 return;
             }
 
+            // Use the same cross-aggregate lock order as ReadyOrderForDelivery and CancelOrder:
+            // lock Order first, then inspect/lock its active Delivery.
+            if (!await orderLock.LockOrderForMutationAsync(command.OrderId, tx))
+                throw new CreateReplacementDeliveryRejectedException("Order was not found.");
+
             if (!await eligibility.IsOrderEligibleAsync(command.OrderId, tx))
                 throw new CreateReplacementDeliveryRejectedException("Order is not eligible for replacement delivery.");
 
