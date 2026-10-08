@@ -71,17 +71,16 @@ public sealed class EfReplacementDeliveryOrderLock(CommerceDbContext db)
         if (db.Database.CurrentTransaction is null)
             throw new InvalidOperationException("Order mutation locks require an active transaction.");
 
-        var lockedOrderId = await db.Orders
+        var lockedOrder = await db.Orders
             .FromSqlInterpolated($"""
                 SELECT *
                 FROM "Orders"
                 WHERE "Id" = {orderId}
                 FOR UPDATE
                 """)
-            .Select(x => (Guid?)x.Id)
             .SingleOrDefaultAsync(cancellationToken);
 
-        return lockedOrderId is not null;
+        return lockedOrder is not null;
     }
 }
 
