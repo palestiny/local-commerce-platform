@@ -7,7 +7,6 @@ using LocalCommerce.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
-[assembly: CollectionBehavior(DisableTestParallelization = true)]
 
 namespace LocalCommerce.Infrastructure.Tests.Ordering;
 
