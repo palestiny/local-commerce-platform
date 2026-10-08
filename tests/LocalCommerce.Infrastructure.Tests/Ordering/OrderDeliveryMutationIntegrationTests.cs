@@ -110,9 +110,13 @@ public sealed class OrderDeliveryMutationIntegrationTests
         order.MarkReadyForPickup();
         await SeedOrderAsync(setup, order, storeId);
 
-        var firstTask = RunCancellationAsync(order.Id);
-        var secondTask = RunCancellationAsync(order.Id);
+        var start = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var ready = new CountdownEvent(2);
+        var firstTask = RunCancellationAsync(order.Id, ready, start.Task);
+        var secondTask = RunCancellationAsync(order.Id, ready, start.Task);
 
+        Assert.True(ready.Wait(TimeSpan.FromSeconds(5)), "Both cancellation commands must reach the start gate.");
+        start.SetResult(true);
         var results = await Task.WhenAll(firstTask, secondTask);
         Assert.Equal(1, results.Count(x => x.Success));
         Assert.Equal(1, results.Count(x => x.Failure is CancelOrderRejectedException));
@@ -122,8 +126,13 @@ public sealed class OrderDeliveryMutationIntegrationTests
         Assert.Equal(OrderStatus.Cancelled, status);
     }
 
-    private static async Task<(bool Success, Exception? Failure)> RunCancellationAsync(Guid orderId)
+    private static async Task<(bool Success, Exception? Failure)> RunCancellationAsync(
+        Guid orderId,
+        CountdownEvent ready,
+        Task startTask)
     {
+        ready.Signal();
+        await startTask;
         await using var db = CreateDb();
         var actorId = Guid.NewGuid();
         var handler = new CancelOrderHandler(
