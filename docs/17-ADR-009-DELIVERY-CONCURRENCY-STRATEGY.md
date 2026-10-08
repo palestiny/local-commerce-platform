@@ -82,6 +82,17 @@ Rules:
 
 ## Verification
 
-The first verification increment is a real PostgreSQL row-lock test using two independent DbContexts and transactions.
+Verified on PostgreSQL in CI at commit `c9e399db481c17803096464252bc4ab72e6587ff`'s predecessor, `c9e399db481c178030964377ab0d1bd2863d66c1`:
 
-This ADR does **not** claim end-to-end Delivery command concurrency is GREEN. That remains open until application commands, idempotency persistence, and contention scenarios are verified against PostgreSQL.
+- Competing driver assignments produce one successful transition and one domain rejection.
+- Competing replacement-delivery creations converge to one active Delivery.
+- Concurrent order cancellations serialize on the Order row.
+- Idempotency reservation, completion, and rollback persistence tests pass.
+- Migration and recovery smoke test passes.
+
+Additional verification is in progress on the newer commit:
+
+- Race order cancellation against replacement-delivery creation, asserting a cancelled Order never retains an active Delivery.
+- Check replacement eligibility against the persisted Order state while the Order row lock is held; only `ReadyForPickup` is eligible.
+
+The gate remains **OPEN** until CI passes on the newest commit and the remaining Delivery transitions (ConfirmPickup, StartDelivery, CompleteDelivery, and FailDelivery) have explicit PostgreSQL concurrency coverage or a documented reason why their existing row-lock path is sufficient.
