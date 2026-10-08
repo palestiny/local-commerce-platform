@@ -77,7 +77,8 @@ Rules:
 - Delivery commands must not rely on a Delivery snapshot loaded before the Unit of Work.
 - Existing application handlers that currently load Delivery before entering the Unit of Work require refactoring before their real PostgreSQL concurrency can be claimed GREEN.
 - Persistence tests must prove that a concurrent command observes the post-commit state rather than applying a stale transition.
-- Coordinated cancellation must lock the Order and active Delivery consistently to avoid cross-aggregate races.
+- Coordinated cancellation, ready-for-delivery, and replacement-delivery creation must lock the Order before inspecting or locking its Delivery. This also serializes the "no active Delivery exists" check against order cancellation, where locking only existing Delivery rows is insufficient.
+- Replacement-delivery creation uses the database's unique active-delivery index as a final integrity backstop, not as its primary serialization strategy.
 
 ## Verification
 
