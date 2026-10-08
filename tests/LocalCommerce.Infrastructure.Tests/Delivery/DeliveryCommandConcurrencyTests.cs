@@ -2,6 +2,7 @@ using LocalCommerce.Application.Delivery;
 using LocalCommerce.Application.Idempotency;
 using LocalCommerce.Domain;
 using LocalCommerce.Domain.Delivery;
+using LocalCommerce.Application.Ordering;
 using LocalCommerce.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
@@ -90,6 +91,67 @@ public sealed class DeliveryCommandConcurrencyTests
 
         Assert.NotNull(active);
         Assert.Equal(DeliveryStatus.Unassigned, active!.Status);
+    }
+
+    [Fact]
+    public async Task Concurrent_order_cancellation_and_replacement_never_leave_active_delivery_for_cancelled_order()
+    {
+        await using var setup = CreateDb();
+        await DatabaseInitializer.InitializeAsync(setup);
+
+        var orderId = Guid.NewGuid();
+        var storeId = Guid.NewGuid();
+        await SeedOrderAndStoreAsync(setup, orderId, storeId);
+
+        var failed = LocalCommerce.Domain.Delivery.Delivery.Create(orderId, storeId);
+        failed.Fail("CUSTOMER_UNAVAILABLE", "Customer unavailable");
+        await new EfDeliveryRepository(setup).AddAsync(failed, CancellationToken.None);
+
+        var start = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var ready = new CountdownEvent(2);
+        var cancellation = RunCancellationAsync(orderId, ready, start.Task);
+        var replacement = RunReplacementAsync(orderId, storeId, ready, start.Task);
+
+        Assert.True(ready.Wait(TimeSpan.FromSeconds(5)), "Both commands must reach the start gate.");
+        start.SetResult(true);
+
+        var results = await Task.WhenAll(cancellation, replacement);
+        Assert.True(results[0].Success, $"Cancellation must succeed; failure: {results[0].Failure}");
+
+        await using var verify = CreateDb();
+        var persistedOrder = await verify.Orders.SingleAsync(x => x.Id == orderId);
+        var active = await new EfDeliveryRepository(verify)
+            .GetActiveByOrderIdAsync(orderId, CancellationToken.None);
+
+        Assert.Equal(LocalCommerce.Domain.Ordering.OrderStatus.Cancelled, persistedOrder.Status);
+        Assert.Null(active);
+    }
+
+    private static async Task<(bool Success, Exception? Failure)> RunCancellationAsync(
+        Guid orderId,
+        CountdownEvent ready,
+        Task startTask)
+    {
+        ready.Signal();
+        await startTask;
+        await using var db = CreateDb();
+
+        var handler = new CancelOrderHandler(
+            new EfOrderForDeliveryRepository(db),
+            new EfDeliveryRepository(db),
+            new AllowCancelAuthorization(),
+            new EfGeneralizedIdempotencyStore(db),
+            new EfOrderDeliveryUnitOfWork(db));
+
+        try
+        {
+            await handler.HandleAsync(new CancelOrderCommand(orderId, Guid.NewGuid(), $"cancel-{Guid.NewGuid():N}"));
+            return (true, null);
+        }
+        catch (Exception exception)
+        {
+            return (false, exception);
+        }
     }
 
     private static async Task<(bool Success, Exception? Failure)> RunAssignAsync(
@@ -205,6 +267,15 @@ public sealed class DeliveryCommandConcurrencyTests
     {
         public Task<Driver?> GetAsync(Guid driverId, CancellationToken cancellationToken) =>
             Task.FromResult<Driver?>(driver.Id == driverId ? driver : null);
+    }
+
+    private sealed class AllowCancelAuthorization : ICancelOrderAuthorization
+    {
+        public Task<bool> CanCancelAsync(
+            Guid actorId,
+            LocalCommerce.Domain.Ordering.Order order,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(true);
     }
 
     private sealed class AllowAssignAuthorization : IAssignDriverAuthorization
