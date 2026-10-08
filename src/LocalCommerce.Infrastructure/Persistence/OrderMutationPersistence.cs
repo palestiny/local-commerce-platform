@@ -63,6 +63,23 @@ public sealed class EfOrderForDeliveryRepository(CommerceDbContext db) :
     }
 }
 
+public sealed class EfReplacementDeliveryEligibility(CommerceDbContext db)
+    : IReplacementDeliveryEligibility
+{
+    public async Task<bool> IsOrderEligibleAsync(Guid orderId, CancellationToken cancellationToken)
+    {
+        if (db.Database.CurrentTransaction is null)
+            throw new InvalidOperationException("Replacement eligibility must be checked inside an active transaction.");
+
+        var status = await db.Orders
+            .Where(x => x.Id == orderId)
+            .Select(x => (LocalCommerce.Domain.Ordering.OrderStatus?)x.Status)
+            .SingleOrDefaultAsync(cancellationToken);
+
+        return status == LocalCommerce.Domain.Ordering.OrderStatus.ReadyForPickup;
+    }
+}
+
 public sealed class EfReplacementDeliveryOrderLock(CommerceDbContext db)
     : LocalCommerce.Application.Delivery.IReplacementDeliveryOrderLock
 {
