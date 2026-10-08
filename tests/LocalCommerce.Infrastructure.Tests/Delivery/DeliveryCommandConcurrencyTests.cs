@@ -38,7 +38,7 @@ public sealed class DeliveryCommandConcurrencyTests
         var actorB = Guid.NewGuid();
 
         var start = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var ready = new CountdownEvent(2);
+        using var ready = new CountdownEvent(2);
         var first = RunAssignAsync(delivery.Id, actorA, driverA, ready, start.Task);
         var second = RunAssignAsync(delivery.Id, actorB, driverB, ready, start.Task);
 
@@ -73,7 +73,7 @@ public sealed class DeliveryCommandConcurrencyTests
         await new EfDeliveryRepository(setup).AddAsync(failed, CancellationToken.None);
 
         var start = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var ready = new CountdownEvent(2);
+        using var ready = new CountdownEvent(2);
         var first = RunReplacementAsync(orderId, storeId, ready, start.Task);
         var second = RunReplacementAsync(orderId, storeId, ready, start.Task);
 
