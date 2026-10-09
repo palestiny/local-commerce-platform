@@ -94,6 +94,41 @@ public sealed class DeliveryCommandConcurrencyTests
     }
 
     [Fact]
+    public async Task Replacement_with_different_store_is_rejected_and_persists_no_active_delivery()
+    {
+        await using var setup = CreateDb();
+        await DatabaseInitializer.InitializeAsync(setup);
+
+        var orderId = Guid.NewGuid();
+        var orderStoreId = Guid.NewGuid();
+        var wrongStoreId = Guid.NewGuid();
+        await SeedOrderAndStoreAsync(setup, orderId, orderStoreId);
+        setup.Stores.Add(new StoreEntity { Id = wrongStoreId, IsActive = true });
+        await setup.SaveChangesAsync();
+
+        var failed = LocalCommerce.Domain.Delivery.Delivery.Create(orderId, orderStoreId);
+        failed.Fail("CUSTOMER_UNAVAILABLE", "Customer unavailable");
+        await new EfDeliveryRepository(setup).AddAsync(failed, CancellationToken.None);
+
+        await using var commandDb = CreateDb();
+        var handler = new CreateReplacementDeliveryHandler(
+            new EfReplacementDeliveryRepository(commandDb),
+            new EfReplacementDeliveryOrderLock(commandDb),
+            new EfReplacementDeliveryEligibility(commandDb),
+            new EfGeneralizedIdempotencyStore(commandDb),
+            new EfOrderDeliveryUnitOfWork(commandDb));
+
+        await Assert.ThrowsAsync<CreateReplacementDeliveryRejectedException>(() =>
+            handler.HandleAsync(new CreateReplacementDeliveryCommand(
+                orderId, wrongStoreId, Guid.NewGuid(), $"replacement-mismatch-{Guid.NewGuid():N}")));
+
+        await using var verify = CreateDb();
+        var active = await new EfDeliveryRepository(verify)
+            .GetActiveByOrderIdAsync(orderId, CancellationToken.None);
+        Assert.Null(active);
+    }
+
+    [Fact]
     public async Task Concurrent_order_cancellation_and_replacement_never_leave_active_delivery_for_cancelled_order()
     {
         await using var setup = CreateDb();
