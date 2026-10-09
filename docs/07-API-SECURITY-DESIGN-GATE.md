@@ -1,6 +1,6 @@
 # API & Security Design Gate
 
-Status: **CONTRACT PROPOSAL READY FOR OWNER REVIEW — HTTP IMPLEMENTATION BLOCKED**
+Status: **V1 API/SECURITY DIRECTION APPROVED — IMPLEMENTATION BLOCKED PENDING CONTRACT CLOSURE**
 
 ## Objective
 
@@ -22,7 +22,7 @@ Rules:
 - Every response that represents a failed request includes a correlation/trace identifier when available.
 - HTTP semantics must distinguish validation, authentication, authorization, not-found, conflict and server/provider failures.
 
-Exact route names and DTOs below are a proposed v1 contract, not yet owner-approved. Do not implement controllers until the contract is accepted and application error semantics are mapped without parsing exception messages.
+Owner decision: the v1 API/security direction and proposed route matrix below are APPROVED as the design baseline. This does not freeze every DTO field or operational setting. Do not implement controllers until the remaining contract decisions are resolved and application error semantics can be mapped without parsing exception messages.
 
 ## Proposed v1 Route Matrix
 
@@ -38,7 +38,7 @@ Exact route names and DTOs below are a proposed v1 contract, not yet owner-appro
 | POST | `/api/v1/deliveries/{deliveryId}/complete` | Complete delivery | `200 OK` |
 | POST | `/api/v1/deliveries/{deliveryId}/fail` | Record an explicit delivery failure | `200 OK` |
 
-The assignment route uses an explicit command rather than a client-controlled Delivery status. The failure request carries a failure code and reason. Route naming, success payload fields, and exact DTO schemas remain subject to owner approval.
+Accepted baseline: the assignment route uses an explicit command rather than a client-controlled Delivery status; the failure request carries a failure code and reason. Route refinements, success payload fields, and exact DTO schemas remain open for contract closure and compatibility review.
 
 ## Actor Identity and Resource Authorization
 
@@ -61,7 +61,7 @@ Every state-changing command requires an `Idempotency-Key` request header.
 - The key reservation, business mutation, and completion record must share the established persistence transaction where that command requires atomicity.
 - Never log the raw key or credentials. Logs may include operation, a safe correlation ID, and a non-reversible key digest if operationally required.
 
-The header length/character boundary and replay response status are proposed choices that require owner approval before becoming a public compatibility promise.
+The owner has approved the proposed idempotency design direction: same actor/operation/key and same fingerprint replays the original completed result; a different fingerprint conflicts; key reservation, mutation, and completion must share the required persistence transaction. The proposed 1–128 visible ASCII character boundary and exact replay HTTP status remain provisional until contract closure.
 
 ## Standard Error Contract
 
@@ -117,7 +117,9 @@ Do not map exceptions by matching their human-readable messages. Before HTTP imp
 - Error/log redaction tests.
 - OpenAPI contract reviewed against the implemented routes and DTOs.
 
-## Open Decisions (Do Not Guess)
+## Remaining Decisions (Do Not Guess)
+
+The owner approved the design direction, not the unselected infrastructure and deployment details. Keep these open until evidence and requirements support a choice:
 
 - Authentication provider/framework and token/session lifecycle.
 - Exact permission matrix for dispatch/admin operations.
@@ -128,7 +130,7 @@ Do not map exceptions by matching their human-readable messages. Before HTTP imp
 
 ## Gate Exit Criteria
 
-- Owner approves the v1 route matrix and DTO direction.
+- The owner has approved the v1 route matrix and DTO direction as the baseline; resolve and document any remaining DTO/status refinements before implementation.
 - Stable application error codes/types exist for validation, authorization, not-found, state conflict, idempotency conflict, and provider failures.
 - Authentication integration boundary is selected without coupling Domain/Application to the provider.
 - Resource-level authorization policy is implemented and testable.
