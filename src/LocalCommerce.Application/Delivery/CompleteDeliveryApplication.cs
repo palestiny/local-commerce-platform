@@ -64,14 +64,14 @@ public sealed class CompleteDeliveryHandler(
                 ?? throw new CompleteDeliveryRejectedException("Delivery was not found.", ApplicationErrorCodes.ResourceNotFound);
 
             if (delivery.Status != DeliveryEntityStatus.OutForDelivery)
-                throw new CompleteDeliveryRejectedException("Delivery must be OUT_FOR_DELIVERY.");
+                throw new CompleteDeliveryRejectedException("Delivery must be OUT_FOR_DELIVERY.", ApplicationErrorCodes.DeliveryInvalidState);
 
             if (!await authorization.CanCompleteDeliveryAsync(command.ActorId, delivery, tx))
                 throw new CompleteDeliveryRejectedException("Actor is not authorized to complete delivery.", ApplicationErrorCodes.AuthorizationForbidden);
 
             var driverId = delivery.DriverId;
             if (driverId is null || driverId == Guid.Empty)
-                throw new CompleteDeliveryRejectedException("Delivery must have an assigned driver.");
+                throw new CompleteDeliveryRejectedException("Delivery must have an assigned driver.", ApplicationErrorCodes.DeliveryInvalidState);
 
             try { delivery.Complete(); }
             catch (DomainRuleViolationException exception) { throw new CompleteDeliveryRejectedException(exception.Message, ApplicationErrorCodes.DeliveryInvalidState); }
