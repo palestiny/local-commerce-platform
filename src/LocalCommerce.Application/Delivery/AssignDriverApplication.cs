@@ -113,7 +113,7 @@ public sealed class AssignDriverHandler(
             throw new AssignDriverRejectedException("The idempotency key was already used with a different request.", ApplicationErrorCodes.IdempotencyKeyReused);
 
         if (existing.Status == IdempotencyStatus.Reserved)
-            throw new AssignDriverRejectedException("Idempotency operation is still in progress.", ApplicationErrorCodes.IdempotencyResultUnavailable);
+            throw new AssignDriverRejectedException("A persisted idempotency reservation cannot be proven to be in progress.", ApplicationErrorCodes.InternalUnexpected);
 
         if (existing.Status != IdempotencyStatus.Completed ||
             !string.Equals(existing.ResourceType, "DeliveryAssignment", StringComparison.Ordinal) ||
