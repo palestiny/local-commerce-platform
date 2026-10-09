@@ -67,7 +67,7 @@ public sealed class FailDeliveryHandler(
                 ?? throw new FailDeliveryRejectedException("Delivery was not found.", ApplicationErrorCodes.ResourceNotFound);
 
             if (delivery.Status is DeliveryEntityStatus.Delivered or DeliveryEntityStatus.Failed)
-                throw new FailDeliveryRejectedException("Terminal Delivery cannot be failed.");
+                throw new FailDeliveryRejectedException("Terminal Delivery cannot be failed.", ApplicationErrorCodes.DeliveryInvalidState);
 
             if (!await authorization.CanFailDeliveryAsync(command.ActorId, delivery, tx))
                 throw new FailDeliveryRejectedException("Actor is not authorized to fail delivery.", ApplicationErrorCodes.AuthorizationForbidden);
