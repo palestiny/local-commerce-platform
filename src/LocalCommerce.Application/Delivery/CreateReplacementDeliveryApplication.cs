@@ -104,7 +104,7 @@ public sealed class CreateReplacementDeliveryHandler(
             throw new CreateReplacementDeliveryRejectedException("The idempotency key was already used with a different request.", ApplicationErrorCodes.IdempotencyKeyReused);
 
         if (existing.Status == IdempotencyStatus.Reserved)
-            throw new CreateReplacementDeliveryRejectedException("Idempotency operation is still in progress.", ApplicationErrorCodes.IdempotencyResultUnavailable);
+            throw new CreateReplacementDeliveryRejectedException("A persisted idempotency reservation cannot be proven to be in progress.", ApplicationErrorCodes.InternalUnexpected);
 
         if (existing.Status != IdempotencyStatus.Completed ||
             !string.Equals(existing.ResourceType, "Delivery", StringComparison.Ordinal) ||
