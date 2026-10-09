@@ -87,3 +87,13 @@ Review scope: the current Create Order, Get Customer Order Details, and Cancel O
 - No authentication provider, first HTTP slice, final DTO schema, idempotency header syntax, or cancellation concealment policy is selected by this review.
 
 **Next closure action:** complete the route-level decisions above for the owner-approved initial slice, then add adapter contract tests before implementing controllers. Keep HTTP implementation blocked until the API/security gate exit evidence is met.
+
+
+## Additional application review: replacement delivery
+
+Review of `src/LocalCommerce.Application/Delivery/CreateReplacementDeliveryApplication.cs` identified two unresolved checks:
+
+- The handler accepts `ActorId` but has no authorization dependency or permission check.
+- The handler accepts `StoreId`, checks order eligibility by `OrderId`, and creates a Delivery using the supplied `StoreId`; the reviewed code does not verify that the Store belongs to the Order.
+
+Do not include this operation in an HTTP slice until the allowed actor policy and Order–Store consistency rule are defined and enforced. Add tests for an actor without permission and a mismatched StoreId. This is a finding about the reviewed application handler; this review did not establish that an HTTP endpoint exposes it.
