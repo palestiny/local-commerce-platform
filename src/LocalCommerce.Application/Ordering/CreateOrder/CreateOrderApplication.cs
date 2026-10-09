@@ -1,3 +1,4 @@
+using LocalCommerce.Application.Errors;
 using LocalCommerce.Application.Idempotency;
 using LocalCommerce.Domain.Ordering;
 
@@ -75,9 +76,12 @@ public interface IOrderNumberGenerator
     string Next();
 }
 
-public sealed class CreateOrderRejectedException : Exception
+public sealed class CreateOrderRejectedException : ApplicationFailureException
 {
-    public CreateOrderRejectedException(string message) : base(message) { }
+    public CreateOrderRejectedException(
+        string message,
+        string code = ApplicationErrorCodes.RequestInvalid)
+        : base(code, message) { }
 }
 
 public sealed class CreateOrderHandler
@@ -118,13 +122,13 @@ public sealed class CreateOrderHandler
         CancellationToken cancellationToken = default)
     {
         if (command.CustomerId == Guid.Empty)
-            throw new CreateOrderRejectedException("Customer is required.");
+            throw new CreateOrderRejectedException("Customer is required.", ApplicationErrorCodes.RequestInvalid);
 
         if (command.CartId == Guid.Empty)
-            throw new CreateOrderRejectedException("Cart is required.");
+            throw new CreateOrderRejectedException("Cart is required.", ApplicationErrorCodes.RequestInvalid);
 
         if (string.IsNullOrWhiteSpace(command.IdempotencyKey))
-            throw new CreateOrderRejectedException("Idempotency key is required.");
+            throw new CreateOrderRejectedException("Idempotency key is required.", ApplicationErrorCodes.IdempotencyKeyRequired);
 
         var fingerprint = BuildFingerprint(command);
 
@@ -140,31 +144,31 @@ public sealed class CreateOrderHandler
         var cart = await CartReader.GetAsync(command.CartId, cancellationToken);
 
         if (cart is null)
-            throw new CreateOrderRejectedException("Cart was not found.");
+            throw new CreateOrderRejectedException("Cart was not found.", ApplicationErrorCodes.ResourceNotFound);
 
         if (cart.CustomerId != command.CustomerId)
-            throw new CreateOrderRejectedException("Cart does not belong to the customer.");
+            throw new CreateOrderRejectedException("Cart does not belong to the customer.", ApplicationErrorCodes.ResourceNotFound);
 
         if (!cart.IsActive)
-            throw new CreateOrderRejectedException("Cart is not active.");
+            throw new CreateOrderRejectedException("Cart is not active.", ApplicationErrorCodes.CartNotCheckoutable);
 
         if (cart.Lines.Count == 0)
-            throw new CreateOrderRejectedException("Cart is empty.");
+            throw new CreateOrderRejectedException("Cart is empty.", ApplicationErrorCodes.CartNotCheckoutable);
 
         if (cart.Lines.Any(line => line.Quantity <= 0))
-            throw new CreateOrderRejectedException("Cart contains an invalid quantity.");
+            throw new CreateOrderRejectedException("Cart contains an invalid quantity.", ApplicationErrorCodes.RequestInvalid);
 
         var store = await StoreReader.GetAsync(cart.StoreId, cancellationToken);
 
         if (store is null || store.StoreId != cart.StoreId || !store.IsActive)
-            throw new CreateOrderRejectedException("Store is not active.");
+            throw new CreateOrderRejectedException("Store is not active.", ApplicationErrorCodes.CatalogItemUnavailable);
 
         var productIds = cart.Lines.Select(line => line.ProductId).Distinct().ToArray();
         var products = await ProductReader.GetAsync(productIds, cancellationToken);
         var productsById = products.ToDictionary(product => product.ProductId);
 
         if (productsById.Count != productIds.Length)
-            throw new CreateOrderRejectedException("One or more products were not found.");
+            throw new CreateOrderRejectedException("One or more products were not found.", ApplicationErrorCodes.CatalogItemUnavailable);
 
         var items = new List<OrderItem>(cart.Lines.Count);
 
@@ -174,13 +178,13 @@ public sealed class CreateOrderHandler
                 throw new CreateOrderRejectedException("One or more products were not found.");
 
             if (product.StoreId != cart.StoreId)
-                throw new CreateOrderRejectedException("Cart contains a product from another store.");
+                throw new CreateOrderRejectedException("Cart contains a product from another store.", ApplicationErrorCodes.CatalogItemUnavailable);
 
             if (!product.IsOrderable)
-                throw new CreateOrderRejectedException("One or more products are not orderable.");
+                throw new CreateOrderRejectedException("One or more products are not orderable.", ApplicationErrorCodes.CatalogItemUnavailable);
 
             if (line.VariantName != product.VariantName)
-                throw new CreateOrderRejectedException("Cart contains a product variant that no longer matches.");
+                throw new CreateOrderRejectedException("Cart contains a product variant that no longer matches.", ApplicationErrorCodes.CatalogItemUnavailable);
 
             var lineTotal = product.UnitPrice * line.Quantity;
 
@@ -236,7 +240,7 @@ public sealed class CreateOrderHandler
                 transactionCancellationToken);
         }, cancellationToken);
 
-        return result ?? throw new InvalidOperationException("Create Order completed without a result.");
+        return result ?? throw new ApplicationFailureException(ApplicationErrorCodes.InternalUnexpected, "Create Order completed without a result.");
     }
 
     private static string BuildFingerprint(CreateOrderCommand command) =>
@@ -251,20 +255,23 @@ public sealed class CreateOrderHandler
     {
         if (!string.Equals(existing.Fingerprint, fingerprint, StringComparison.Ordinal))
             throw new CreateOrderRejectedException(
-                "The idempotency key was already used with a different request.");
+                "The idempotency key was already used with a different request.",
+                ApplicationErrorCodes.IdempotencyKeyReused);
 
         if (existing.Status != IdempotencyStatus.Completed
             || existing.ResourceType != "Order"
             || existing.ResourceId is null
             || string.IsNullOrWhiteSpace(existing.ResultPayload))
             throw new CreateOrderRejectedException(
-                "The idempotency key is currently reserved and has no completed result.");
+                "The idempotency key is currently reserved and has no completed result.",
+                ApplicationErrorCodes.IdempotencyResultUnavailable);
 
         var result = System.Text.Json.JsonSerializer.Deserialize<CreateOrderResult>(
             existing.ResultPayload);
 
         return result
-            ?? throw new InvalidOperationException(
+            ?? throw new ApplicationFailureException(
+                ApplicationErrorCodes.InternalUnexpected,
                 "Completed Create Order idempotency result is invalid.");
     }
 }
