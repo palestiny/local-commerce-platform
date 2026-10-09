@@ -1,6 +1,8 @@
 # Foundation Review Checklist
 
-Status: **M1 DELIVERY CONCURRENCY GREEN VERIFIED — NEXT: API CONTRACT/SECURITY GATE**
+Status: **CURRENT BOUNDARY: API CONTRACT/SECURITY CLOSURE; HTTP IMPLEMENTATION BLOCKED**
+
+> Current summary: the documented M0 persistence and defined M1 Delivery concurrency scenarios have CI evidence in the sections below. The next engineering boundary is API/security contract closure, followed by HTTP adapter implementation only after its gate passes. Pilot wedge decisions remain OPEN and block Phase B product implementation. Historical "next boundary" notes later in this document are retained as history, not as current instructions.
 
 ## Review Scope
 
@@ -156,9 +158,9 @@ Resolve the API contract/security design gate, then implement HTTP endpoints onl
 - Verification covers customer ownership, optional Delivery composition, missing Order behavior, and non-mutating read semantics.
 - Verification boundary at the time: application/domain test doubles. Later PostgreSQL persistence and concurrency evidence is recorded below.
 
-## Next M1 Boundary
+## Historical Next Boundary — Superseded
 
-**Delivery persistence + append-only DeliveryStatusHistory** is now the next implementation boundary. HTTP/API remains deferred until persistence and concurrency semantics are proven.
+At the time this note was written, Delivery persistence + append-only DeliveryStatusHistory was the next implementation boundary. The later sections in this checklist record that persistence work and the defined PostgreSQL concurrency scenarios as completed with CI evidence.
 
 
 ### Delivery Persistence + History
@@ -173,9 +175,9 @@ Resolve the API contract/security design gate, then implement HTTP endpoints onl
 - Database trigger enforces append-only DeliveryStatusHistory by rejecting UPDATE/DELETE.
 - Verification boundary at the time: basic persistence only. End-to-end command concurrency was subsequently verified as recorded below.
 
-## Next M1 Boundary
+## Historical Next Boundary — Superseded
 
-**PostgreSQL concurrency verification** was completed for the defined M1 scenarios; see the final verification section below.
+PostgreSQL concurrency verification for the defined M1 scenarios was subsequently completed; see the verification evidence below.
 
 
 ## PostgreSQL Concurrency Strategy
@@ -185,9 +187,9 @@ Resolve the API contract/security design gate, then implement HTTP endpoints onl
 - A real PostgreSQL test verifies the second transactional load waits for the first transaction and reads the committed Delivery state.
 - **GREEN VERIFIED for the defined M1 scenarios:** end-to-end command concurrency, cancellation contention, replacement-delivery contention, and PostgreSQL idempotency persistence. See ADR-009 and ADR-010 for exact scope and limitations.
 
-## Next M1 Boundary
+## Current Next Boundary
 
-The transaction-boundary refactor and real PostgreSQL concurrency verification are complete for the scenarios listed below. Next: API contract/security design and HTTP implementation.
+The transaction-boundary refactor and real PostgreSQL concurrency verification are complete for the scenarios listed below. Next: close the remaining API contract/security decisions and adapter tests. HTTP implementation remains blocked until that gate passes.
 
 ### PostgreSQL concurrency verification
 
