@@ -94,7 +94,9 @@ The owner approved the following implementation direction:
 2. Keep Cart checkoutability and catalog item availability as separate error codes.
 3. Use `409 Conflict` for a matching idempotency operation that is demonstrably still in progress; treat an unexpected incomplete/corrupt persisted record as an internal integrity failure, not as an automatic transient `503`.
 
-The initial `ApplicationFailureException` and `ApplicationErrorCodes` contract has been added under `src/LocalCommerce.Application/Errors/`, with focused unit tests. Existing operation-specific rejection exceptions have **not yet all been migrated**; this is incremental work, not a claim that the error taxonomy is fully enforced end-to-end.
+The shared `ApplicationFailureException` / `ApplicationErrorCodes` contract and focused tests are in place. The current feature branch now migrates stable codes through Create Order, Cancel Order, and the Delivery command handlers: Ready Order for Delivery, Assign Driver, Confirm Pickup, Start Delivery, Complete Delivery, Fail Delivery, and Create Replacement Delivery. Their application tests assert representative codes for invalid input/state, not-found, authorization, idempotency fingerprint conflicts, and corrupted/incomplete idempotency results. Domain transition failures are translated at the application boundary for these migrated commands.
+
+This remains an incremental migration, not proof that every application operation or every error path is fully classified. The customer order-details query and any future handlers still need an inventory pass. HTTP Problem Details mapping and adapter-level tests do not exist yet, and controllers remain blocked.
 
 ## Remaining decisions
 
