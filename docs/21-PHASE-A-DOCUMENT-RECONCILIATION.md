@@ -83,7 +83,7 @@ No provider, price, legal conclusion, success threshold, or scale target is infe
 - New decision records start at ADR-011.
 - Before adding a new ADR, search the current Decision Log and existing ADR files to avoid duplicate decisions.
 - Update links/references only in the same focused change that has been reviewed for that document; do not perform a blind global renumber.
-- ADR-011 is not assigned a subject in this document. The next actual decision should receive that number only when a distinct decision record is ready.
+- ADR-011 is assigned to **Initial Market Context and Product Positioning** in `docs/22-ADR-011-INITIAL-MARKET-AND-POSITIONING.md`. Further new decisions continue at ADR-012 only when a distinct decision record is ready.
 
 ## Next document changes
 
