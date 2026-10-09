@@ -103,11 +103,14 @@ public sealed class CreateReplacementDeliveryHandler(
         if (!string.Equals(existing.Fingerprint, fingerprint, StringComparison.Ordinal))
             throw new CreateReplacementDeliveryRejectedException("The idempotency key was already used with a different request.", ApplicationErrorCodes.IdempotencyKeyReused);
 
+        if (existing.Status == IdempotencyStatus.Reserved)
+            throw new CreateReplacementDeliveryRejectedException("Idempotency operation is still in progress.", ApplicationErrorCodes.IdempotencyResultUnavailable);
+
         if (existing.Status != IdempotencyStatus.Completed ||
             !string.Equals(existing.ResourceType, "Delivery", StringComparison.Ordinal) ||
             existing.ResourceId is null ||
             string.IsNullOrWhiteSpace(existing.ResultPayload))
-            throw new CreateReplacementDeliveryRejectedException("Idempotency record is incomplete.", ApplicationErrorCodes.IdempotencyResultUnavailable);
+            throw new CreateReplacementDeliveryRejectedException("Idempotency record is invalid.", ApplicationErrorCodes.InternalUnexpected);
 
         var result = System.Text.Json.JsonSerializer.Deserialize<CreateReplacementDeliveryResult>(existing.ResultPayload);
         if (result is null || result.DeliveryId == Guid.Empty || result.DeliveryId != existing.ResourceId.Value)
