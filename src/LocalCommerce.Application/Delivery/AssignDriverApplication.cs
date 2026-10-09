@@ -1,6 +1,8 @@
 using System.Security.Cryptography;
 using System.Text;
 using LocalCommerce.Application.Idempotency;
+using LocalCommerce.Application.Errors;
+using LocalCommerce.Domain;
 using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
 using DriverEntity = LocalCommerce.Domain.Delivery.Driver;
 
@@ -9,7 +11,7 @@ namespace LocalCommerce.Application.Delivery;
 public sealed record AssignDriverCommand(Guid DeliveryId, Guid DriverId, Guid ActorId, string IdempotencyKey);
 public sealed record AssignDriverResult(Guid DeliveryId, Guid DriverId);
 
-public sealed class AssignDriverRejectedException(string message) : Exception(message);
+public sealed class AssignDriverRejectedException(string message, string code = ApplicationErrorCodes.DeliveryInvalidState) : ApplicationFailureException(code, message);
 
 public interface IAssignDriverDeliveryRepository
 {
@@ -45,10 +47,10 @@ public sealed class AssignDriverHandler(
         AssignDriverCommand command,
         CancellationToken cancellationToken = default)
     {
-        if (command.DeliveryId == Guid.Empty) throw new AssignDriverRejectedException("Delivery is required.");
-        if (command.DriverId == Guid.Empty) throw new AssignDriverRejectedException("Driver is required.");
-        if (command.ActorId == Guid.Empty) throw new AssignDriverRejectedException("Actor is required.");
-        if (string.IsNullOrWhiteSpace(command.IdempotencyKey)) throw new AssignDriverRejectedException("Idempotency key is required.");
+        if (command.DeliveryId == Guid.Empty) throw new AssignDriverRejectedException("Delivery is required.", ApplicationErrorCodes.RequestInvalid);
+        if (command.DriverId == Guid.Empty) throw new AssignDriverRejectedException("Driver is required.", ApplicationErrorCodes.RequestInvalid);
+        if (command.ActorId == Guid.Empty) throw new AssignDriverRejectedException("Actor is required.", ApplicationErrorCodes.RequestInvalid);
+        if (string.IsNullOrWhiteSpace(command.IdempotencyKey)) throw new AssignDriverRejectedException("Idempotency key is required.", ApplicationErrorCodes.IdempotencyKeyRequired);
 
         var fingerprint = BuildFingerprint(command);
         var existing = await idempotencyStore.GetAsync(command.ActorId, Operation, command.IdempotencyKey, cancellationToken);
@@ -68,15 +70,22 @@ public sealed class AssignDriverHandler(
             }
 
             var delivery = await deliveryRepository.GetAsync(command.DeliveryId, transactionCancellationToken)
-                ?? throw new AssignDriverRejectedException("Delivery was not found.");
+                ?? throw new AssignDriverRejectedException("Delivery was not found.", ApplicationErrorCodes.ResourceNotFound);
             var driver = await driverRepository.GetAsync(command.DriverId, transactionCancellationToken)
-                ?? throw new AssignDriverRejectedException("Driver was not found.");
+                ?? throw new AssignDriverRejectedException("Driver was not found.", ApplicationErrorCodes.ResourceNotFound);
 
             if (!driver.IsActive) throw new AssignDriverRejectedException("Driver is inactive.");
             if (!await authorization.CanAssignAsync(command.ActorId, delivery, transactionCancellationToken))
-                throw new AssignDriverRejectedException("Actor is not authorized to assign a Driver.");
+                throw new AssignDriverRejectedException("Actor is not authorized to assign a Driver.", ApplicationErrorCodes.AuthorizationForbidden);
 
-            delivery.AssignDriver(driver.Id);
+            try
+            {
+                delivery.AssignDriver(driver.Id);
+            }
+            catch (DomainRuleViolationException exception)
+            {
+                throw new AssignDriverRejectedException(exception.Message, ApplicationErrorCodes.DeliveryInvalidState);
+            }
             await deliveryRepository.SaveAsync(delivery, transactionCancellationToken);
 
             result = new AssignDriverResult(delivery.Id, driver.Id);
@@ -91,7 +100,7 @@ public sealed class AssignDriverHandler(
                 transactionCancellationToken);
         }, cancellationToken);
 
-        return result ?? throw new InvalidOperationException("Driver assignment completed without a result.");
+        return result ?? throw new ApplicationFailureException(ApplicationErrorCodes.InternalUnexpected, "Driver assignment completed without a result.");
     }
 
     private static string BuildFingerprint(AssignDriverCommand command) =>
@@ -101,18 +110,18 @@ public sealed class AssignDriverHandler(
     private static AssignDriverResult ValidateExisting(IdempotencyRecord existing, string fingerprint)
     {
         if (!string.Equals(existing.Fingerprint, fingerprint, StringComparison.Ordinal))
-            throw new AssignDriverRejectedException("The idempotency key was already used with a different request.");
+            throw new AssignDriverRejectedException("The idempotency key was already used with a different request.", ApplicationErrorCodes.IdempotencyKeyReused);
 
         if (existing.Status != IdempotencyStatus.Completed ||
             !string.Equals(existing.ResourceType, "DeliveryAssignment", StringComparison.Ordinal) ||
             existing.ResourceId is null ||
             string.IsNullOrWhiteSpace(existing.ResultPayload))
-            throw new AssignDriverRejectedException("Idempotency record is incomplete.");
+            throw new AssignDriverRejectedException("Idempotency record is incomplete.", ApplicationErrorCodes.IdempotencyResultUnavailable);
 
         var result = System.Text.Json.JsonSerializer.Deserialize<AssignDriverResult>(existing.ResultPayload);
         if (result is null || result.DeliveryId == Guid.Empty || result.DriverId == Guid.Empty ||
             result.DeliveryId != existing.ResourceId.Value)
-            throw new AssignDriverRejectedException("Idempotency record is invalid.");
+            throw new AssignDriverRejectedException("Idempotency record is invalid.", ApplicationErrorCodes.InternalUnexpected);
 
         return result;
     }
