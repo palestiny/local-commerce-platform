@@ -1,0 +1,63 @@
+name: dotnet
+
+on:
+  push:
+    branches:
+      - main
+      - "feature/**"
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: localcommerce
+        options: >-
+          --health-cmd "pg_isready -U postgres -d localcommerce"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+        ports:
+          - 5432:5432
+    env:
+      LOCAL_COMMERCE_POSTGRES: Host=localhost;Port=5432;Database=localcommerce;Username=postgres;Password=postgres
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Restore
+        run: dotnet restore LocalCommercePlatform.sln
+      - name: Test
+        run: dotnet test LocalCommercePlatform.sln --no-restore --verbosity normal
+
+      - name: Migration and recovery smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          backup_dir="${RUNNER_TEMP}/local-commerce-backup"
+          mkdir -p "$backup_dir"
+          docker run --rm --network host -e PGPASSWORD=postgres postgres:16 \
+            psql -h 127.0.0.1 -U postgres -d localcommerce \
+            -v ON_ERROR_STOP=1 \
+            -c "INSERT INTO \"Stores\" (\"Id\", \"IsActive\") VALUES ('00000000-0000-0000-0000-000000000001', true) ON CONFLICT (\"Id\") DO NOTHING;"
+          docker run --rm --network host -v "$backup_dir:/backup" -e PGPASSWORD=postgres postgres:16 \
+            pg_dump -h 127.0.0.1 -U postgres -d localcommerce --format=custom --file=/backup/localcommerce.dump
+          docker run --rm --network host -e PGPASSWORD=postgres postgres:16 \
+            psql -h 127.0.0.1 -U postgres -d postgres \
+            -v ON_ERROR_STOP=1 \
+            -c "DROP DATABASE localcommerce;" \
+            -c "CREATE DATABASE localcommerce;"
+          docker run --rm --network host -v "$backup_dir:/backup" -e PGPASSWORD=postgres postgres:16 \
+            pg_restore -h 127.0.0.1 -U postgres -d localcommerce --exit-on-error /backup/localcommerce.dump
+          docker run --rm --network host -e PGPASSWORD=postgres postgres:16 \
+            psql -h 127.0.0.1 -U postgres -d localcommerce \
+            -v ON_ERROR_STOP=1 \
+            -c "SELECT 1 FROM \"Stores\" WHERE \"Id\"='00000000-0000-0000-0000-000000000001';"
