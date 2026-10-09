@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using LocalCommerce.Application.Idempotency;
+using LocalCommerce.Application.Errors;
 using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
 
 namespace LocalCommerce.Application.Delivery;
@@ -8,7 +9,7 @@ namespace LocalCommerce.Application.Delivery;
 public sealed record CreateReplacementDeliveryCommand(Guid OrderId, Guid StoreId, Guid ActorId, string IdempotencyKey);
 public sealed record CreateReplacementDeliveryResult(Guid DeliveryId);
 
-public sealed class CreateReplacementDeliveryRejectedException(string message) : Exception(message);
+public sealed class CreateReplacementDeliveryRejectedException(string message, string code = ApplicationErrorCodes.DeliveryInvalidState) : ApplicationFailureException(code, message);
 
 public interface ICreateReplacementDeliveryRepository
 {
@@ -45,9 +46,9 @@ public sealed class CreateReplacementDeliveryHandler(
         CancellationToken ct = default)
     {
         if (command.OrderId == Guid.Empty || command.StoreId == Guid.Empty || command.ActorId == Guid.Empty)
-            throw new CreateReplacementDeliveryRejectedException("Order, Store and Actor are required.");
+            throw new CreateReplacementDeliveryRejectedException("Order, Store and Actor are required.", ApplicationErrorCodes.RequestInvalid);
         if (string.IsNullOrWhiteSpace(command.IdempotencyKey))
-            throw new CreateReplacementDeliveryRejectedException("Idempotency key is required.");
+            throw new CreateReplacementDeliveryRejectedException("Idempotency key is required.", ApplicationErrorCodes.IdempotencyKeyRequired);
 
         var fingerprint = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(
             $"{command.OrderId:N}|{command.StoreId:N}|{command.ActorId:N}")));
@@ -71,13 +72,13 @@ public sealed class CreateReplacementDeliveryHandler(
             // Use the same cross-aggregate lock order as ReadyOrderForDelivery and CancelOrder:
             // lock Order first, then inspect/lock its active Delivery.
             if (!await orderLock.LockOrderForMutationAsync(command.OrderId, tx))
-                throw new CreateReplacementDeliveryRejectedException("Order was not found.");
+                throw new CreateReplacementDeliveryRejectedException("Order was not found.", ApplicationErrorCodes.ResourceNotFound);
 
             if (!await eligibility.IsOrderEligibleAsync(command.OrderId, tx))
-                throw new CreateReplacementDeliveryRejectedException("Order is not eligible for replacement delivery.");
+                throw new CreateReplacementDeliveryRejectedException("Order is not eligible for replacement delivery.", ApplicationErrorCodes.OrderInvalidState);
 
             if (await repository.GetActiveByOrderIdAsync(command.OrderId, tx) is not null)
-                throw new CreateReplacementDeliveryRejectedException("An active Delivery already exists.");
+                throw new CreateReplacementDeliveryRejectedException("An active Delivery already exists.", ApplicationErrorCodes.DeliveryInvalidState);
 
             var delivery = DeliveryEntity.Create(command.OrderId, command.StoreId);
             await repository.AddAsync(delivery, tx);
@@ -94,23 +95,23 @@ public sealed class CreateReplacementDeliveryHandler(
                 tx);
         }, ct);
 
-        return result ?? throw new InvalidOperationException("Replacement delivery completed without a result.");
+        return result ?? throw new ApplicationFailureException(ApplicationErrorCodes.InternalUnexpected, "Replacement delivery completed without a result.");
     }
 
     private static CreateReplacementDeliveryResult Resolve(IdempotencyRecord existing, string fingerprint)
     {
         if (!string.Equals(existing.Fingerprint, fingerprint, StringComparison.Ordinal))
-            throw new CreateReplacementDeliveryRejectedException("The idempotency key was already used with a different request.");
+            throw new CreateReplacementDeliveryRejectedException("The idempotency key was already used with a different request.", ApplicationErrorCodes.IdempotencyKeyReused);
 
         if (existing.Status != IdempotencyStatus.Completed ||
             !string.Equals(existing.ResourceType, "Delivery", StringComparison.Ordinal) ||
             existing.ResourceId is null ||
             string.IsNullOrWhiteSpace(existing.ResultPayload))
-            throw new CreateReplacementDeliveryRejectedException("Idempotency record is incomplete.");
+            throw new CreateReplacementDeliveryRejectedException("Idempotency record is incomplete.", ApplicationErrorCodes.IdempotencyResultUnavailable);
 
         var result = System.Text.Json.JsonSerializer.Deserialize<CreateReplacementDeliveryResult>(existing.ResultPayload);
         if (result is null || result.DeliveryId == Guid.Empty || result.DeliveryId != existing.ResourceId.Value)
-            throw new CreateReplacementDeliveryRejectedException("Idempotency record is invalid.");
+            throw new CreateReplacementDeliveryRejectedException("Idempotency record is invalid.", ApplicationErrorCodes.InternalUnexpected);
 
         return result;
     }
