@@ -92,14 +92,14 @@ public sealed class StartDeliveryHandler
                 throw new StartDeliveryRejectedException("Delivery was not found.", ApplicationErrorCodes.ResourceNotFound);
 
             if (delivery.Status != DeliveryEntityStatus.PickedUp)
-                throw new StartDeliveryRejectedException("Delivery must be PICKED_UP.");
+                throw new StartDeliveryRejectedException("Delivery must be PICKED_UP.", ApplicationErrorCodes.DeliveryInvalidState);
 
             if (!await _authorization.CanStartDeliveryAsync(command.ActorId, delivery, ct))
                 throw new StartDeliveryRejectedException("Actor is not authorized to start delivery.", ApplicationErrorCodes.AuthorizationForbidden);
 
             var driverId = delivery.DriverId;
             if (driverId is null || driverId == Guid.Empty)
-                throw new StartDeliveryRejectedException("Picked-up Delivery must have an assigned driver.");
+                throw new StartDeliveryRejectedException("Picked-up Delivery must have an assigned driver.", ApplicationErrorCodes.DeliveryInvalidState);
 
             try
             {
