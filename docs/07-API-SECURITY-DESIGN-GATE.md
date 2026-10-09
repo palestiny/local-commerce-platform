@@ -65,6 +65,8 @@ The owner has approved the proposed idempotency design direction: same actor/ope
 
 ## Standard Error Contract
 
+The stable application error taxonomy is now documented as a proposal in [API Application Error Taxonomy](19-API-APPLICATION-ERROR-TAXONOMY-PROPOSAL.md). It is **not yet owner-approved or implemented**. Controller work remains blocked until the owner resolves the proposal's listed decisions and typed failures can be mapped without inspecting message text.
+
 Use RFC 9457 Problem Details as the response envelope, extended with stable machine-readable fields:
 
 - `code`: stable application error code, independent of exception text.
