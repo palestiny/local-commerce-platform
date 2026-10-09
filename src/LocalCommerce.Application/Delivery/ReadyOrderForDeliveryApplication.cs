@@ -173,7 +173,7 @@ public sealed class ReadyOrderForDeliveryHandler
 
         if (existing.Status == IdempotencyStatus.Reserved)
             throw new ReadyOrderForDeliveryRejectedException(
-                "The idempotency operation is still in progress.", ApplicationErrorCodes.IdempotencyResultUnavailable);
+                "A persisted idempotency reservation cannot be proven to be in progress.", ApplicationErrorCodes.InternalUnexpected);
 
         if (existing.Status != IdempotencyStatus.Completed ||
             !string.Equals(existing.ResourceType, "Delivery", StringComparison.Ordinal) ||
