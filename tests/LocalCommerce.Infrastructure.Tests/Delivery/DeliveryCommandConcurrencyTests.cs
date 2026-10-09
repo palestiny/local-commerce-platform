@@ -129,6 +129,44 @@ public sealed class DeliveryCommandConcurrencyTests
     }
 
     [Fact]
+    public async Task Replacement_rolls_back_delivery_and_idempotency_reservation_when_completion_fails()
+    {
+        await using var setup = CreateDb();
+        await DatabaseInitializer.InitializeAsync(setup);
+
+        var orderId = Guid.NewGuid();
+        var storeId = Guid.NewGuid();
+        var actorId = Guid.NewGuid();
+        var key = $"replacement-rollback-{Guid.NewGuid():N}";
+        await SeedOrderAndStoreAsync(setup, orderId, storeId);
+
+        var failed = LocalCommerce.Domain.Delivery.Delivery.Create(orderId, storeId);
+        failed.Fail("CUSTOMER_UNAVAILABLE", "Customer unavailable");
+        await new EfDeliveryRepository(setup).AddAsync(failed, CancellationToken.None);
+
+        await using var commandDb = CreateDb();
+        var realIdempotency = new EfGeneralizedIdempotencyStore(commandDb);
+        var handler = new CreateReplacementDeliveryHandler(
+            new EfReplacementDeliveryRepository(commandDb),
+            new EfReplacementDeliveryOrderLock(commandDb),
+            new EfReplacementDeliveryEligibility(commandDb),
+            new FailOnCompleteIdempotencyStore(realIdempotency),
+            new EfOrderDeliveryUnitOfWork(commandDb));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            handler.HandleAsync(new CreateReplacementDeliveryCommand(orderId, storeId, actorId, key)));
+
+        await using var verify = CreateDb();
+        var active = await new EfDeliveryRepository(verify)
+            .GetActiveByOrderIdAsync(orderId, CancellationToken.None);
+        Assert.Null(active);
+        Assert.False(await verify.IdempotencyRecords.AnyAsync(x =>
+            x.ScopeId == actorId &&
+            x.Operation == "CreateReplacementDelivery" &&
+            x.IdempotencyKey == key));
+    }
+
+    [Fact]
     public async Task Concurrent_order_cancellation_and_replacement_never_leave_active_delivery_for_cancelled_order()
     {
         await using var setup = CreateDb();
@@ -524,6 +562,21 @@ public sealed class DeliveryCommandConcurrencyTests
                 throw;
             }
         }
+    }
+
+    private sealed class FailOnCompleteIdempotencyStore(IIdempotencyStore inner) : IIdempotencyStore
+    {
+        public Task<IdempotencyRecord?> GetAsync(
+            Guid scopeId, string operation, string key, CancellationToken ct) =>
+            inner.GetAsync(scopeId, operation, key, ct);
+
+        public Task<IdempotencyRecord?> ReserveAsync(
+            Guid scopeId, string operation, string key, string fingerprint, CancellationToken ct) =>
+            inner.ReserveAsync(scopeId, operation, key, fingerprint, ct);
+
+        public Task CompleteAsync(
+            Guid scopeId, string operation, string key, IdempotencyCompletion completion, CancellationToken ct) =>
+            throw new InvalidOperationException("Forced failure after Delivery persistence to verify transaction rollback.");
     }
 
     private sealed class EfReplacementDeliveryRepository(CommerceDbContext db)
