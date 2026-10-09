@@ -1,6 +1,6 @@
 # M0 TDD RED — Create Order
 
-Status: RED specification
+Status: **HISTORICAL RED SPECIFICATION — REQUIREMENTS RETAINED AS ACCEPTANCE REFERENCE**
 
 ## Objective
 
@@ -79,6 +79,8 @@ A RED test is valid only when:
 - the assertion represents a committed business rule;
 - the test does not encode an unresolved design choice.
 
-## Next Step
+## Status Note and Current Use
 
-Implement only enough domain/application code to make the Create Order RED set GREEN. Then refactor and run the full M0 verification suite.
+The instruction above describes the original TDD sequence and is historical, not the current implementation task. The Create Order domain/application implementation and PostgreSQL persistence path have later CI evidence recorded in `docs/08-FOUNDATION-REVIEW-CHECKLIST.md` and `docs/06-PERSISTENCE-RELIABILITY-DESIGN-GATE.md`. Keep this RED set as the acceptance checklist; do not claim every case in this document is covered solely because the original suite passed.
+
+The current engineering boundary is the API/security contract gate. HTTP adapter/controller work remains blocked until `docs/07-API-SECURITY-DESIGN-GATE.md` is closed. The pilot wedge remains a separate blocker for Phase B product implementation.
