@@ -60,7 +60,26 @@ public sealed class GetCustomerOrderDetailsHandlerTests
         var act = () => fixture.Handler.HandleAsync(
             new GetCustomerOrderDetailsQuery(fixture.CustomerId, Guid.NewGuid()));
 
-        await Assert.ThrowsAsync<GetCustomerOrderDetailsRejectedException>(act);
+        var error = await Assert.ThrowsAsync<GetCustomerOrderDetailsRejectedException>(act);
+        Assert.Equal(ApplicationErrorCodes.ResourceNotFound, error.Code);
+    }
+
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    public async Task Empty_identifiers_are_rejected_with_request_invalid_code(
+        bool emptyCustomerId,
+        bool emptyOrderId)
+    {
+        var fixture = Fixture.Create();
+        var query = new GetCustomerOrderDetailsQuery(
+            emptyCustomerId ? Guid.Empty : fixture.CustomerId,
+            emptyOrderId ? Guid.Empty : fixture.Order.Id);
+
+        var act = () => fixture.Handler.HandleAsync(query);
+
+        var error = await Assert.ThrowsAsync<GetCustomerOrderDetailsRejectedException>(act);
+        Assert.Equal(ApplicationErrorCodes.RequestInvalid, error.Code);
     }
 
     [Fact]
