@@ -258,20 +258,27 @@ public sealed class CreateOrderHandler
                 "The idempotency key was already used with a different request.",
                 ApplicationErrorCodes.IdempotencyKeyReused);
 
+        if (existing.Status == IdempotencyStatus.Reserved)
+            throw new ApplicationFailureException(
+                ApplicationErrorCodes.InternalUnexpected,
+                "A persisted idempotency reservation cannot be proven to be in progress.");
+
         if (existing.Status != IdempotencyStatus.Completed
             || existing.ResourceType != "Order"
             || existing.ResourceId is null
             || string.IsNullOrWhiteSpace(existing.ResultPayload))
-            throw new CreateOrderRejectedException(
-                "The idempotency key is currently reserved and has no completed result.",
-                ApplicationErrorCodes.IdempotencyResultUnavailable);
+            throw new ApplicationFailureException(
+                ApplicationErrorCodes.InternalUnexpected,
+                "Completed Create Order idempotency record is invalid.");
 
         var result = System.Text.Json.JsonSerializer.Deserialize<CreateOrderResult>(
             existing.ResultPayload);
 
-        return result
-            ?? throw new ApplicationFailureException(
+        if (result is null || result.OrderId == Guid.Empty || result.OrderId != existing.ResourceId.Value)
+            throw new ApplicationFailureException(
                 ApplicationErrorCodes.InternalUnexpected,
                 "Completed Create Order idempotency result is invalid.");
+
+        return result;
     }
 }
