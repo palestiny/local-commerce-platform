@@ -1,4 +1,5 @@
 using LocalCommerce.Application.Ordering;
+using LocalCommerce.Application.Errors;
 using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
 using LocalCommerce.Domain.Delivery;
 using LocalCommerce.Domain.Ordering;
@@ -47,7 +48,9 @@ public sealed class GetCustomerOrderDetailsHandlerTests
         var act = () => fixture.Handler.HandleAsync(
             new GetCustomerOrderDetailsQuery(Guid.NewGuid(), fixture.Order.Id));
 
-        await Assert.ThrowsAsync<GetCustomerOrderDetailsRejectedException>(act);
+        var error = var error = await Assert.ThrowsAsync<GetCustomerOrderDetailsRejectedException>(act);
+        Assert.Equal(ApplicationErrorCodes.ResourceNotFound, error.Code);
+        Assert.Equal(ApplicationErrorCodes.ResourceNotFound, error.Code);
     }
 
     [Fact]
