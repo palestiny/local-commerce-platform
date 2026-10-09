@@ -99,3 +99,18 @@ Review of `src/LocalCommerce.Application/Delivery/CreateReplacementDeliveryAppli
 Do not include this operation in an HTTP slice until the allowed actor policy and Order–Store consistency rule are defined and enforced. Add tests for an actor without permission and a mismatched StoreId. This is a finding about the reviewed application handler; this review did not establish that an HTTP endpoint exposes it.
 
 - The focused `CreateReplacementDeliveryHandlerTests` cover eligibility, active Delivery rejection, and idempotent replay/conflict, but do not test authorization denial or a Store that does not belong to the Order. Their fake unit of work executes the operation delegate directly, so those tests also do not establish database transaction rollback or concurrent-request safety.
+
+
+### Persistence implementation review — replacement delivery
+
+Reviewed on `feature/foundation-domain-architecture`: `DeliveryPersistence.cs`, `OrderMutationPersistence.cs`, `CommerceDbContext.cs`, `GeneralizedIdempotencyPersistence.cs`, `Order.cs`, `Delivery.cs`, and `DeliveryCommandConcurrencyTests.cs`.
+
+- **Order lock:** `EfReplacementDeliveryOrderLock` requires an active transaction and uses PostgreSQL `SELECT ... FOR UPDATE` on the Order row. The eligibility check also requires an active transaction.
+- **Active-delivery invariant:** the EF model defines a unique filtered index on `Deliveries.OrderId` for `Unassigned`, `Assigned`, `PickedUp`, and `OutForDelivery`. This is useful defense in depth against concurrent active deliveries.
+- **Concurrency evidence exists, with limits:** infrastructure integration tests cover concurrent replacement creation and a race between order cancellation and replacement creation. They use PostgreSQL and must actually run against a configured `LOCAL_COMMERCE_POSTGRES` database before their results can be claimed. The reviewed source alone is not evidence that the tests passed in this environment.
+- **Store relationship gap remains:** the handler does not compare the command's `StoreId` with the locked Order's `StoreId`. Both IDs can individually satisfy foreign keys while still referring to different stores. Add a negative integration/application test and enforce the relationship using the locked Order as the authority.
+- **Production Unit of Work implementation not found in reviewed Infrastructure files:** `EfOrderDeliveryUnitOfWork` implements `IReadyForDeliveryUnitOfWork` and `ICancelOrderUnitOfWork`, but not `ICreateReplacementDeliveryUnitOfWork`. The replacement-concurrency test defines a test-only `EfReplacementUnitOfWork`. Before treating the handler as production-wired, locate or add a production implementation and verify registration/composition. This finding is scoped to the reviewed source tree; it is not a claim that a public HTTP route currently exists.
+- **Authorization is a design blocker:** the handler has no authorization port. Owner/architecture must define the allowed actor policy before any transport exposes this operation; do not infer dispatch/admin/store permissions.
+- **Atomicity test limitation:** a test-only Unit of Work can exercise a transaction, but only a test using the actual production implementation can verify the production transaction boundary and rollback behavior for Delivery + idempotency writes.
+
+Required follow-up before exposure: enforce Order–Store equality, add mismatch and authorization-denial tests, verify production Unit of Work implementation/registration, and run the PostgreSQL concurrency/rollback suite. Keep the operation outside any HTTP slice until actor policy and the route contract are approved.
