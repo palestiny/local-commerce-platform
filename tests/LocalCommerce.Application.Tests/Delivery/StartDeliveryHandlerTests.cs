@@ -1,5 +1,6 @@
 using LocalCommerce.Application.Delivery;
 using LocalCommerce.Application.Idempotency;
+using LocalCommerce.Application.Errors;
 using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
 using DeliveryEntityStatus = LocalCommerce.Domain.Delivery.DeliveryStatus;
 using Xunit;
@@ -33,7 +34,8 @@ public sealed class StartDeliveryHandlerTests
         var act = () => fixture.Handler.HandleAsync(
             new StartDeliveryCommand(fixture.Delivery.Id, fixture.DriverId, "start-1"));
 
-        await Assert.ThrowsAsync<StartDeliveryRejectedException>(act);
+        var error = await Assert.ThrowsAsync<StartDeliveryRejectedException>(act);
+        Assert.Equal(ApplicationErrorCodes.AuthorizationForbidden, error.Code);
         Assert.Equal(DeliveryEntityStatus.PickedUp, fixture.Delivery.Status);
     }
 
@@ -47,7 +49,8 @@ public sealed class StartDeliveryHandlerTests
         var act = () => fixture.Handler.HandleAsync(
             new StartDeliveryCommand(fixture.Delivery.Id, otherDriverId, "start-1"));
 
-        await Assert.ThrowsAsync<StartDeliveryRejectedException>(act);
+        var error = await Assert.ThrowsAsync<StartDeliveryRejectedException>(act);
+        Assert.Equal(ApplicationErrorCodes.AuthorizationForbidden, error.Code);
         Assert.Equal(DeliveryEntityStatus.PickedUp, fixture.Delivery.Status);
     }
 
@@ -59,7 +62,8 @@ public sealed class StartDeliveryHandlerTests
         var act = () => fixture.Handler.HandleAsync(
             new StartDeliveryCommand(fixture.Delivery.Id, fixture.DriverId, "start-1"));
 
-        await Assert.ThrowsAsync<StartDeliveryRejectedException>(act);
+        var error = await Assert.ThrowsAsync<StartDeliveryRejectedException>(act);
+        Assert.Equal(ApplicationErrorCodes.DeliveryInvalidState, error.Code);
         Assert.Equal(DeliveryEntityStatus.Assigned, fixture.Delivery.Status);
     }
 
@@ -89,7 +93,8 @@ public sealed class StartDeliveryHandlerTests
         var act = () => fixture.Handler.HandleAsync(
             command with { DeliveryId = Guid.NewGuid() });
 
-        await Assert.ThrowsAsync<StartDeliveryRejectedException>(act);
+        var error = await Assert.ThrowsAsync<StartDeliveryRejectedException>(act);
+        Assert.Equal(ApplicationErrorCodes.IdempotencyKeyReused, error.Code);
     }
 
     [Fact]
