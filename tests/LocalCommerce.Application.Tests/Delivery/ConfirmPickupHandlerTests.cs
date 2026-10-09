@@ -1,5 +1,6 @@
 using LocalCommerce.Application.Delivery;
 using LocalCommerce.Application.Idempotency;
+using LocalCommerce.Application.Errors;
 using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
 using DeliveryEntityStatus = LocalCommerce.Domain.Delivery.DeliveryStatus;
 using Xunit;
@@ -37,7 +38,8 @@ public sealed class ConfirmPickupHandlerTests
                 fixture.DriverId,
                 "pickup-1"));
 
-        await Assert.ThrowsAsync<ConfirmPickupRejectedException>(act);
+        var error = await Assert.ThrowsAsync<ConfirmPickupRejectedException>(act);
+        Assert.Equal(ApplicationErrorCodes.AuthorizationForbidden, error.Code);
         Assert.Equal(DeliveryEntityStatus.Assigned, fixture.Delivery.Status);
     }
 
@@ -72,7 +74,8 @@ public sealed class ConfirmPickupHandlerTests
                 fixture.DriverId,
                 "pickup-1"));
 
-        await Assert.ThrowsAsync<ConfirmPickupRejectedException>(act);
+        var error = await Assert.ThrowsAsync<ConfirmPickupRejectedException>(act);
+        Assert.Equal(ApplicationErrorCodes.DeliveryInvalidState, error.Code);
     }
 
     [Fact]
@@ -105,7 +108,8 @@ public sealed class ConfirmPickupHandlerTests
         var act = () => fixture.Handler.HandleAsync(
             command with { DeliveryId = Guid.NewGuid() });
 
-        await Assert.ThrowsAsync<ConfirmPickupRejectedException>(act);
+        var error = await Assert.ThrowsAsync<ConfirmPickupRejectedException>(act);
+        Assert.Equal(ApplicationErrorCodes.IdempotencyKeyReused, error.Code);
     }
 
     [Fact]
