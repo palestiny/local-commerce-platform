@@ -1,5 +1,6 @@
 using LocalCommerce.Application.Delivery;
 using LocalCommerce.Application.Idempotency;
+using LocalCommerce.Application.Errors;
 using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
 using DeliveryEntityStatus = LocalCommerce.Domain.Delivery.DeliveryStatus;
 using Xunit;
@@ -24,7 +25,8 @@ public sealed class FailDeliveryHandlerTests
     {
         var fixture=Fixture.Create(); fixture.Authorization.Allowed=false;
         var act=()=>fixture.Handler.HandleAsync(new FailDeliveryCommand(fixture.Delivery.Id,fixture.ActorId,"X","Reason","fail-1"));
-        await Assert.ThrowsAsync<FailDeliveryRejectedException>(act);
+        var error=await Assert.ThrowsAsync<FailDeliveryRejectedException>(act);
+        Assert.Equal(ApplicationErrorCodes.AuthorizationForbidden,error.Code);
         Assert.NotEqual(DeliveryEntityStatus.Failed,fixture.Delivery.Status);
     }
 
@@ -33,7 +35,8 @@ public sealed class FailDeliveryHandlerTests
     {
         var fixture=Fixture.Create(); fixture.Delivery=DeliveryEntity.Create(Guid.NewGuid(),Guid.NewGuid()); fixture.Delivery.AssignDriver(fixture.ActorId); fixture.Delivery.ConfirmPickup(fixture.ActorId); fixture.Delivery.StartDelivery(); fixture.Delivery.Complete(); fixture.Repository.SetDelivery(fixture.Delivery);
         var act=()=>fixture.Handler.HandleAsync(new FailDeliveryCommand(fixture.Delivery.Id,fixture.ActorId,"X","Reason","fail-1"));
-        await Assert.ThrowsAsync<FailDeliveryRejectedException>(act);
+        var error=await Assert.ThrowsAsync<FailDeliveryRejectedException>(act);
+        Assert.Equal(ApplicationErrorCodes.DeliveryInvalidState,error.Code);
         Assert.Equal(DeliveryEntityStatus.Delivered,fixture.Delivery.Status);
     }
 
@@ -59,7 +62,8 @@ public sealed class FailDeliveryHandlerTests
     {
         var fixture=Fixture.Create(); var command=new FailDeliveryCommand(fixture.Delivery.Id,fixture.ActorId,"X","Reason","fail-1"); await fixture.Handler.HandleAsync(command);
         var act=()=>fixture.Handler.HandleAsync(command with { FailureCode="Y" });
-        await Assert.ThrowsAsync<FailDeliveryRejectedException>(act);
+        var error=await Assert.ThrowsAsync<FailDeliveryRejectedException>(act);
+        Assert.Equal(ApplicationErrorCodes.IdempotencyKeyReused,error.Code);
     }
 
     [Fact]
