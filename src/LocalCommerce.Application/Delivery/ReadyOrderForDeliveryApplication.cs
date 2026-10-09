@@ -171,12 +171,16 @@ public sealed class ReadyOrderForDeliveryHandler
             throw new ReadyOrderForDeliveryRejectedException(
                 "The idempotency key was already used with a different request.", ApplicationErrorCodes.IdempotencyKeyReused);
 
+        if (existing.Status == IdempotencyStatus.Reserved)
+            throw new ReadyOrderForDeliveryRejectedException(
+                "The idempotency operation is still in progress.", ApplicationErrorCodes.IdempotencyResultUnavailable);
+
         if (existing.Status != IdempotencyStatus.Completed ||
             !string.Equals(existing.ResourceType, "Delivery", StringComparison.Ordinal) ||
             existing.ResourceId is null ||
             string.IsNullOrWhiteSpace(existing.ResultPayload))
             throw new ReadyOrderForDeliveryRejectedException(
-                "The idempotency record is incomplete.", ApplicationErrorCodes.IdempotencyResultUnavailable);
+                "The idempotency record is invalid.", ApplicationErrorCodes.InternalUnexpected);
 
         var result = JsonSerializer.Deserialize<ReadyOrderForDeliveryResult>(
             existing.ResultPayload);
