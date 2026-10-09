@@ -1,5 +1,6 @@
 using LocalCommerce.Application.Delivery;
 using LocalCommerce.Application.Idempotency;
+using LocalCommerce.Application.Errors;
 using System.Text.Json;
 using LocalCommerce.Domain;
 using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
@@ -43,7 +44,8 @@ public sealed class ReadyOrderForDeliveryHandlerTests
                 fixture.ActorId,
                 "ready-1"));
 
-        await Assert.ThrowsAsync<DomainRuleViolationException>(act);
+        var error = await Assert.ThrowsAsync<ReadyOrderForDeliveryRejectedException>(act);
+        Assert.Equal(ApplicationErrorCodes.OrderInvalidState, error.Code);
         Assert.Empty(fixture.DeliveryRepository.Deliveries);
     }
 
@@ -60,7 +62,8 @@ public sealed class ReadyOrderForDeliveryHandlerTests
                 fixture.ActorId,
                 "ready-1"));
 
-        await Assert.ThrowsAsync<ReadyOrderForDeliveryRejectedException>(act);
+        var error = await Assert.ThrowsAsync<ReadyOrderForDeliveryRejectedException>(act);
+        Assert.Equal(ApplicationErrorCodes.DeliveryInvalidState, error.Code);
         Assert.Equal(OrderStatus.Preparing, fixture.Order.Status);
         Assert.Single(fixture.DeliveryRepository.Deliveries);
     }
@@ -77,7 +80,8 @@ public sealed class ReadyOrderForDeliveryHandlerTests
                 fixture.ActorId,
                 "ready-1"));
 
-        await Assert.ThrowsAsync<ReadyOrderForDeliveryRejectedException>(act);
+        var error = await Assert.ThrowsAsync<ReadyOrderForDeliveryRejectedException>(act);
+        Assert.Equal(ApplicationErrorCodes.AuthorizationForbidden, error.Code);
         Assert.Equal(OrderStatus.Preparing, fixture.Order.Status);
         Assert.Empty(fixture.DeliveryRepository.Deliveries);
     }
@@ -117,7 +121,8 @@ public sealed class ReadyOrderForDeliveryHandlerTests
                 fixture.ActorId,
                 "ready-1"));
 
-        await Assert.ThrowsAsync<ReadyOrderForDeliveryRejectedException>(act);
+        var error = await Assert.ThrowsAsync<ReadyOrderForDeliveryRejectedException>(act);
+        Assert.Equal(ApplicationErrorCodes.IdempotencyKeyReused, error.Code);
     }
 
     [Fact]
