@@ -112,11 +112,14 @@ public sealed class AssignDriverHandler(
         if (!string.Equals(existing.Fingerprint, fingerprint, StringComparison.Ordinal))
             throw new AssignDriverRejectedException("The idempotency key was already used with a different request.", ApplicationErrorCodes.IdempotencyKeyReused);
 
+        if (existing.Status == IdempotencyStatus.Reserved)
+            throw new AssignDriverRejectedException("Idempotency operation is still in progress.", ApplicationErrorCodes.IdempotencyResultUnavailable);
+
         if (existing.Status != IdempotencyStatus.Completed ||
             !string.Equals(existing.ResourceType, "DeliveryAssignment", StringComparison.Ordinal) ||
             existing.ResourceId is null ||
             string.IsNullOrWhiteSpace(existing.ResultPayload))
-            throw new AssignDriverRejectedException("Idempotency record is incomplete.", ApplicationErrorCodes.IdempotencyResultUnavailable);
+            throw new AssignDriverRejectedException("Idempotency record is invalid.", ApplicationErrorCodes.InternalUnexpected);
 
         var result = System.Text.Json.JsonSerializer.Deserialize<AssignDriverResult>(existing.ResultPayload);
         if (result is null || result.DeliveryId == Guid.Empty || result.DriverId == Guid.Empty ||
