@@ -35,7 +35,7 @@ public sealed class CancelOrderHandler{
    var order=await _orders.GetAsync(c.OrderId,tx)??throw new CancelOrderRejectedException("Order was not found.",ApplicationErrorCodes.ResourceNotFound);
    if(!await _auth.CanCancelAsync(c.ActorId,order,tx))throw new CancelOrderRejectedException("Actor is not authorized to cancel this Order.",ApplicationErrorCodes.AuthorizationForbidden);
    var active=await _deliveries.GetActiveByOrderIdAsync(c.OrderId,tx);
-   if(active is not null&&active.Status is DeliveryEntityStatus.PickedUp or DeliveryEntityStatus.OutForDelivery)throw new CancelOrderRejectedException("Order cancellation is not allowed after pickup.");
+   if(active is not null&&active.Status is DeliveryEntityStatus.PickedUp or DeliveryEntityStatus.OutForDelivery)throw new CancelOrderRejectedException("Order cancellation is not allowed after pickup.", ApplicationErrorCodes.OrderInvalidState);
    try
    {
     order.Cancel();
@@ -43,7 +43,7 @@ public sealed class CancelOrderHandler{
    }
    catch(DomainRuleViolationException exception)
    {
-    throw new CancelOrderRejectedException(exception.Message);
+    throw new CancelOrderRejectedException(exception.Message, ApplicationErrorCodes.OrderInvalidState);
    }
    await _orders.SaveAsync(order,tx);
    if(active is not null) await _deliveries.SaveAsync(active,tx);
