@@ -114,3 +114,10 @@ Reviewed on `feature/foundation-domain-architecture`: `DeliveryPersistence.cs`, 
 - **Atomicity test limitation:** a test-only Unit of Work can exercise a transaction, but only a test using the actual production implementation can verify the production transaction boundary and rollback behavior for Delivery + idempotency writes.
 
 Required follow-up before exposure: enforce Order–Store equality, add mismatch and authorization-denial tests, verify production Unit of Work implementation/registration, and run the PostgreSQL concurrency/rollback suite. Keep the operation outside any HTTP slice until actor policy and the route contract are approved.
+
+
+### Follow-up implementation proposal
+
+A separate draft PR, [#14](https://github.com/palestiny/local-commerce-platform/pull/14), proposes two narrow corrections from the persistence review: validate replacement Delivery StoreId against the locked Order's StoreId, and implement `ICreateReplacementDeliveryUnitOfWork` in the existing EF order/delivery Unit of Work. It adds an application-level negative test for a mismatched StoreId.
+
+Verification remains **NOT PROVEN**: no workflow runs or commit statuses were returned for PR #14's current head, and tests have not been executed in this environment. The PostgreSQL concurrency/rollback suite still needs to run with a configured database. PR #14 is draft and must not be treated as merge-ready. The actor authorization policy remains OPEN and blocks exposing replacement delivery over HTTP.
