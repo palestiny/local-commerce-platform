@@ -1,6 +1,6 @@
 # Foundation Review Checklist
 
-Status: **POSTGRESQL IDEMPOTENCY PERSISTENCE GREEN VERIFIED — NEXT: END-TO-END DELIVERY CONCURRENCY**
+Status: **M1 DELIVERY CONCURRENCY GREEN VERIFIED — NEXT: API CONTRACT/SECURITY GATE**
 
 ## Review Scope
 
@@ -135,17 +135,16 @@ This removes the previous overlap between Order and Delivery.
 
 ### Verification Boundary
 
-The cancellation GREEN result is domain/application verification using test doubles. It does **not** yet prove Delivery PostgreSQL persistence, Delivery history persistence, or real database concurrency for cancellation.
+The historical cancellation result below was initially verified with test doubles. Subsequent PostgreSQL integration coverage now verifies cancellation contention and the cancellation-versus-replacement race; see the PostgreSQL concurrency verification section below.
 
 ## Remaining M1 Work
 
-1. PostgreSQL concurrency verification for Delivery commands.
-3. API contracts/security and HTTP implementation.
-4. Operational control and pilot-readiness concerns.
+1. API contract/security design and HTTP implementation.
+2. Operational control and pilot-readiness concerns.
 
 ## Next Step
 
-Start TDD RED for the Customer Composed Read. Keep HTTP/API implementation sequenced after the domain/application and persistence boundaries are proven.
+Resolve the API contract/security design gate, then implement HTTP endpoints only against approved contracts and resource-level authorization rules. Keep pilot-specific product and infrastructure decisions explicitly open.
 
 
 ### Customer Composed Read
@@ -155,7 +154,7 @@ Start TDD RED for the Customer Composed Read. Keep HTTP/API implementation seque
 - CI run `36785578476` (#220), job `110126060648`.
 - `Test` and `Migration and recovery smoke test` both passed.
 - Verification covers customer ownership, optional Delivery composition, missing Order behavior, and non-mutating read semantics.
-- Verification boundary: application/domain test doubles; Delivery PostgreSQL read/persistence/history/concurrency remain unproven.
+- Verification boundary at the time: application/domain test doubles. Later PostgreSQL persistence and concurrency evidence is recorded below.
 
 ## Next M1 Boundary
 
@@ -172,11 +171,11 @@ Start TDD RED for the Customer Composed Read. Keep HTTP/API implementation seque
 - DeliveryStatusHistory append/read verified with transition metadata.
 - PostgreSQL partial unique index verified by rejecting a second active Delivery for the same Order.
 - Database trigger enforces append-only DeliveryStatusHistory by rejecting UPDATE/DELETE.
-- Verification boundary: basic persistence only; command concurrency remains next.
+- Verification boundary at the time: basic persistence only. End-to-end command concurrency was subsequently verified as recorded below.
 
 ## Next M1 Boundary
 
-**PostgreSQL concurrency verification** is now the next implementation boundary. The target is real concurrent command behavior, not only application test doubles.
+**PostgreSQL concurrency verification** was completed for the defined M1 scenarios; see the final verification section below.
 
 
 ## PostgreSQL Concurrency Strategy
@@ -184,32 +183,26 @@ Start TDD RED for the Customer Composed Read. Keep HTTP/API implementation seque
 - **ADR-009 ACCEPTED:** PostgreSQL row-level locking for M1 Delivery mutation commands.
 - Mutable Delivery command loads inside a transaction use `SELECT FOR UPDATE`.
 - A real PostgreSQL test verifies the second transactional load waits for the first transaction and reads the committed Delivery state.
-- **Not yet GREEN:** end-to-end command concurrency, cancellation contention, and Delivery command idempotency at the PostgreSQL boundary.
+- **GREEN VERIFIED for the defined M1 scenarios:** end-to-end command concurrency, cancellation contention, replacement-delivery contention, and PostgreSQL idempotency persistence. See ADR-009 and ADR-010 for exact scope and limitations.
 
 ## Next M1 Boundary
 
-Refactor Delivery command transaction boundaries, then run real PostgreSQL concurrency tests for assignment/state transitions and coordinated cancellation before API/HTTP implementation.
+The transaction-boundary refactor and real PostgreSQL concurrency verification are complete for the scenarios listed below. Next: API contract/security design and HTTP implementation.
 
 ### PostgreSQL concurrency verification
 
-**Current status: PARTIAL GREEN — row-lock primitive verified; end-to-end command concurrency remains OPEN.**
+**Current status: GREEN VERIFIED for the defined M1 concurrency scenarios.**
 
 Verified after commit `e2bc8cf85878510f13dd5697a909b4876af98a10`:
 - CI run #264 (`36825487024`) completed successfully.
 - Delivery persistence test suite verifies a second PostgreSQL transaction waits while the first transaction holds the Delivery row lock, then observes the committed state.
 - Delivery mutation handlers now load mutable Delivery state inside the active Unit of Work for AssignDriver, ConfirmPickup, StartDelivery, CompleteDelivery, and FailDelivery.
 
-Still not proven GREEN:
-- concurrent execution of the application commands through real PostgreSQL persistence;
-- coordinated Order + Delivery cancellation contention and lock ordering;
-- replacement-delivery race behavior under PostgreSQL;
-- Delivery command idempotency persistence/concurrency boundary.
+The above historical gaps were subsequently closed for the defined M1 scenarios by CI run `37861612028`, commit `fdba8b7524b8550ef707fc80780327c9a8dce189`. Coverage includes competing driver assignment, replacement creation, concurrent cancellation, cancellation-versus-replacement, persisted Order eligibility under lock, and competing ConfirmPickup/StartDelivery/CompleteDelivery/FailDelivery commands with operation-specific loser exceptions. Idempotency persistence and migration/recovery smoke tests also passed. This is not exhaustive proof of every possible cross-command interleaving or production-load behavior.
 
 
 ## ADR-010 Acceptance Boundary
 
-**Status: ACCEPTED — implementation next**
+**Status: ACCEPTED — PostgreSQL persistence GREEN VERIFIED**
 
-Generalized command idempotency persistence is now approved. The next implementation slice must evolve the Order-specific persistence model into a resource-neutral record before claiming PostgreSQL Delivery command concurrency GREEN.
-
-Required verification: reservation race, replay, fingerprint conflict, transactional completion, rollback, concurrent mutation, and migration/recovery smoke test.
+Generalized command idempotency is implemented as a resource-neutral persistence capability. CI run `37861612028` passed the idempotency persistence tests and migration/recovery smoke test alongside the defined M1 Delivery concurrency suite. The implementation is verified for the exercised reservation/replay/fingerprint/transaction/rollback scenarios; future commands must add concurrency tests for their own mutation paths.
