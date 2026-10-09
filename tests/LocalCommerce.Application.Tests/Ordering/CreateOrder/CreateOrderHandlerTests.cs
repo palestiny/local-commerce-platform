@@ -1,3 +1,4 @@
+using LocalCommerce.Application.Errors;
 using LocalCommerce.Application.Idempotency;
 using LocalCommerce.Application.Ordering.CreateOrder;
 using LocalCommerce.Domain.Ordering;
@@ -34,7 +35,8 @@ public sealed class CreateOrderHandlerTests
         var act = () => fixture.Handler.HandleAsync(
             new CreateOrderCommand(CustomerId, CartId, "idem-1"));
 
-        await Assert.ThrowsAsync<CreateOrderRejectedException>(act);
+        var exception = await Assert.ThrowsAsync<CreateOrderRejectedException>(act);
+        Assert.Equal(ApplicationErrorCodes.CartNotCheckoutable, exception.Code);
     }
 
     [Fact]
@@ -67,7 +69,8 @@ public sealed class CreateOrderHandlerTests
         var act = () => fixture.Handler.HandleAsync(
             new CreateOrderCommand(CustomerId, CartId, "idem-1"));
 
-        await Assert.ThrowsAsync<CreateOrderRejectedException>(act);
+        var exception = await Assert.ThrowsAsync<CreateOrderRejectedException>(act);
+        Assert.Equal(ApplicationErrorCodes.CatalogItemUnavailable, exception.Code);
     }
 
     [Fact]
@@ -118,7 +121,8 @@ public sealed class CreateOrderHandlerTests
         var act = () => fixture.Handler.HandleAsync(
             new CreateOrderCommand(CustomerId, Guid.NewGuid(), "idem-1"));
 
-        await Assert.ThrowsAsync<CreateOrderRejectedException>(act);
+        var exception = await Assert.ThrowsAsync<CreateOrderRejectedException>(act);
+        Assert.Equal(ApplicationErrorCodes.IdempotencyKeyReused, exception.Code);
     }
 
     [Fact]
