@@ -2,6 +2,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using LocalCommerce.Application.Idempotency;
+using LocalCommerce.Application.Errors;
+using LocalCommerce.Domain;
 using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
 using LocalCommerce.Domain.Delivery;
 using LocalCommerce.Domain.Ordering;
@@ -41,9 +43,9 @@ public interface IReadyForDeliveryUnitOfWork
         CancellationToken cancellationToken);
 }
 
-public sealed class ReadyOrderForDeliveryRejectedException : Exception
+public sealed class ReadyOrderForDeliveryRejectedException : ApplicationFailureException
 {
-    public ReadyOrderForDeliveryRejectedException(string message) : base(message) { }
+    public ReadyOrderForDeliveryRejectedException(string message, string code = ApplicationErrorCodes.OrderInvalidState) : base(code, message) { }
 }
 
 public sealed class ReadyOrderForDeliveryHandler
@@ -75,11 +77,11 @@ public sealed class ReadyOrderForDeliveryHandler
         CancellationToken cancellationToken = default)
     {
         if (command.OrderId == Guid.Empty)
-            throw new ReadyOrderForDeliveryRejectedException("Order is required.");
+            throw new ReadyOrderForDeliveryRejectedException("Order is required.", ApplicationErrorCodes.RequestInvalid);
         if (command.ActorId == Guid.Empty)
-            throw new ReadyOrderForDeliveryRejectedException("Actor is required.");
+            throw new ReadyOrderForDeliveryRejectedException("Actor is required.", ApplicationErrorCodes.RequestInvalid);
         if (string.IsNullOrWhiteSpace(command.IdempotencyKey))
-            throw new ReadyOrderForDeliveryRejectedException("Idempotency key is required.");
+            throw new ReadyOrderForDeliveryRejectedException("Idempotency key is required.", ApplicationErrorCodes.IdempotencyKeyRequired);
 
         var fingerprint = BuildFingerprint(command);
         var existing = await IdempotencyStore.GetAsync(
@@ -114,13 +116,13 @@ public sealed class ReadyOrderForDeliveryHandler
                 transactionCancellationToken);
 
             if (order is null)
-                throw new ReadyOrderForDeliveryRejectedException("Order was not found.");
+                throw new ReadyOrderForDeliveryRejectedException("Order was not found.", ApplicationErrorCodes.ResourceNotFound);
 
             if (!await Authorization.CanMarkReadyAsync(
                     command.ActorId,
                     order,
                     transactionCancellationToken))
-                throw new ReadyOrderForDeliveryRejectedException("Actor is not authorized to mark this Order ready.");
+                throw new ReadyOrderForDeliveryRejectedException("Actor is not authorized to mark this Order ready.", ApplicationErrorCodes.AuthorizationForbidden);
 
             var activeDelivery = await DeliveryRepository.GetActiveByOrderIdAsync(
                 order.Id,
@@ -128,9 +130,10 @@ public sealed class ReadyOrderForDeliveryHandler
 
             if (activeDelivery is not null)
                 throw new ReadyOrderForDeliveryRejectedException(
-                    "The Order already has an active Delivery.");
+                    "The Order already has an active Delivery.", ApplicationErrorCodes.DeliveryInvalidState);
 
-            order.MarkReadyForPickup();
+            try { order.MarkReadyForPickup(); }
+            catch (DomainRuleViolationException exception) { throw new ReadyOrderForDeliveryRejectedException(exception.Message, ApplicationErrorCodes.OrderInvalidState); }
 
             var delivery = DeliveryEntity.Create(order.Id, order.StoreId);
 
@@ -150,7 +153,7 @@ public sealed class ReadyOrderForDeliveryHandler
                 transactionCancellationToken);
         }, cancellationToken);
 
-        return result ?? throw new InvalidOperationException(
+        return result ?? throw new ApplicationFailureException(ApplicationErrorCodes.InternalUnexpected,
             "Ready Order for Delivery completed without a result.");
     }
 
