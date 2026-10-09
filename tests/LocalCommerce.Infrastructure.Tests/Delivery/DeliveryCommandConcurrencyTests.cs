@@ -368,7 +368,7 @@ public sealed class DeliveryCommandConcurrencyTests
             new EfReplacementDeliveryOrderLock(db),
             new EfReplacementDeliveryEligibility(db),
             new EfGeneralizedIdempotencyStore(db),
-            new EfReplacementUnitOfWork(db));
+            new EfOrderDeliveryUnitOfWork(db));
 
         try
         {
@@ -505,29 +505,5 @@ public sealed class DeliveryCommandConcurrencyTests
             LocalCommerce.Domain.Delivery.Delivery delivery,
             CancellationToken cancellationToken) =>
             _inner.AddAsync(delivery, cancellationToken);
-    }
-
-    private sealed class EfReplacementUnitOfWork(CommerceDbContext db)
-        : ICreateReplacementDeliveryUnitOfWork
-    {
-        public async Task ExecuteAsync(
-            Func<CancellationToken, Task> operation,
-            CancellationToken cancellationToken)
-        {
-            await using var transaction =
-                await db.Database.BeginTransactionAsync(cancellationToken);
-
-            try
-            {
-                await operation(cancellationToken);
-                await db.SaveChangesAsync(cancellationToken);
-                await transaction.CommitAsync(cancellationToken);
-            }
-            catch
-            {
-                await transaction.RollbackAsync(cancellationToken);
-                throw;
-            }
-        }
     }
 }
