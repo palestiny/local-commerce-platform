@@ -1,0 +1,68 @@
+# API & Security Contract Closure Checklist
+
+Status: **REVIEW CHECKLIST — NO NEW OWNER DECISIONS MADE — HTTP IMPLEMENTATION BLOCKED**
+
+## Purpose and boundary
+
+This checklist converts the remaining items in the API & Security Design Gate (docs/07-API-SECURITY-DESIGN-GATE.md) and API Application Error Taxonomy (docs/19-API-APPLICATION-ERROR-TAXONOMY-PROPOSAL.md) into explicit closure evidence. It is a review aid, not approval of unresolved choices.
+
+Current foundation code and application-level error-code tests do not prove an HTTP API is secure or contract-complete. Do not start controllers, authentication integration, or public endpoint implementation from this checklist alone. Do not start Phase B while the pilot wedge remains open.
+
+## Contract closure register
+
+| ID | Area | Current baseline | Still required to close | Required evidence |
+|---|---|---|---|---|
+| API-01 | Initial HTTP slice | Customer Order routes are proposed as a smaller first slice; owner approval is not recorded here | Owner chooses customer-only slice or explicitly approves a broader initial route set | Recorded owner decision; route list updated consistently in the gate |
+| API-02 | Route and DTO contract | /api/v1 route matrix is a design baseline; DTO fields and some success semantics remain open | Specify request/response schemas, required/optional fields, identifier formats, nullability, and success status/body/headers for every included route | Reviewed contract table or OpenAPI draft; no Domain entities exposed |
+| API-03 | Identity integration | Provider/framework and token/session lifecycle are OPEN | Select an authentication integration boundary and define credential/session expiry, revocation, and failure behavior for the chosen client strategy | Owner decision and provider/framework-specific design backed by current official documentation |
+| API-04 | Resource authorization | Ownership/assignment checks and concealed customer Order reads are required | Define the permission matrix for every route in the chosen slice; explicitly separate customer ownership checks from role checks | Route × actor × resource authorization matrix; negative tests for cross-owner access |
+| API-05 | Idempotency header | Same actor + operation + key + fingerprint replays the completed result; fingerprint mismatch conflicts. Key reservation, mutation, and completion must preserve required atomicity | Confirm accepted character set and length boundary; define exact HTTP replay representation/status and behavior when the outcome cannot safely be replayed | Owner-approved header contract; boundary, replay, conflict, concurrency, and rollback tests |
+| API-06 | Error-to-HTTP mapping | Stable transport-neutral error codes and a proposed RFC 9457 Problem Details envelope exist | Review every included operation's possible application failures and map each to status/code; specify safe generic handling for unknown failures | Explicit mapping table; adapter tests proving no message-text matching or exception-detail leakage |
+| API-07 | Request validation and limits | Body limits, timeouts, and rate limits are required but numeric values are OPEN | Set deployment-informed body-size, timeout, and rate-limit values; identify configuration ownership and exceptions for legitimate workloads | Recorded rationale tied to hosting/traffic assumptions; tests for oversized payloads, timeout/cancellation, and rate limits |
+| API-08 | Observability and audit | Trace ID in errors and audit of privileged/commercial transitions are required | Define which actions need durable audit records in the chosen slice and verify trace propagation and sensitive-field redaction | Audit event list/schema, trace tests, and log/error redaction tests |
+| API-09 | API description and compatibility | OpenAPI review is required before pilot | Define the versioned API description and verify it matches implemented routes, DTOs, statuses, and headers | Generated/maintained OpenAPI artifact and contract consistency test or documented review |
+| API-10 | Pilot scope dependency | Pilot categories, merchant count, service zones, operating split, and success thresholds remain OPEN | Resolve the pilot wedge through the product/design gate; do not infer it from the long-term ambition to support many categories | Explicit owner decision and updated project foundation/open-question/decision records |
+
+## Required route-level review template
+
+For every route included in the approved first slice, complete all fields before implementation:
+
+- **Actor source:** authenticated server-side principal; no client-supplied actor ID is authoritative.
+- **Resource scope:** exact ownership/relationship check and whether inaccessible resources are concealed as 404.
+- **Request DTO:** fields, validation, identifier format, maximum lengths, and fields that must never be client-authoritative.
+- **Success contract:** status, response schema, Location where resource creation requires it, and replay behavior.
+- **Failure contract:** stable application code, HTTP status, safe Problem Details fields, and retry guidance.
+- **Idempotency:** required/optional header, accepted syntax, operation scope, fingerprint semantics, replay result, conflict result, and failure/rollback behavior.
+- **Abuse controls:** applicable body limit, timeout, rate-limit policy, and sensitive-data redaction.
+- **Verification:** positive contract test, invalid-input test, unauthorized/cross-resource test, replay/conflict test where applicable, and unexpected-error sanitization test.
+
+A route is not contract-complete merely because its application handler exists or its unit tests pass.
+
+## Recommended closure order
+
+1. Confirm the initial HTTP slice. The customer-only Order slice is a proposal, not an owner-approved decision in this checklist.
+2. Resolve the authentication boundary using the selected client strategy, hosting constraints, budget, and current official provider/framework documentation. Do not assume a provider or pricing.
+3. Complete the route-level DTO, authorization, success, and error contracts for only the approved slice.
+4. Close the idempotency transport details and operational limits with documented rationale.
+5. Define contract/security tests before controller implementation.
+6. Implement the adapter only after the gate's exit criteria are met, then verify the actual HTTP boundary with integration tests.
+7. Keep Phase B blocked until the separate pilot-wedge decisions are approved.
+
+## Explicit non-decisions
+
+This checklist does not select an authentication provider, decide web/mobile technology, define admin/dispatch permissions, set numeric rate limits/timeouts/body limits, approve exact DTO fields, choose the first HTTP slice, or approve the pilot wedge. These remain OPEN until the owner decides them and the corresponding records are updated.
+
+## Gate exit evidence
+
+The API/security gate may be proposed for owner review only when:
+
+- Every route in the approved initial slice has a completed route-level contract.
+- Authentication integration and resource authorization are specified and testable.
+- Idempotency syntax, replay, conflict, and failure semantics are explicit.
+- Every known application error code and unknown failure has safe, tested HTTP behavior.
+- Abuse-control values have a documented deployment rationale.
+- Contract/security test cases exist before controller work.
+- OpenAPI and implementation can be compared by repeatable verification.
+- No claim of pilot readiness is made solely from application-layer tests or CI for an earlier commit.
+
+**Stop condition:** until the owner approves the remaining decisions and the required design evidence exists, do not implement HTTP controllers or authentication-provider integration, and do not mark this gate PASS.
