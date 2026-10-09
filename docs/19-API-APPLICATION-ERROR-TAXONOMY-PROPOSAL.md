@@ -39,7 +39,7 @@ Do not return exception type names, stack traces, SQL/provider messages, connect
 | `catalog.item_unavailable` | Product/store/variant cannot currently be ordered | 409 | Refresh catalog/cart |
 | `idempotency.key_required` | Required Idempotency-Key is absent/invalid | 400 | Supply a valid key |
 | `idempotency.key_reused` | Same actor/operation/key has a different request fingerprint | 409 | Use a new key only for a genuinely new operation |
-| `idempotency.result_unavailable` | A matching operation cannot yet safely replay a completed result | 409 (provisional) | Retry same key after documented delay |
+| `idempotency.result_unavailable` | An explicit, trustworthy in-progress signal proves the matching operation is still executing and cannot yet replay | 409 (only when proven) | Retry same key according to the documented policy |
 | `rate_limit.exceeded` | Request limit exceeded | 429 | Respect Retry-After when present |
 | `dependency.unavailable` | A required dependency is temporarily unavailable and failure is safe to expose as transient | 503 | Retry only according to policy |
 | `internal.unexpected` | Unexpected failure without a safe public classification | 500 | Do not blindly retry non-idempotent work |
@@ -49,6 +49,7 @@ Do not return exception type names, stack traces, SQL/provider messages, connect
 1. The same error code must mean the same thing across endpoints.
 2. Do not classify by matching exception message text.
 3. Do not map every application rejection to 400. Distinguish invalid input, missing resource, authorization, and state conflict.
+4. A persisted `Reserved` idempotency record alone does not prove an operation is still running. Without a trustworthy lease/heartbeat or equivalent in-progress signal, classify it as `internal.unexpected`; reserve `idempotency.result_unavailable` for a proven in-progress operation.
 4. Resource ownership concealment must deliberately use the same public response as missing resources where the approved security policy requires it.
 5. A unique database constraint violation is not automatically a public 500. Translate only known constraints at the persistence/application boundary into the relevant stable conflict code; unknown database errors remain internal failures.
 6. Cancellation, delivery completion, and other commercial mutations must preserve transaction rollback and idempotency behavior when a failure is returned.
@@ -92,11 +93,11 @@ The owner approved the following implementation direction:
 
 1. Use a shared typed application failure with stable codes rather than parsing exception messages.
 2. Keep Cart checkoutability and catalog item availability as separate error codes.
-3. Use `409 Conflict` for a matching idempotency operation that is demonstrably still in progress; treat an unexpected incomplete/corrupt persisted record as an internal integrity failure, not as an automatic transient `503`.
+3. Use `409 Conflict` only when reliable state proves a matching idempotency operation is still in progress; a persisted `Reserved` record by itself is insufficient. Treat unproven reservations and incomplete/corrupt persisted records as internal integrity failures, not as automatic transient `503` responses.
 
 The shared `ApplicationFailureException` / `ApplicationErrorCodes` contract and focused tests are in place. The current feature branch now migrates stable codes through Create Order, Cancel Order, and the Delivery command handlers: Ready Order for Delivery, Assign Driver, Confirm Pickup, Start Delivery, Complete Delivery, Fail Delivery, and Create Replacement Delivery. Their application tests assert representative codes for invalid input/state, not-found, authorization, idempotency fingerprint conflicts, and corrupted/incomplete idempotency results. Domain transition failures are translated at the application boundary for these migrated commands.
 
-The current application command/query handlers have now been migrated to the shared typed base and stable codes, with representative error-code assertions in their tests. This does not prove every branch is covered or that unexpected infrastructure exceptions are all normalized; perform a final error-path audit as part of the HTTP adapter design. HTTP Problem Details mapping and adapter-level tests do not exist yet, and controllers remain blocked.
+The current application command/query handlers have been migrated to the shared typed base and stable codes, with representative error-code assertions in their tests. A persisted reservation without reliable evidence of active execution is now treated as an integrity failure. This does not prove every branch is covered or that unexpected infrastructure exceptions are all normalized; perform a final error-path audit as part of the HTTP adapter design. HTTP Problem Details mapping and adapter-level tests do not exist yet, and controllers remain blocked.
 
 ## Remaining decisions
 
