@@ -96,7 +96,7 @@ The owner approved the following implementation direction:
 
 The shared `ApplicationFailureException` / `ApplicationErrorCodes` contract and focused tests are in place. The current feature branch now migrates stable codes through Create Order, Cancel Order, and the Delivery command handlers: Ready Order for Delivery, Assign Driver, Confirm Pickup, Start Delivery, Complete Delivery, Fail Delivery, and Create Replacement Delivery. Their application tests assert representative codes for invalid input/state, not-found, authorization, idempotency fingerprint conflicts, and corrupted/incomplete idempotency results. Domain transition failures are translated at the application boundary for these migrated commands.
 
-This remains an incremental migration, not proof that every application operation or every error path is fully classified. The customer order-details query and any future handlers still need an inventory pass. HTTP Problem Details mapping and adapter-level tests do not exist yet, and controllers remain blocked.
+The current application command/query handlers have now been migrated to the shared typed base and stable codes, with representative error-code assertions in their tests. This does not prove every branch is covered or that unexpected infrastructure exceptions are all normalized; perform a final error-path audit as part of the HTTP adapter design. HTTP Problem Details mapping and adapter-level tests do not exist yet, and controllers remain blocked.
 
 ## Remaining decisions
 
