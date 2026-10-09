@@ -97,3 +97,5 @@ Review of `src/LocalCommerce.Application/Delivery/CreateReplacementDeliveryAppli
 - The handler accepts `StoreId`, checks order eligibility by `OrderId`, and creates a Delivery using the supplied `StoreId`; the reviewed code does not verify that the Store belongs to the Order.
 
 Do not include this operation in an HTTP slice until the allowed actor policy and Order–Store consistency rule are defined and enforced. Add tests for an actor without permission and a mismatched StoreId. This is a finding about the reviewed application handler; this review did not establish that an HTTP endpoint exposes it.
+
+- The focused `CreateReplacementDeliveryHandlerTests` cover eligibility, active Delivery rejection, and idempotent replay/conflict, but do not test authorization denial or a Store that does not belong to the Order. Their fake unit of work executes the operation delegate directly, so those tests also do not establish database transaction rollback or concurrent-request safety.
