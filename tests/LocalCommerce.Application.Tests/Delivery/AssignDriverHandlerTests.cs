@@ -101,6 +101,34 @@ public sealed class AssignDriverHandlerTests
     }
 
     [Fact]
+    public async Task Reserved_idempotency_record_returns_in_progress_code()
+    {
+        var fixture = Fixture.Create();
+        var command = new AssignDriverCommand(fixture.Delivery.Id, fixture.Driver.Id, fixture.ActorId, "assign-reserved");
+        await fixture.Handler.HandleAsync(command);
+        fixture.IdempotencyStore.Mutate(fixture.ActorId, "AssignDriver", "assign-reserved",
+            record => record with { Status = IdempotencyStatus.Reserved });
+
+        var error = await Assert.ThrowsAsync<AssignDriverRejectedException>(() => fixture.Handler.HandleAsync(command));
+
+        Assert.Equal(ApplicationErrorCodes.IdempotencyResultUnavailable, error.Code);
+    }
+
+    [Fact]
+    public async Task Corrupt_completed_idempotency_record_returns_internal_integrity_code()
+    {
+        var fixture = Fixture.Create();
+        var command = new AssignDriverCommand(fixture.Delivery.Id, fixture.Driver.Id, fixture.ActorId, "assign-corrupt");
+        await fixture.Handler.HandleAsync(command);
+        fixture.IdempotencyStore.Mutate(fixture.ActorId, "AssignDriver", "assign-corrupt",
+            record => record with { ResourceType = "UnexpectedResource" });
+
+        var error = await Assert.ThrowsAsync<AssignDriverRejectedException>(() => fixture.Handler.HandleAsync(command));
+
+        Assert.Equal(ApplicationErrorCodes.InternalUnexpected, error.Code);
+    }
+
+    [Fact]
     public async Task Same_idempotency_key_with_different_driver_is_rejected()
     {
         var fixture = Fixture.Create();
@@ -246,6 +274,12 @@ public sealed class AssignDriverHandlerTests
                 null);
 
             return Task.FromResult<IdempotencyRecord?>(null);
+        }
+
+        public void Mutate(Guid scopeId, string operation, string key, Func<IdempotencyRecord, IdempotencyRecord> update)
+        {
+            var recordKey = Key(scopeId, operation, key);
+            _records[recordKey] = update(_records[recordKey]);
         }
 
         public Task CompleteAsync(
