@@ -58,6 +58,7 @@ Every state-changing command requires an `Idempotency-Key` request header.
 - Proposed boundary: 1–128 visible ASCII characters; reject absent, empty, whitespace-only, or overlong values before invoking the handler.
 - Same key + same canonical request fingerprint replays the original completed result without a second commercial effect.
 - Same key + different fingerprint returns `409 Conflict`.
+- A persisted `Reserved` record alone does not prove that execution is still active. Until the store exposes trustworthy in-progress evidence (such as a lease/heartbeat), an uncompleted visible record is an integrity failure, not a retryable `409`.
 - The key reservation, business mutation, and completion record must share the established persistence transaction where that command requires atomicity.
 - Never log the raw key or credentials. Logs may include operation, a safe correlation ID, and a non-reversible key digest if operationally required.
 
