@@ -66,13 +66,13 @@ public sealed class ConfirmPickupHandler(
                 ?? throw new ConfirmPickupRejectedException("Delivery was not found.", ApplicationErrorCodes.ResourceNotFound);
 
             if (delivery.Status != DeliveryStatus.Assigned)
-                throw new ConfirmPickupRejectedException("Pickup can only be confirmed for an assigned Delivery.");
+                throw new ConfirmPickupRejectedException("Pickup can only be confirmed for an assigned Delivery.", ApplicationErrorCodes.DeliveryInvalidState);
 
             if (!await authorization.CanConfirmPickupAsync(command.ActorId, delivery, transactionCancellationToken))
                 throw new ConfirmPickupRejectedException("Actor is not authorized to confirm pickup.", ApplicationErrorCodes.AuthorizationForbidden);
 
             var driverId = delivery.DriverId
-                ?? throw new ConfirmPickupRejectedException("Assigned Delivery must have a Driver.");
+                ?? throw new ConfirmPickupRejectedException("Assigned Delivery must have a Driver.", ApplicationErrorCodes.DeliveryInvalidState);
 
             try
             {
