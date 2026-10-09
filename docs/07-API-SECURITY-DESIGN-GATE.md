@@ -65,7 +65,7 @@ The owner has approved the proposed idempotency design direction: same actor/ope
 
 ## Standard Error Contract
 
-The owner has approved the error-contract direction in [API Application Error Taxonomy](19-API-APPLICATION-ERROR-TAXONOMY-PROPOSAL.md): shared typed application failures with stable codes; separate Cart and catalog codes; and `409` only for a demonstrably in-progress idempotency operation. The initial transport-neutral code catalogue/base exception and unit tests are committed. Migration of existing handlers and mapping tests are still outstanding, so controller work remains blocked.
+The owner has approved the error-contract direction in [API Application Error Taxonomy](19-API-APPLICATION-ERROR-TAXONOMY-PROPOSAL.md): shared typed application failures with stable codes; separate Cart and catalog codes; and `409` only for a demonstrably in-progress idempotency operation. The transport-neutral code catalogue/base exception is committed, and the current application command/query handlers have been migrated with representative error-code tests, including the distinction between an in-progress idempotency record and a corrupt completed record. HTTP Problem Details mapping and adapter-level contract tests remain outstanding, so controller work remains blocked.
 
 Use RFC 9457 Problem Details as the response envelope, extended with stable machine-readable fields:
 
