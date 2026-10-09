@@ -48,8 +48,7 @@ public sealed class GetCustomerOrderDetailsHandlerTests
         var act = () => fixture.Handler.HandleAsync(
             new GetCustomerOrderDetailsQuery(Guid.NewGuid(), fixture.Order.Id));
 
-        var error = var error = await Assert.ThrowsAsync<GetCustomerOrderDetailsRejectedException>(act);
-        Assert.Equal(ApplicationErrorCodes.ResourceNotFound, error.Code);
+        var error = await Assert.ThrowsAsync<GetCustomerOrderDetailsRejectedException>(act);
         Assert.Equal(ApplicationErrorCodes.ResourceNotFound, error.Code);
     }
 
