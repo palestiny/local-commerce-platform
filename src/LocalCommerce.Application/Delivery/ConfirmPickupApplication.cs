@@ -1,6 +1,8 @@
 using System.Security.Cryptography;
 using System.Text;
 using LocalCommerce.Application.Idempotency;
+using LocalCommerce.Application.Errors;
+using LocalCommerce.Domain;
 using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
 using LocalCommerce.Domain.Delivery;
 
@@ -9,7 +11,7 @@ namespace LocalCommerce.Application.Delivery;
 public sealed record ConfirmPickupCommand(Guid DeliveryId, Guid ActorId, string IdempotencyKey);
 public sealed record ConfirmPickupResult(Guid DeliveryId, Guid DriverId);
 
-public sealed class ConfirmPickupRejectedException(string message) : Exception(message);
+public sealed class ConfirmPickupRejectedException(string message, string code = ApplicationErrorCodes.DeliveryInvalidState) : ApplicationFailureException(code, message);
 
 public interface IConfirmPickupDeliveryRepository
 {
@@ -39,9 +41,9 @@ public sealed class ConfirmPickupHandler(
         ConfirmPickupCommand command,
         CancellationToken cancellationToken = default)
     {
-        if (command.DeliveryId == Guid.Empty) throw new ConfirmPickupRejectedException("Delivery is required.");
-        if (command.ActorId == Guid.Empty) throw new ConfirmPickupRejectedException("Actor is required.");
-        if (string.IsNullOrWhiteSpace(command.IdempotencyKey)) throw new ConfirmPickupRejectedException("Idempotency key is required.");
+        if (command.DeliveryId == Guid.Empty) throw new ConfirmPickupRejectedException("Delivery is required.", ApplicationErrorCodes.RequestInvalid);
+        if (command.ActorId == Guid.Empty) throw new ConfirmPickupRejectedException("Actor is required.", ApplicationErrorCodes.RequestInvalid);
+        if (string.IsNullOrWhiteSpace(command.IdempotencyKey)) throw new ConfirmPickupRejectedException("Idempotency key is required.", ApplicationErrorCodes.IdempotencyKeyRequired);
 
         var fingerprint = BuildFingerprint(command);
         var existing = await idempotencyStore.GetAsync(command.ActorId, Operation, command.IdempotencyKey, cancellationToken);
@@ -61,18 +63,25 @@ public sealed class ConfirmPickupHandler(
             }
 
             var delivery = await deliveryRepository.GetAsync(command.DeliveryId, transactionCancellationToken)
-                ?? throw new ConfirmPickupRejectedException("Delivery was not found.");
+                ?? throw new ConfirmPickupRejectedException("Delivery was not found.", ApplicationErrorCodes.ResourceNotFound);
 
             if (delivery.Status != DeliveryStatus.Assigned)
                 throw new ConfirmPickupRejectedException("Pickup can only be confirmed for an assigned Delivery.");
 
             if (!await authorization.CanConfirmPickupAsync(command.ActorId, delivery, transactionCancellationToken))
-                throw new ConfirmPickupRejectedException("Actor is not authorized to confirm pickup.");
+                throw new ConfirmPickupRejectedException("Actor is not authorized to confirm pickup.", ApplicationErrorCodes.AuthorizationForbidden);
 
             var driverId = delivery.DriverId
                 ?? throw new ConfirmPickupRejectedException("Assigned Delivery must have a Driver.");
 
-            delivery.ConfirmPickup(driverId);
+            try
+            {
+                delivery.ConfirmPickup(driverId);
+            }
+            catch (DomainRuleViolationException exception)
+            {
+                throw new ConfirmPickupRejectedException(exception.Message, ApplicationErrorCodes.DeliveryInvalidState);
+            }
             await deliveryRepository.SaveAsync(delivery, transactionCancellationToken);
 
             result = new ConfirmPickupResult(delivery.Id, driverId);
@@ -87,7 +96,7 @@ public sealed class ConfirmPickupHandler(
                 transactionCancellationToken);
         }, cancellationToken);
 
-        return result ?? throw new InvalidOperationException("Pickup confirmation completed without a result.");
+        return result ?? throw new ApplicationFailureException(ApplicationErrorCodes.InternalUnexpected, "Pickup confirmation completed without a result.");
     }
 
     private static string BuildFingerprint(ConfirmPickupCommand command) =>
@@ -97,18 +106,18 @@ public sealed class ConfirmPickupHandler(
     private static ConfirmPickupResult ValidateExisting(IdempotencyRecord existing, string fingerprint)
     {
         if (!string.Equals(existing.Fingerprint, fingerprint, StringComparison.Ordinal))
-            throw new ConfirmPickupRejectedException("The idempotency key was already used with a different request.");
+            throw new ConfirmPickupRejectedException("The idempotency key was already used with a different request.", ApplicationErrorCodes.IdempotencyKeyReused);
 
         if (existing.Status != IdempotencyStatus.Completed ||
             !string.Equals(existing.ResourceType, "Delivery", StringComparison.Ordinal) ||
             existing.ResourceId is null ||
             string.IsNullOrWhiteSpace(existing.ResultPayload))
-            throw new ConfirmPickupRejectedException("Idempotency record is incomplete.");
+            throw new ConfirmPickupRejectedException("Idempotency record is incomplete.", ApplicationErrorCodes.IdempotencyResultUnavailable);
 
         var result = System.Text.Json.JsonSerializer.Deserialize<ConfirmPickupResult>(existing.ResultPayload);
         if (result is null || result.DeliveryId == Guid.Empty || result.DriverId == Guid.Empty ||
             result.DeliveryId != existing.ResourceId.Value)
-            throw new ConfirmPickupRejectedException("Idempotency record is invalid.");
+            throw new ConfirmPickupRejectedException("Idempotency record is invalid.", ApplicationErrorCodes.InternalUnexpected);
 
         return result;
     }
