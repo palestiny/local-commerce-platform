@@ -19,7 +19,7 @@ public interface ICreateReplacementDeliveryRepository
 
 public interface IReplacementDeliveryOrderLock
 {
-    Task<bool> LockOrderForMutationAsync(Guid orderId, CancellationToken ct);
+    Task<Guid?> LockOrderForMutationAsync(Guid orderId, CancellationToken ct);
 }
 
 public interface IReplacementDeliveryEligibility
@@ -71,8 +71,14 @@ public sealed class CreateReplacementDeliveryHandler(
 
             // Use the same cross-aggregate lock order as ReadyOrderForDelivery and CancelOrder:
             // lock Order first, then inspect/lock its active Delivery.
-            if (!await orderLock.LockOrderForMutationAsync(command.OrderId, tx))
+            var orderStoreId = await orderLock.LockOrderForMutationAsync(command.OrderId, tx);
+            if (orderStoreId is null)
                 throw new CreateReplacementDeliveryRejectedException("Order was not found.", ApplicationErrorCodes.ResourceNotFound);
+
+            if (orderStoreId.Value != command.StoreId)
+                throw new CreateReplacementDeliveryRejectedException(
+                    "The requested Store does not belong to this Order.",
+                    ApplicationErrorCodes.RequestInvalid);
 
             if (!await eligibility.IsOrderEligibleAsync(command.OrderId, tx))
                 throw new CreateReplacementDeliveryRejectedException("Order is not eligible for replacement delivery.", ApplicationErrorCodes.OrderInvalidState);
