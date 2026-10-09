@@ -1,6 +1,8 @@
 using System.Security.Cryptography;
 using System.Text;
 using LocalCommerce.Application.Idempotency;
+using LocalCommerce.Application.Errors;
+using LocalCommerce.Domain;
 using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
 using DeliveryEntityStatus = LocalCommerce.Domain.Delivery.DeliveryStatus;
 
@@ -9,7 +11,7 @@ namespace LocalCommerce.Application.Delivery;
 public sealed record CompleteDeliveryCommand(Guid DeliveryId, Guid ActorId, string IdempotencyKey);
 public sealed record CompleteDeliveryResult(Guid DeliveryId, Guid DriverId);
 
-public sealed class CompleteDeliveryRejectedException(string message) : Exception(message);
+public sealed class CompleteDeliveryRejectedException(string message, string code = ApplicationErrorCodes.DeliveryInvalidState) : ApplicationFailureException(code, message);
 
 public interface ICompleteDeliveryDeliveryRepository
 {
@@ -39,9 +41,9 @@ public sealed class CompleteDeliveryHandler(
         CompleteDeliveryCommand command,
         CancellationToken ct = default)
     {
-        if (command.DeliveryId == Guid.Empty) throw new CompleteDeliveryRejectedException("DeliveryId is required.");
-        if (command.ActorId == Guid.Empty) throw new CompleteDeliveryRejectedException("ActorId is required.");
-        if (string.IsNullOrWhiteSpace(command.IdempotencyKey)) throw new CompleteDeliveryRejectedException("IdempotencyKey is required.");
+        if (command.DeliveryId == Guid.Empty) throw new CompleteDeliveryRejectedException("DeliveryId is required.", ApplicationErrorCodes.RequestInvalid);
+        if (command.ActorId == Guid.Empty) throw new CompleteDeliveryRejectedException("ActorId is required.", ApplicationErrorCodes.RequestInvalid);
+        if (string.IsNullOrWhiteSpace(command.IdempotencyKey)) throw new CompleteDeliveryRejectedException("IdempotencyKey is required.", ApplicationErrorCodes.IdempotencyKeyRequired);
 
         var fingerprint = Fingerprint(command);
         var existing = await idempotencyStore.GetAsync(command.ActorId, Operation, command.IdempotencyKey, ct);
@@ -59,19 +61,20 @@ public sealed class CompleteDeliveryHandler(
             }
 
             var delivery = await deliveries.GetAsync(command.DeliveryId, tx)
-                ?? throw new CompleteDeliveryRejectedException("Delivery was not found.");
+                ?? throw new CompleteDeliveryRejectedException("Delivery was not found.", ApplicationErrorCodes.ResourceNotFound);
 
             if (delivery.Status != DeliveryEntityStatus.OutForDelivery)
                 throw new CompleteDeliveryRejectedException("Delivery must be OUT_FOR_DELIVERY.");
 
             if (!await authorization.CanCompleteDeliveryAsync(command.ActorId, delivery, tx))
-                throw new CompleteDeliveryRejectedException("Actor is not authorized to complete delivery.");
+                throw new CompleteDeliveryRejectedException("Actor is not authorized to complete delivery.", ApplicationErrorCodes.AuthorizationForbidden);
 
             var driverId = delivery.DriverId;
             if (driverId is null || driverId == Guid.Empty)
                 throw new CompleteDeliveryRejectedException("Delivery must have an assigned driver.");
 
-            delivery.Complete();
+            try { delivery.Complete(); }
+            catch (DomainRuleViolationException exception) { throw new CompleteDeliveryRejectedException(exception.Message, ApplicationErrorCodes.DeliveryInvalidState); }
             await deliveries.SaveAsync(delivery, tx);
 
             result = new CompleteDeliveryResult(delivery.Id, driverId.Value);
@@ -86,24 +89,24 @@ public sealed class CompleteDeliveryHandler(
                 tx);
         }, ct);
 
-        return result ?? throw new InvalidOperationException("Delivery completion completed without a result.");
+        return result ?? throw new ApplicationFailureException(ApplicationErrorCodes.InternalUnexpected, "Delivery completion completed without a result.");
     }
 
     private static CompleteDeliveryResult Resolve(IdempotencyRecord existing, string fp)
     {
         if (!string.Equals(existing.Fingerprint, fp, StringComparison.Ordinal))
-            throw new CompleteDeliveryRejectedException("Idempotency key was already used with a different request.");
+            throw new CompleteDeliveryRejectedException("Idempotency key was already used with a different request.", ApplicationErrorCodes.IdempotencyKeyReused);
 
         if (existing.Status != IdempotencyStatus.Completed ||
             !string.Equals(existing.ResourceType, "Delivery", StringComparison.Ordinal) ||
             existing.ResourceId is null ||
             string.IsNullOrWhiteSpace(existing.ResultPayload))
-            throw new CompleteDeliveryRejectedException("Idempotency record is incomplete.");
+            throw new CompleteDeliveryRejectedException("Idempotency record is incomplete.", ApplicationErrorCodes.IdempotencyResultUnavailable);
 
         var result = System.Text.Json.JsonSerializer.Deserialize<CompleteDeliveryResult>(existing.ResultPayload);
         if (result is null || result.DeliveryId == Guid.Empty || result.DriverId == Guid.Empty ||
             result.DeliveryId != existing.ResourceId.Value)
-            throw new CompleteDeliveryRejectedException("Idempotency record is invalid.");
+            throw new CompleteDeliveryRejectedException("Idempotency record is invalid.", ApplicationErrorCodes.InternalUnexpected);
 
         return result;
     }
