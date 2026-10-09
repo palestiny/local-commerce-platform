@@ -1,5 +1,6 @@
 using LocalCommerce.Application.Delivery;
 using LocalCommerce.Application.Idempotency;
+using LocalCommerce.Application.Errors;
 using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
 using DeliveryEntityStatus = LocalCommerce.Domain.Delivery.DeliveryStatus;
 using Xunit;
@@ -25,7 +26,8 @@ public sealed class CompleteDeliveryHandlerTests
         var fixture = Fixture.Create();
         fixture.Authorization.Allowed = false;
         var act = () => fixture.Handler.HandleAsync(new CompleteDeliveryCommand(fixture.Delivery.Id, fixture.DriverId, "complete-1"));
-        await Assert.ThrowsAsync<CompleteDeliveryRejectedException>(act);
+        var error = await Assert.ThrowsAsync<CompleteDeliveryRejectedException>(act);
+        Assert.Equal(ApplicationErrorCodes.AuthorizationForbidden, error.Code);
         Assert.Equal(DeliveryEntityStatus.OutForDelivery, fixture.Delivery.Status);
     }
 
@@ -46,7 +48,8 @@ public sealed class CompleteDeliveryHandlerTests
         fixture.Delivery.AssignDriver(fixture.DriverId);
         fixture.Repository.SetDelivery(fixture.Delivery);
         var act = () => fixture.Handler.HandleAsync(new CompleteDeliveryCommand(fixture.Delivery.Id, fixture.DriverId, "complete-1"));
-        await Assert.ThrowsAsync<CompleteDeliveryRejectedException>(act);
+        var error = await Assert.ThrowsAsync<CompleteDeliveryRejectedException>(act);
+        Assert.Equal(ApplicationErrorCodes.DeliveryInvalidState, error.Code);
         Assert.Equal(DeliveryEntityStatus.Assigned, fixture.Delivery.Status);
     }
 
@@ -68,7 +71,8 @@ public sealed class CompleteDeliveryHandlerTests
         var command = new CompleteDeliveryCommand(fixture.Delivery.Id, fixture.DriverId, "complete-1");
         await fixture.Handler.HandleAsync(command);
         var act = () => fixture.Handler.HandleAsync(command with { DeliveryId = Guid.NewGuid() });
-        await Assert.ThrowsAsync<CompleteDeliveryRejectedException>(act);
+        var error = await Assert.ThrowsAsync<CompleteDeliveryRejectedException>(act);
+        Assert.Equal(ApplicationErrorCodes.IdempotencyKeyReused, error.Code);
     }
 
     [Fact]
