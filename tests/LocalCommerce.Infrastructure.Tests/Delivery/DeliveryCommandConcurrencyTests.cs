@@ -48,7 +48,7 @@ public sealed class DeliveryCommandConcurrencyTests
         var results = await Task.WhenAll(first, second);
 
         Assert.Equal(1, results.Count(x => x.Success));
-        Assert.Equal(1, results.Count(x => x.Failure is DomainRuleViolationException));
+        Assert.Equal(1, results.Count(x => x.Failure is AssignDriverRejectedException));
 
         await using var verify = CreateDb();
         var persisted = await new EfDeliveryRepository(verify)
