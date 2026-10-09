@@ -97,11 +97,14 @@ public sealed class CompleteDeliveryHandler(
         if (!string.Equals(existing.Fingerprint, fp, StringComparison.Ordinal))
             throw new CompleteDeliveryRejectedException("Idempotency key was already used with a different request.", ApplicationErrorCodes.IdempotencyKeyReused);
 
+        if (existing.Status == IdempotencyStatus.Reserved)
+            throw new CompleteDeliveryRejectedException("Idempotency operation is still in progress.", ApplicationErrorCodes.IdempotencyResultUnavailable);
+
         if (existing.Status != IdempotencyStatus.Completed ||
             !string.Equals(existing.ResourceType, "Delivery", StringComparison.Ordinal) ||
             existing.ResourceId is null ||
             string.IsNullOrWhiteSpace(existing.ResultPayload))
-            throw new CompleteDeliveryRejectedException("Idempotency record is incomplete.", ApplicationErrorCodes.IdempotencyResultUnavailable);
+            throw new CompleteDeliveryRejectedException("Idempotency record is invalid.", ApplicationErrorCodes.InternalUnexpected);
 
         var result = System.Text.Json.JsonSerializer.Deserialize<CompleteDeliveryResult>(existing.ResultPayload);
         if (result is null || result.DeliveryId == Guid.Empty || result.DriverId == Guid.Empty ||
