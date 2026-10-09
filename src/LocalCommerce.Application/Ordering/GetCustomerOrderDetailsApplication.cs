@@ -1,4 +1,5 @@
 using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
+using LocalCommerce.Application.Errors;
 using LocalCommerce.Domain.Delivery;
 using LocalCommerce.Domain.Ordering;
 
@@ -45,10 +46,10 @@ public interface ICustomerOrderDetailsAuthorization
         CancellationToken cancellationToken);
 }
 
-public sealed class GetCustomerOrderDetailsRejectedException : Exception
+public sealed class GetCustomerOrderDetailsRejectedException : ApplicationFailureException
 {
-    public GetCustomerOrderDetailsRejectedException(string message)
-        : base(message) { }
+    public GetCustomerOrderDetailsRejectedException(string message, string code = ApplicationErrorCodes.ResourceNotFound)
+        : base(code, message) { }
 }
 
 public sealed class GetCustomerOrderDetailsHandler
@@ -72,10 +73,10 @@ public sealed class GetCustomerOrderDetailsHandler
         CancellationToken cancellationToken = default)
     {
         if (query.CustomerId == Guid.Empty)
-            throw new GetCustomerOrderDetailsRejectedException("Customer is required.");
+            throw new GetCustomerOrderDetailsRejectedException("Customer is required.", ApplicationErrorCodes.RequestInvalid);
 
         if (query.OrderId == Guid.Empty)
-            throw new GetCustomerOrderDetailsRejectedException("Order is required.");
+            throw new GetCustomerOrderDetailsRejectedException("Order is required.", ApplicationErrorCodes.RequestInvalid);
 
         var order = await OrderRepository.GetAsync(
             query.OrderId,
