@@ -175,7 +175,7 @@ public sealed class CreateOrderHandler
         foreach (var line in cart.Lines)
         {
             if (!productsById.TryGetValue(line.ProductId, out var product))
-                throw new CreateOrderRejectedException("One or more products were not found.");
+                throw new CreateOrderRejectedException("One or more products were not found.", ApplicationErrorCodes.CatalogItemUnavailable);
 
             if (product.StoreId != cart.StoreId)
                 throw new CreateOrderRejectedException("Cart contains a product from another store.", ApplicationErrorCodes.CatalogItemUnavailable);
