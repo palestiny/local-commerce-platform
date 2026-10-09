@@ -1,6 +1,6 @@
 # M1 Delivery Vertical Slice Design Gate
 
-Status: **DELIVERY PERSISTENCE + HISTORY GREEN VERIFIED — NEXT: POSTGRESQL CONCURRENCY**
+Status: **M1 DELIVERY CONCURRENCY GREEN VERIFIED — NEXT: API CONTRACT/SECURITY GATE**
 
 ## Objective
 
@@ -564,14 +564,14 @@ GitHub Actions run `36822196856` (#240), job `110239982378`, commit `e3cc70567db
 
 ### Verification boundary
 
-This proves Delivery persistence/schema and basic history persistence against PostgreSQL. It does **not** yet prove concurrent Delivery commands, concurrent assignment, coordinated cancellation under database contention, or end-to-end history creation for every application command.
+At this historical milestone, this proved Delivery persistence/schema and basic history persistence against PostgreSQL. Subsequent concurrency verification is recorded below. End-to-end history creation for every application command remains a separate coverage consideration and must not be inferred from the concurrency tests.
 
-Next boundary: PostgreSQL concurrency verification for Delivery commands and active-Delivery invariants under contention.
+The next boundary after the subsequent concurrency verification is API contract/security design and HTTP implementation.
 
 
 ## Updated Delivery Concurrency Strategy — 2026-10-01
 
-**Status: STRATEGY ACCEPTED — END-TO-END COMMAND CONCURRENCY STILL OPEN.**
+**Status: STRATEGY ACCEPTED — DEFINED M1 COMMAND CONCURRENCY GREEN VERIFIED.**
 
 ADR-009 accepts PostgreSQL row-level locking for M1 Delivery mutation commands.
 
@@ -579,23 +579,28 @@ ADR-009 accepts PostgreSQL row-level locking for M1 Delivery mutation commands.
 - The transaction must begin before the mutable Delivery load.
 - Read-only customer queries remain non-locking.
 - The existing active-Delivery partial unique index remains the database backstop.
-- End-to-end command concurrency is not yet GREEN because current application handlers still contain pre-transaction Delivery loads and Delivery command idempotency persistence is not yet proven against PostgreSQL.
+- The transaction-boundary refactor and PostgreSQL idempotency persistence verification have since completed; see the final verification section below.
 
 A real PostgreSQL persistence test now verifies that a second transactional Delivery load waits for the first writer and observes the committed state.
 
-Next: refactor command boundaries so mutable loads occur inside the Unit of Work, then verify concurrent assignment/state transitions, cancellation contention, and command idempotency against PostgreSQL.
+The refactor and the defined PostgreSQL contention tests are complete. Continue with API contract/security design before HTTP implementation.
 
 ### PostgreSQL concurrency verification
 
-**Current status: PARTIAL GREEN — row-lock primitive verified; end-to-end command concurrency remains OPEN.**
+**Current status: GREEN VERIFIED for the defined M1 concurrency scenarios.**
 
 Verified after commit `e2bc8cf85878510f13dd5697a909b4876af98a10`:
 - CI run #264 (`36825487024`) completed successfully.
 - Delivery persistence test suite verifies a second PostgreSQL transaction waits while the first transaction holds the Delivery row lock, then observes the committed state.
 - Delivery mutation handlers now load mutable Delivery state inside the active Unit of Work for AssignDriver, ConfirmPickup, StartDelivery, CompleteDelivery, and FailDelivery.
 
-Still not proven GREEN:
-- concurrent execution of the application commands through real PostgreSQL persistence;
-- coordinated Order + Delivery cancellation contention and lock ordering;
-- replacement-delivery race behavior under PostgreSQL;
-- Delivery command idempotency persistence/concurrency boundary.
+Verified on PostgreSQL in GitHub Actions CI run `37861612028`, commit `fdba8b7524b8550ef707fc80780327c9a8dce189`:
+- Competing driver assignments produce one success and one domain rejection.
+- Competing replacement-delivery creations converge to one active Delivery.
+- Concurrent cancellations serialize on the Order row.
+- Cancellation-versus-replacement leaves no active Delivery for a cancelled Order.
+- Replacement eligibility uses persisted Order state while the Order lock is held.
+- Concurrent ConfirmPickup, StartDelivery, CompleteDelivery, and FailDelivery each have one winner; the loser raises the operation-specific rejection exception.
+- Idempotency persistence and migration/recovery smoke tests pass.
+
+Scope limitation: this closes the listed M1 scenarios, not every possible cross-command interleaving or production-load behavior. End-to-end DeliveryStatusHistory creation coverage for every command should be reviewed separately.
