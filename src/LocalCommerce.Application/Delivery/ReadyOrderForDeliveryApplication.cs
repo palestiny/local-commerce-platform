@@ -169,14 +169,14 @@ public sealed class ReadyOrderForDeliveryHandler
     {
         if (!string.Equals(existing.Fingerprint, fingerprint, StringComparison.Ordinal))
             throw new ReadyOrderForDeliveryRejectedException(
-                "The idempotency key was already used with a different request.");
+                "The idempotency key was already used with a different request.", ApplicationErrorCodes.IdempotencyKeyReused);
 
         if (existing.Status != IdempotencyStatus.Completed ||
             !string.Equals(existing.ResourceType, "Delivery", StringComparison.Ordinal) ||
             existing.ResourceId is null ||
             string.IsNullOrWhiteSpace(existing.ResultPayload))
             throw new ReadyOrderForDeliveryRejectedException(
-                "The idempotency record is incomplete.");
+                "The idempotency record is incomplete.", ApplicationErrorCodes.IdempotencyResultUnavailable);
 
         var result = JsonSerializer.Deserialize<ReadyOrderForDeliveryResult>(
             existing.ResultPayload);
@@ -186,7 +186,7 @@ public sealed class ReadyOrderForDeliveryHandler
             result.DeliveryId == Guid.Empty ||
             result.DeliveryId != existing.ResourceId.Value)
             throw new ReadyOrderForDeliveryRejectedException(
-                "The idempotency record is invalid.");
+                "The idempotency record is invalid.", ApplicationErrorCodes.InternalUnexpected);
 
         return result;
     }
