@@ -1,6 +1,8 @@
 using System.Security.Cryptography;
 using System.Text;
 using LocalCommerce.Application.Idempotency;
+using LocalCommerce.Application.Errors;
+using LocalCommerce.Domain;
 using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
 using DeliveryEntityStatus = LocalCommerce.Domain.Delivery.DeliveryStatus;
 
@@ -9,7 +11,7 @@ namespace LocalCommerce.Application.Delivery;
 public sealed record FailDeliveryCommand(Guid DeliveryId, Guid ActorId, string FailureCode, string FailureReason, string IdempotencyKey);
 public sealed record FailDeliveryResult(Guid DeliveryId);
 
-public sealed class FailDeliveryRejectedException(string message) : Exception(message);
+public sealed class FailDeliveryRejectedException(string message, string code = ApplicationErrorCodes.DeliveryInvalidState) : ApplicationFailureException(code, message);
 
 public interface IFailDeliveryDeliveryRepository
 {
@@ -40,11 +42,11 @@ public sealed class FailDeliveryHandler(
         CancellationToken ct = default)
     {
         if (command.DeliveryId == Guid.Empty || command.ActorId == Guid.Empty)
-            throw new FailDeliveryRejectedException("Delivery and Actor are required.");
+            throw new FailDeliveryRejectedException("Delivery and Actor are required.", ApplicationErrorCodes.RequestInvalid);
         if (string.IsNullOrWhiteSpace(command.IdempotencyKey))
-            throw new FailDeliveryRejectedException("Idempotency key is required.");
+            throw new FailDeliveryRejectedException("Idempotency key is required.", ApplicationErrorCodes.IdempotencyKeyRequired);
         if (string.IsNullOrWhiteSpace(command.FailureCode) || string.IsNullOrWhiteSpace(command.FailureReason))
-            throw new FailDeliveryRejectedException("Failure code and reason are required.");
+            throw new FailDeliveryRejectedException("Failure code and reason are required.", ApplicationErrorCodes.RequestInvalid);
 
         var fingerprint = Fingerprint(command);
         var existing = await idempotencyStore.GetAsync(command.ActorId, Operation, command.IdempotencyKey, ct);
@@ -62,15 +64,16 @@ public sealed class FailDeliveryHandler(
             }
 
             var delivery = await deliveries.GetAsync(command.DeliveryId, tx)
-                ?? throw new FailDeliveryRejectedException("Delivery was not found.");
+                ?? throw new FailDeliveryRejectedException("Delivery was not found.", ApplicationErrorCodes.ResourceNotFound);
 
             if (delivery.Status is DeliveryEntityStatus.Delivered or DeliveryEntityStatus.Failed)
                 throw new FailDeliveryRejectedException("Terminal Delivery cannot be failed.");
 
             if (!await authorization.CanFailDeliveryAsync(command.ActorId, delivery, tx))
-                throw new FailDeliveryRejectedException("Actor is not authorized to fail delivery.");
+                throw new FailDeliveryRejectedException("Actor is not authorized to fail delivery.", ApplicationErrorCodes.AuthorizationForbidden);
 
-            delivery.Fail(command.FailureCode, command.FailureReason);
+            try { delivery.Fail(command.FailureCode, command.FailureReason); }
+            catch (DomainRuleViolationException exception) { throw new FailDeliveryRejectedException(exception.Message, ApplicationErrorCodes.DeliveryInvalidState); }
             await deliveries.SaveAsync(delivery, tx);
 
             result = new FailDeliveryResult(delivery.Id);
@@ -85,7 +88,7 @@ public sealed class FailDeliveryHandler(
                 tx);
         }, ct);
 
-        return result ?? throw new InvalidOperationException("Delivery failure completed without a result.");
+        return result ?? throw new ApplicationFailureException(ApplicationErrorCodes.InternalUnexpected, "Delivery failure completed without a result.");
     }
 
     private static string Fingerprint(FailDeliveryCommand command) =>
@@ -95,17 +98,17 @@ public sealed class FailDeliveryHandler(
     private static FailDeliveryResult Resolve(IdempotencyRecord existing, string fingerprint)
     {
         if (!string.Equals(existing.Fingerprint, fingerprint, StringComparison.Ordinal))
-            throw new FailDeliveryRejectedException("The idempotency key was already used with a different request.");
+            throw new FailDeliveryRejectedException("The idempotency key was already used with a different request.", ApplicationErrorCodes.IdempotencyKeyReused);
 
         if (existing.Status != IdempotencyStatus.Completed ||
             !string.Equals(existing.ResourceType, "Delivery", StringComparison.Ordinal) ||
             existing.ResourceId is null ||
             string.IsNullOrWhiteSpace(existing.ResultPayload))
-            throw new FailDeliveryRejectedException("Idempotency record is incomplete.");
+            throw new FailDeliveryRejectedException("Idempotency record is incomplete.", ApplicationErrorCodes.IdempotencyResultUnavailable);
 
         var result = System.Text.Json.JsonSerializer.Deserialize<FailDeliveryResult>(existing.ResultPayload);
         if (result is null || result.DeliveryId == Guid.Empty || result.DeliveryId != existing.ResourceId.Value)
-            throw new FailDeliveryRejectedException("Idempotency record is invalid.");
+            throw new FailDeliveryRejectedException("Idempotency record is invalid.", ApplicationErrorCodes.InternalUnexpected);
 
         return result;
     }
