@@ -74,7 +74,7 @@ public sealed class AssignDriverHandler(
             var driver = await driverRepository.GetAsync(command.DriverId, transactionCancellationToken)
                 ?? throw new AssignDriverRejectedException("Driver was not found.", ApplicationErrorCodes.ResourceNotFound);
 
-            if (!driver.IsActive) throw new AssignDriverRejectedException("Driver is inactive.");
+            if (!driver.IsActive) throw new AssignDriverRejectedException("Driver is inactive.", ApplicationErrorCodes.DeliveryInvalidState);
             if (!await authorization.CanAssignAsync(command.ActorId, delivery, transactionCancellationToken))
                 throw new AssignDriverRejectedException("Actor is not authorized to assign a Driver.", ApplicationErrorCodes.AuthorizationForbidden);
 
