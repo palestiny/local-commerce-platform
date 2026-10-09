@@ -50,11 +50,11 @@ Do not return exception type names, stack traces, SQL/provider messages, connect
 2. Do not classify by matching exception message text.
 3. Do not map every application rejection to 400. Distinguish invalid input, missing resource, authorization, and state conflict.
 4. A persisted `Reserved` idempotency record alone does not prove an operation is still running. Without a trustworthy lease/heartbeat or equivalent in-progress signal, classify it as `internal.unexpected`; reserve `idempotency.result_unavailable` for a proven in-progress operation.
-4. Resource ownership concealment must deliberately use the same public response as missing resources where the approved security policy requires it.
-5. A unique database constraint violation is not automatically a public 500. Translate only known constraints at the persistence/application boundary into the relevant stable conflict code; unknown database errors remain internal failures.
-6. Cancellation, delivery completion, and other commercial mutations must preserve transaction rollback and idempotency behavior when a failure is returned.
-7. Cancellation caused by caller-requested cancellation/timeouts must not be accidentally translated into `internal.unexpected`.
-8. Log the stable code and trace ID; redact credentials and Idempotency-Key. Keep diagnostic exception details only in appropriately protected server-side telemetry.
+5. Resource ownership concealment must deliberately use the same public response as missing resources where the approved security policy requires it.
+6. A unique database constraint violation is not automatically a public 500. Translate only known constraints at the persistence/application boundary into the relevant stable conflict code; unknown database errors remain internal failures.
+7. Cancellation, delivery completion, and other commercial mutations must preserve transaction rollback and idempotency behavior when a failure is returned.
+8. Cancellation caused by caller-requested cancellation/timeouts must not be accidentally translated into `internal.unexpected`.
+9. Log the stable code and trace ID; redact credentials and Idempotency-Key. Keep diagnostic exception details only in appropriately protected server-side telemetry.
 
 ## Recommended implementation design
 
@@ -72,10 +72,11 @@ A shared base type is recommended over a large set of near-identical rejection e
 
 ## Current codebase observations (verified from the feature branch)
 
-- `DomainRuleViolationException` currently carries only a message.
-- Application handlers use operation-specific rejection exceptions whose public meaning is currently encoded primarily in message text.
-- The API gate already forbids exception-message parsing, but a complete stable application error taxonomy is not yet implemented.
-- Therefore the API gate is not ready for controller implementation solely because the route direction was approved.
+- `ApplicationFailureException` and `ApplicationErrorCodes` now provide a shared transport-neutral code contract.
+- Create Order, Cancel Order, Get Customer Order Details, and the current Delivery command handlers derive their operation-specific rejection exceptions from the shared failure type.
+- Domain transition failures in the migrated commands are translated at the application boundary to explicit stable codes.
+- Focused application tests assert representative codes, including resource-not-found concealment, invalid input, state conflicts, authorization, idempotency fingerprint conflicts, and corrupt/incomplete idempotency records.
+- The taxonomy is a useful baseline, but the HTTP adapter does not exist yet. Remaining risks include unclassified branches in individual handlers, unexpected infrastructure failures, cancellation propagation, and code-to-status mapping consistency. These must be audited and tested before controllers are exposed.
 
 ## Required tests before controller implementation
 
@@ -95,10 +96,46 @@ The owner approved the following implementation direction:
 2. Keep Cart checkoutability and catalog item availability as separate error codes.
 3. Use `409 Conflict` only when reliable state proves a matching idempotency operation is still in progress; a persisted `Reserved` record by itself is insufficient. Treat unproven reservations and incomplete/corrupt persisted records as internal integrity failures, not as automatic transient `503` responses.
 
-The shared `ApplicationFailureException` / `ApplicationErrorCodes` contract and focused tests are in place. The current feature branch now migrates stable codes through Create Order, Cancel Order, and the Delivery command handlers: Ready Order for Delivery, Assign Driver, Confirm Pickup, Start Delivery, Complete Delivery, Fail Delivery, and Create Replacement Delivery. Their application tests assert representative codes for invalid input/state, not-found, authorization, idempotency fingerprint conflicts, and corrupted/incomplete idempotency results. Domain transition failures are translated at the application boundary for these migrated commands.
+The shared `ApplicationFailureException` / `ApplicationErrorCodes` contract and focused tests are in place. The current feature branch migrates stable codes through Create Order, Cancel Order, Get Customer Order Details, and the Delivery command handlers: Ready Order for Delivery, Assign Driver, Confirm Pickup, Start Delivery, Complete Delivery, Fail Delivery, and Create Replacement Delivery. Their application tests assert representative codes for invalid input/state, not-found, authorization, idempotency fingerprint conflicts, and corrupted/incomplete idempotency results. Domain transition failures are translated at the application boundary for these migrated commands.
 
-The current application command/query handlers have been migrated to the shared typed base and stable codes, with representative error-code assertions in their tests. A persisted reservation without reliable evidence of active execution is now treated as an integrity failure. This does not prove every branch is covered or that unexpected infrastructure exceptions are all normalized; perform a final error-path audit as part of the HTTP adapter design. HTTP Problem Details mapping and adapter-level tests do not exist yet, and controllers remain blocked.
+A follow-up test commit asserts `resource.not_found` for a missing customer Order and `request.invalid` for empty identifiers in the customer order-details query. CI run 37867134802 completed successfully on the latest commit. This does not prove every branch is covered or that unexpected infrastructure exceptions are all normalized; perform a final error-path audit as part of the HTTP adapter design. HTTP Problem Details mapping and adapter-level tests do not exist yet, and controllers remain blocked.
 
 ## Remaining decisions
 
 The exact route DTO fields/status refinements, authentication provider and lifecycle, dispatch/admin permission matrix, idempotency header character/length boundary, rate limits, body limits, timeout budgets, and initial HTTP slice remain open. No controller implementation is authorized until those contract decisions and the required error mapping/tests are closed.
+
+
+## Recommended first HTTP slice (proposal; not yet owner-approved)
+
+Prefer a customer-only first vertical slice, limited to:
+
+1. `POST /api/v1/orders` — create an Order from an owned Cart.
+2. `GET /api/v1/orders/{orderId}` — read the customer's Order and optional active Delivery summary.
+3. `POST /api/v1/orders/{orderId}/cancel` — cancel an eligible Order under the existing application rules.
+
+Why this slice: it validates authenticated customer identity, ownership concealment, command idempotency, safe Problem Details, and the read/write boundary without prematurely choosing merchant/driver permission infrastructure. It must not ship with anonymous access or a client-supplied customer identity treated as authoritative.
+
+### Adapter mapping proposal
+
+- `request.invalid` → 400
+- `authentication.required`, `authentication.invalid` → 401
+- `authorization.forbidden` → 403
+- `resource.not_found` → 404
+- `order.invalid_state`, `delivery.invalid_state`, `cart.not_checkoutable`, `catalog.item_unavailable`, `idempotency.key_reused` → 409
+- `request.payload_too_large` → 413
+- `rate_limit.exceeded` → 429
+- `dependency.unavailable` → 503 only when a known transient dependency failure is classified explicitly
+- `internal.unexpected` and every unknown code/exception → 500 with a generic safe detail
+
+Do not map `idempotency.result_unavailable` to 409 unless a future implementation can prove active execution. Current persisted reservations without such proof remain `internal.unexpected`.
+
+### Required adapter tests
+
+- Every known code maps to the expected HTTP status without message matching.
+- Unknown code and untyped exception return generic 500 without exposing exception message/type/stack.
+- Problem Details includes `code` and request `traceId`; validation `errors` is omitted when empty.
+- Missing Order and inaccessible Order have the same public status and code.
+- Missing/invalid auth is rejected before handler execution; customer identity comes from the authenticated principal.
+- Missing/invalid/overlong idempotency keys are rejected at the boundary according to the finally approved key contract.
+- Cancellation tokens propagate and are not converted into generic application failures.
+- Integration tests cover idempotent replay, key/fingerprint conflict, and transaction rollback.
