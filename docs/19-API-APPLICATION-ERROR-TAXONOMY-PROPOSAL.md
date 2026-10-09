@@ -1,6 +1,6 @@
 # API Application Error Taxonomy — Proposal
 
-Status: **PROPOSED — OWNER REVIEW REQUIRED; NO HTTP IMPLEMENTATION AUTHORIZED**
+Status: **ERROR-CONTRACT DIRECTION APPROVED — INCREMENTAL MIGRATION IN PROGRESS; HTTP IMPLEMENTATION STILL BLOCKED**
 
 ## Purpose
 
@@ -86,11 +86,16 @@ A shared base type is recommended over a large set of near-identical rejection e
 - Tests prove rollback remains intact when a typed failure occurs after transaction/reservation begins.
 - Integration tests verify idempotent replay and fingerprint conflict at the HTTP boundary once the HTTP slice is approved.
 
-## Decisions still required from the owner
+## Owner-approved decisions
 
-1. Accept or revise the code catalogue and HTTP mapping above.
-2. Decide whether `idempotency.result_unavailable` should be `409` or a transient `503`; recommendation is `409` only when the same operation is demonstrably still in progress, otherwise treat unexpected persisted/incomplete records as an internal integrity failure.
-3. Confirm whether unavailable catalog/cart conditions should be grouped as `409` conflicts or split into more granular stable codes.
-4. Approve the implementation migration approach: shared typed failure base + explicit codes (recommended), versus typed result objects.
+The owner approved the following implementation direction:
 
-No provider, role matrix, rate threshold, payload limit, or controller scope is decided by this proposal.
+1. Use a shared typed application failure with stable codes rather than parsing exception messages.
+2. Keep Cart checkoutability and catalog item availability as separate error codes.
+3. Use `409 Conflict` for a matching idempotency operation that is demonstrably still in progress; treat an unexpected incomplete/corrupt persisted record as an internal integrity failure, not as an automatic transient `503`.
+
+The initial `ApplicationFailureException` and `ApplicationErrorCodes` contract has been added under `src/LocalCommerce.Application/Errors/`, with focused unit tests. Existing operation-specific rejection exceptions have **not yet all been migrated**; this is incremental work, not a claim that the error taxonomy is fully enforced end-to-end.
+
+## Remaining decisions
+
+The exact route DTO fields/status refinements, authentication provider and lifecycle, dispatch/admin permission matrix, idempotency header character/length boundary, rate limits, body limits, timeout budgets, and initial HTTP slice remain open. No controller implementation is authorized until those contract decisions and the required error mapping/tests are closed.
