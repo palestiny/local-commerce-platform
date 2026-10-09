@@ -44,7 +44,7 @@ The project owner explicitly approved this direction. The idempotency persistenc
 
 ## Consequences
 
-Persistence implementation is now GREEN VERIFIED against real PostgreSQL. Delivery command concurrency remains open because the application handlers and coordinated cross-aggregate operations still require end-to-end contention tests.
+Persistence implementation is GREEN VERIFIED against real PostgreSQL. The defined M1 Delivery command concurrency scenarios have also passed in CI run `37861612028`; see ADR-009 for the exact command-race coverage and its explicit limits.
 
 ## Verification Evidence
 
@@ -56,11 +56,8 @@ CI run `36903751445` (#385), commit `78453abcc7fce887d0e11b60eca2d8d565ba5097`, 
 - rollback behavior
 - migration/recovery smoke test
 
-## Remaining Verification Required
+## Verification Status
 
-- RED tests for reserve/replay/fingerprint conflict.
-- Unique-key race against real PostgreSQL.
-- Same-transaction completion behavior.
-- Rollback behavior.
-- Concurrent command behavior where only one mutation commits.
-- Migration/recovery smoke test.
+The required PostgreSQL persistence scenarios are GREEN VERIFIED in CI run `36903751445` (reservation race, replay/fingerprint persistence, same-transaction completion, rollback, and migration/recovery smoke test). The subsequent M1 concurrency run `37861612028` also passed the Delivery command contention suite and migration/recovery smoke test.
+
+Future command handlers must still provide command-specific tests for replay, fingerprint conflicts, transactional completion/rollback, and relevant concurrent mutation paths. This ADR does not imply that every future command is automatically verified merely because the shared persistence capability is proven.
