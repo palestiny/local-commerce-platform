@@ -1,4 +1,5 @@
 using LocalCommerce.Application.Ordering;
+using LocalCommerce.Application.Errors;
 using LocalCommerce.Application.Idempotency;
 using LocalCommerce.Application.Delivery;
 using DeliveryEntity=LocalCommerce.Domain.Delivery.Delivery;
@@ -12,10 +13,11 @@ namespace LocalCommerce.Application.Tests.Ordering;
 public sealed class CancelOrderApplicationTests
 {
     [Fact] public async Task Cancels_order_and_active_delivery_before_pickup(){var f=Fixture.Create();var r=await f.Handler.HandleAsync(new CancelOrderCommand(f.Order.Id,f.ActorId,"cancel-1"));Assert.Equal(OrderStatus.Cancelled,f.Order.Status);Assert.Equal(DeliveryEntityStatus.Cancelled,f.Delivery!.Status);Assert.Equal(f.Order.Id,r.OrderId);}
-    [Fact] public async Task Rejects_cancellation_after_pickup(){var f=Fixture.Create();f.Delivery!.AssignDriver(f.DriverId);f.Delivery.ConfirmPickup(f.DriverId);var act=()=>f.Handler.HandleAsync(new CancelOrderCommand(f.Order.Id,f.ActorId,"cancel-1"));await Assert.ThrowsAsync<CancelOrderRejectedException>(act);Assert.NotEqual(OrderStatus.Cancelled,f.Order.Status);}
+    [Fact] public async Task Rejects_cancellation_after_pickup(){var f=Fixture.Create();f.Delivery!.AssignDriver(f.DriverId);f.Delivery.ConfirmPickup(f.DriverId);var act=()=>f.Handler.HandleAsync(new CancelOrderCommand(f.Order.Id,f.ActorId,"cancel-1"));var error=await Assert.ThrowsAsync<CancelOrderRejectedException>(act);Assert.Equal(ApplicationErrorCodes.OrderInvalidState,error.Code);Assert.NotEqual(OrderStatus.Cancelled,f.Order.Status);}
     [Fact] public async Task Same_key_replays(){var f=Fixture.Create();var c=new CancelOrderCommand(f.Order.Id,f.ActorId,"cancel-1");var a=await f.Handler.HandleAsync(c);var b=await f.Handler.HandleAsync(c);Assert.Equal(a,b);}
-    [Fact] public async Task Different_request_same_key_rejected(){var f=Fixture.Create();var c=new CancelOrderCommand(f.Order.Id,f.ActorId,"cancel-1");await f.Handler.HandleAsync(c);var act=()=>f.Handler.HandleAsync(c with{OrderId=Guid.NewGuid()});await Assert.ThrowsAsync<CancelOrderRejectedException>(act);}
+    [Fact] public async Task Different_request_same_key_rejected(){var f=Fixture.Create();var c=new CancelOrderCommand(f.Order.Id,f.ActorId,"cancel-1");await f.Handler.HandleAsync(c);var act=()=>f.Handler.HandleAsync(c with{OrderId=Guid.NewGuid()});var error=await Assert.ThrowsAsync<CancelOrderRejectedException>(act);Assert.Equal(ApplicationErrorCodes.IdempotencyKeyReused,error.Code);}
     [Fact] public async Task Order_without_delivery_can_be_cancelled(){var f=Fixture.Create(false);var r=await f.Handler.HandleAsync(new CancelOrderCommand(f.Order.Id,f.ActorId,"cancel-1"));Assert.Equal(OrderStatus.Cancelled,f.Order.Status);Assert.Null(r.DeliveryId);}
+    [Fact] public async Task Missing_idempotency_key_has_stable_error_code(){var f=Fixture.Create();var act=()=>f.Handler.HandleAsync(new CancelOrderCommand(f.Order.Id,f.ActorId," "));var error=await Assert.ThrowsAsync<CancelOrderRejectedException>(act);Assert.Equal(ApplicationErrorCodes.IdempotencyKeyRequired,error.Code);}
     [Fact] public async Task Transaction_failure_does_not_apply_cancellation(){var f=Fixture.Create();f.Uow.FailBeforeOperation=true;var act=()=>f.Handler.HandleAsync(new CancelOrderCommand(f.Order.Id,f.ActorId,"cancel-1"));await Assert.ThrowsAsync<InvalidOperationException>(act);Assert.NotEqual(OrderStatus.Cancelled,f.Order.Status);Assert.Equal(DeliveryEntityStatus.Unassigned,f.Delivery!.Status);}
     private sealed class Fixture{
         public Guid ActorId{get;}=Guid.NewGuid(); public Guid DriverId{get;}=Guid.NewGuid(); public OrderEntity Order{get;} public DeliveryEntity? Delivery{get;} public FakeOrderRepo Orders{get;} public FakeDeliveryRepo Deliveries{get;} public FakeAuth Auth{get;} public FakeIdem Idem{get;} public FakeUow Uow{get;} public CancelOrderHandler Handler{get;}
