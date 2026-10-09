@@ -22,7 +22,7 @@ Rules:
 - Every response that represents a failed request includes a correlation/trace identifier when available.
 - HTTP semantics must distinguish validation, authentication, authorization, not-found, conflict and server/provider failures.
 
-Owner decision: the v1 API/security direction and proposed route matrix below are APPROVED as the design baseline. This does not freeze every DTO field or operational setting. Do not implement controllers until the remaining contract decisions are resolved and application error semantics can be mapped without parsing exception messages.
+Owner decision: the v1 API/security direction and proposed route matrix below are APPROVED as the design baseline. This does not freeze every DTO field or operational setting. The shared stable application error contract is now adopted across Create Order, Cancel Order, and the current Delivery command handlers, with focused code-assertion tests. The customer order-details query and any remaining application paths still require review; HTTP Problem Details mapping/tests are not implemented. Do not implement controllers until the remaining contract decisions are resolved and all exposed operations have explicit error semantics that can be mapped without parsing exception messages.
 
 ## Proposed v1 Route Matrix
 
