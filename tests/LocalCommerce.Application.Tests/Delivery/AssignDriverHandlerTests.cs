@@ -1,5 +1,6 @@
 using LocalCommerce.Application.Delivery;
 using LocalCommerce.Application.Idempotency;
+using LocalCommerce.Application.Errors;
 using LocalCommerce.Domain;
 using DeliveryEntity = LocalCommerce.Domain.Delivery.Delivery;
 using DriverEntity = LocalCommerce.Domain.Delivery.Driver;
@@ -40,7 +41,8 @@ public sealed class AssignDriverHandlerTests
                 fixture.ActorId,
                 "assign-1"));
 
-        await Assert.ThrowsAsync<AssignDriverRejectedException>(act);
+        var error = await Assert.ThrowsAsync<AssignDriverRejectedException>(act);
+        Assert.Equal(ApplicationErrorCodes.DeliveryInvalidState, error.Code);
         Assert.Equal(DeliveryEntityStatus.Unassigned, fixture.Delivery.Status);
         Assert.Null(fixture.Delivery.DriverId);
     }
@@ -58,7 +60,8 @@ public sealed class AssignDriverHandlerTests
                 fixture.ActorId,
                 "assign-1"));
 
-        await Assert.ThrowsAsync<AssignDriverRejectedException>(act);
+        var error = await Assert.ThrowsAsync<AssignDriverRejectedException>(act);
+        Assert.Equal(ApplicationErrorCodes.AuthorizationForbidden, error.Code);
         Assert.Equal(DeliveryEntityStatus.Unassigned, fixture.Delivery.Status);
     }
 
@@ -75,7 +78,8 @@ public sealed class AssignDriverHandlerTests
                 fixture.ActorId,
                 "assign-1"));
 
-        await Assert.ThrowsAsync<DomainRuleViolationException>(act);
+        var error = await Assert.ThrowsAsync<AssignDriverRejectedException>(act);
+        Assert.Equal(ApplicationErrorCodes.DeliveryInvalidState, error.Code);
     }
 
     [Fact]
@@ -113,7 +117,8 @@ public sealed class AssignDriverHandlerTests
         var act = () => fixture.Handler.HandleAsync(
             command with { DriverId = otherDriver.Id });
 
-        await Assert.ThrowsAsync<AssignDriverRejectedException>(act);
+        var error = await Assert.ThrowsAsync<AssignDriverRejectedException>(act);
+        Assert.Equal(ApplicationErrorCodes.IdempotencyKeyReused, error.Code);
     }
 
     [Fact]
