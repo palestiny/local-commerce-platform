@@ -66,3 +66,24 @@ The API/security gate may be proposed for owner review only when:
 - No claim of pilot readiness is made solely from application-layer tests or CI for an earlier commit.
 
 **Stop condition:** until the owner approves the remaining decisions and the required design evidence exists, do not implement HTTP controllers or authentication-provider integration, and do not mark this gate PASS.
+
+
+## Application-handler contract review (feature branch evidence)
+
+Review scope: the current Create Order, Get Customer Order Details, and Cancel Order application handlers and their focused application tests on `feature/foundation-domain-architecture`. This is an application-layer review only; it does not verify HTTP middleware, authentication, deployed authorization, or PostgreSQL concurrency.
+
+| Operation | Verified application contract | Gap to close before HTTP |
+|---|---|---|
+| Create Order | `CreateOrderCommand` carries `CustomerId`, `CartId`, and `IdempotencyKey`. The handler checks Cart ownership, active/non-empty Cart, active Store, product availability and variant match; it calculates prices server-side and returns `OrderId` + `OrderNumber`. | The adapter must derive `CustomerId` from the authenticated principal, never trust a body-supplied customer ID. The handler rejects a blank key but does not enforce the proposed visible-ASCII / 1–128 character boundary; enforce the finally approved syntax at the HTTP boundary and test it. Request/response DTO and `201 Created`/Location details remain to be finalized. |
+| Get Customer Order Details | `GetCustomerOrderDetailsQuery` carries `CustomerId` + `OrderId`. Missing Order and failed customer authorization both produce `resource.not_found`; focused tests assert both cases. The result contains Order ID/number/status and optional Delivery ID/status/assigned timestamp. | The adapter must derive `CustomerId` from the authenticated principal. Confirm whether this result is the intended public response shape and document nullability/timestamp representation. Application tests prove handler behavior only, not that the HTTP boundary enforces authentication. |
+| Cancel Order | `CancelOrderCommand` carries `OrderId`, `ActorId`, and `IdempotencyKey`. The handler checks authorization, rejects cancellation after pickup, coordinates Order and active Delivery cancellation, and records/replays a typed idempotency result. | The adapter must derive `ActorId` from the authenticated principal. The handler distinguishes an unauthorized actor with `authorization.forbidden`, while missing Order uses `resource.not_found`; decide and document whether the customer-only cancellation route should conceal inaccessible Orders as 404 or intentionally return 403. Define the public response body/status and replay response. The unit test for transaction failure fails before the operation delegate and does not prove rollback after partial persistence writes. |
+
+### Findings that are verified — and limits
+
+- The three handlers use typed application failure codes rather than requiring HTTP adapters to parse message text for the reviewed branches.
+- The customer order-details tests cover missing/inaccessible Order using the same `resource.not_found` code, invalid empty identifiers, and optional Delivery presence.
+- The Create Order and Cancel Order result records are application contracts, not approved public DTO schemas.
+- The reviewed unit tests do not establish actual HTTP authentication/authorization, Problem Details serialization, header validation, OpenAPI compatibility, or production persistence rollback/concurrency.
+- No authentication provider, first HTTP slice, final DTO schema, idempotency header syntax, or cancellation concealment policy is selected by this review.
+
+**Next closure action:** complete the route-level decisions above for the owner-approved initial slice, then add adapter contract tests before implementing controllers. Keep HTTP implementation blocked until the API/security gate exit evidence is met.
