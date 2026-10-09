@@ -1,6 +1,6 @@
 # Domain & Architecture Foundation Design Gate
 
-Status: READY FOR TDD RED
+Status: **FOUNDATION BASELINE ACCEPTED — CORE DOMAIN/APPLICATION/PERSISTENCE IMPLEMENTATION EVIDENCE RECORDED; API/SECURITY GATE STILL BLOCKS HTTP IMPLEMENTATION**
 
 This gate must be completed before production feature implementation.
 
@@ -163,6 +163,8 @@ Pilot city/zones, merchant categories, delivery operating model, commission/fees
 - API direction approved.
 - Remaining OPEN questions explicitly separated from committed architecture.
 
-## Next Step
+## Current Status and Next Step
 
-Foundation decision ADR-007 is accepted. Proceed to TDD RED for Create Order, while treating the remaining M0 transaction/read-model/failure semantics as implementation design work.
+The original TDD RED instruction above is historical: Create Order, Delivery lifecycle, PostgreSQL persistence, idempotency, and the defined M1 concurrency scenarios have since been implemented and have recorded CI evidence in the later gate/checklist documents. Do not restart that initial step or infer broader correctness beyond the cited scenarios.
+
+The current engineering boundary is the API/security contract and HTTP adapter design. The API/security gate remains **BLOCKED** until the remaining authentication, authorization, DTO, idempotency-header, abuse-control, error-mapping, and adapter-test decisions are closed. Pilot-specific product decisions also remain open; no Phase B product implementation is authorized until the pilot wedge is approved.
