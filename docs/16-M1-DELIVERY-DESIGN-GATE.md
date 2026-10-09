@@ -530,9 +530,9 @@ GitHub Actions push run `36743454949` (#205), job `109983538827`, and pull-reque
 
 ### Verification boundary
 
-This is application/domain verification using test doubles. It does **not** yet prove Delivery PostgreSQL persistence, history persistence, or real database concurrency for cancellation.
+At this historical milestone, cancellation was verified with application/domain test doubles only. Later PostgreSQL persistence and concurrency evidence is documented in the sections below.
 
-Customer Composed Read is now GREEN VERIFIED. Next TDD increment: Delivery persistence + DeliveryStatusHistory.
+Customer Composed Read is GREEN VERIFIED. The following implementation increments subsequently completed Delivery persistence/history and the defined PostgreSQL concurrency scenarios.
 
 
 ## Updated Customer Composed Read Verification — 2026-10-01
@@ -547,9 +547,9 @@ GitHub Actions run `36785578476` (#220), job `110126060648`, commit `e630684b46b
 
 ### Verification boundary
 
-This proves the application/domain contract using the current test-double repositories. It does **not** yet prove the Delivery PostgreSQL read path, Delivery persistence schema, Delivery history persistence, or database concurrency.
+At this historical milestone, this proved the application/domain contract using test-double repositories. Subsequent PostgreSQL persistence and concurrency evidence is documented below.
 
-Next boundary: Delivery persistence + append-only DeliveryStatusHistory, followed by real PostgreSQL concurrency verification.
+Historical next boundary: Delivery persistence + append-only DeliveryStatusHistory, followed by real PostgreSQL concurrency verification. Both have since been implemented for the documented M1 scope.
 
 
 ## Updated Delivery Persistence + History Verification — 2026-10-01
