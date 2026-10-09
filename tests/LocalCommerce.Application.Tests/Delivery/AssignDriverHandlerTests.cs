@@ -101,7 +101,7 @@ public sealed class AssignDriverHandlerTests
     }
 
     [Fact]
-    public async Task Reserved_idempotency_record_returns_in_progress_code()
+    public async Task Unproven_reserved_idempotency_record_returns_integrity_code()
     {
         var fixture = Fixture.Create();
         var command = new AssignDriverCommand(fixture.Delivery.Id, fixture.Driver.Id, fixture.ActorId, "assign-reserved");
@@ -111,7 +111,7 @@ public sealed class AssignDriverHandlerTests
 
         var error = await Assert.ThrowsAsync<AssignDriverRejectedException>(() => fixture.Handler.HandleAsync(command));
 
-        Assert.Equal(ApplicationErrorCodes.IdempotencyResultUnavailable, error.Code);
+        Assert.Equal(ApplicationErrorCodes.InternalUnexpected, error.Code);
     }
 
     [Fact]
