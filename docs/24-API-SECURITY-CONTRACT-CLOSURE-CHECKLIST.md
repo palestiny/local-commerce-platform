@@ -121,3 +121,18 @@ Required follow-up before exposure: enforce Order–Store equality, add mismatch
 A separate draft PR, [#14](https://github.com/palestiny/local-commerce-platform/pull/14), proposes two narrow corrections from the persistence review: validate replacement Delivery StoreId against the locked Order's StoreId, and implement `ICreateReplacementDeliveryUnitOfWork` in the existing EF order/delivery Unit of Work. It adds an application-level negative test for a mismatched StoreId.
 
 Verification status has advanced: GitHub Actions `dotnet` completed successfully for prior PR #14 head `453db0b173e59433f66287ff3512e978b4f73d5f` ([run](https://github.com/palestiny/local-commerce-platform/actions/runs/37923339771)). That workflow runs `dotnet test LocalCommercePlatform.sln` against PostgreSQL and then performs a migration/recovery smoke test. The latest head `08d9c647bafcecc7dbaaffcc32b9705d0380228a` adds a PostgreSQL rollback test using the production Unit of Work. Its workflow completed successfully, including the full solution test suite and migration/recovery smoke test ([latest run](https://github.com/palestiny/local-commerce-platform/actions/runs/37923551201), conclusion: success). PR #14 remains Draft and unmerged; the actor authorization policy remains OPEN and blocks exposing replacement delivery over HTTP.
+
+
+### Owner decision and follow-up status — 2026-10-13
+
+The owner-approved replacement-delivery policy is **Option B**:
+- Dispatch/Admin may create a replacement delivery for an eligible Order.
+- A Merchant may create one only for an Order belonging to that Merchant's Store.
+- A Merchant must be denied for another Store's Order.
+- The server must derive actor identity, role, and Store scope from trusted server-side identity/authorization data. A client-supplied `StoreId` is not proof of permission.
+
+The implementation branch for PR #14 now introduces `ICreateReplacementDeliveryAuthorization` and checks it **before** idempotency lookup/replay, so a previously completed key cannot bypass a later permission revocation. Focused application tests cover denial before mutation and re-authorization before replay. PostgreSQL integration tests use an explicit allow-all test adapter only to preserve their transaction/concurrency scope; they do **not** prove the Option B role matrix.
+
+**Still NOT PROVEN / blocking:** the current persistence model has `Stores` but no persisted Merchant-to-Store membership or actor-role/dispatch-permission model. Therefore no production authorization adapter can yet reliably enforce Option B from the current schema. The new application port is a seam, not a complete production authorization implementation. Define/implement the trusted identity and membership source, then add tests for Dispatch/Admin allowed, own-Store Merchant allowed, cross-Store Merchant denied, and unrelated actor denied. Keep the operation out of HTTP routes until those checks and the API contract are verified.
+
+At the latest review, PR #14 remains Draft and unmerged. Its newest authorization-port commits are awaiting CI; do not infer a passing result until the workflow reports success.
