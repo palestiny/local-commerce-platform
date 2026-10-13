@@ -114,6 +114,7 @@ public sealed class DeliveryCommandConcurrencyTests
         var handler = new CreateReplacementDeliveryHandler(
             new EfReplacementDeliveryRepository(commandDb),
             new EfReplacementDeliveryOrderLock(commandDb),
+            new AllowReplacementDeliveryAuthorization(),
             new EfReplacementDeliveryEligibility(commandDb),
             new EfGeneralizedIdempotencyStore(commandDb),
             new EfOrderDeliveryUnitOfWork(commandDb));
@@ -149,6 +150,7 @@ public sealed class DeliveryCommandConcurrencyTests
         var handler = new CreateReplacementDeliveryHandler(
             new EfReplacementDeliveryRepository(commandDb),
             new EfReplacementDeliveryOrderLock(commandDb),
+            new AllowReplacementDeliveryAuthorization(),
             new EfReplacementDeliveryEligibility(commandDb),
             new FailOnCompleteIdempotencyStore(realIdempotency),
             new EfOrderDeliveryUnitOfWork(commandDb));
@@ -458,6 +460,13 @@ public sealed class DeliveryCommandConcurrencyTests
         {
             return (false, exception);
         }
+    }
+
+
+    private sealed class AllowReplacementDeliveryAuthorization : ICreateReplacementDeliveryAuthorization
+    {
+        public Task<bool> CanCreateAsync(Guid actorId, Guid orderId, CancellationToken cancellationToken) =>
+            Task.FromResult(true);
     }
 
     private static async Task SeedOrderAndStoreAsync(
