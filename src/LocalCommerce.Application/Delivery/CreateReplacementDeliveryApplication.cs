@@ -27,6 +27,12 @@ public interface IReplacementDeliveryEligibility
     Task<bool> IsOrderEligibleAsync(Guid orderId, CancellationToken ct);
 }
 
+/// <summary>Resolves the actor's trusted server-side role and resource scope.</summary>
+public interface ICreateReplacementDeliveryAuthorization
+{
+    Task<bool> CanCreateAsync(Guid actorId, Guid orderId, CancellationToken ct);
+}
+
 public interface ICreateReplacementDeliveryUnitOfWork
 {
     Task ExecuteAsync(Func<CancellationToken, Task> operation, CancellationToken ct);
@@ -35,6 +41,7 @@ public interface ICreateReplacementDeliveryUnitOfWork
 public sealed class CreateReplacementDeliveryHandler(
     ICreateReplacementDeliveryRepository repository,
     IReplacementDeliveryOrderLock orderLock,
+    ICreateReplacementDeliveryAuthorization authorization,
     IReplacementDeliveryEligibility eligibility,
     IIdempotencyStore idempotencyStore,
     ICreateReplacementDeliveryUnitOfWork unitOfWork)
@@ -49,6 +56,13 @@ public sealed class CreateReplacementDeliveryHandler(
             throw new CreateReplacementDeliveryRejectedException("Order, Store and Actor are required.", ApplicationErrorCodes.RequestInvalid);
         if (string.IsNullOrWhiteSpace(command.IdempotencyKey))
             throw new CreateReplacementDeliveryRejectedException("Idempotency key is required.", ApplicationErrorCodes.IdempotencyKeyRequired);
+
+        // Authorize before idempotency replay: a previously authorized actor may have lost
+        // access since the original request, and replay must not bypass current authorization.
+        if (!await authorization.CanCreateAsync(command.ActorId, command.OrderId, ct))
+            throw new CreateReplacementDeliveryRejectedException(
+                "Actor is not authorized to create a replacement delivery for this Order.",
+                ApplicationErrorCodes.AuthorizationForbidden);
 
         var fingerprint = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(
             $"{command.OrderId:N}|{command.StoreId:N}|{command.ActorId:N}")));
