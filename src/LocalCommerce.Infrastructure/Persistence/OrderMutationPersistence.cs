@@ -83,7 +83,7 @@ public sealed class EfReplacementDeliveryEligibility(CommerceDbContext db)
 public sealed class EfReplacementDeliveryOrderLock(CommerceDbContext db)
     : LocalCommerce.Application.Delivery.IReplacementDeliveryOrderLock
 {
-    public async Task<bool> LockOrderForMutationAsync(Guid orderId, CancellationToken cancellationToken)
+    public async Task<Guid?> LockOrderForMutationAsync(Guid orderId, CancellationToken cancellationToken)
     {
         if (db.Database.CurrentTransaction is null)
             throw new InvalidOperationException("Order mutation locks require an active transaction.");
@@ -97,13 +97,14 @@ public sealed class EfReplacementDeliveryOrderLock(CommerceDbContext db)
                 """)
             .SingleOrDefaultAsync(cancellationToken);
 
-        return lockedOrder is not null;
+        return lockedOrder?.StoreId;
     }
 }
 
 public sealed class EfOrderDeliveryUnitOfWork(CommerceDbContext db) :
     IReadyForDeliveryUnitOfWork,
-    ICancelOrderUnitOfWork
+    ICancelOrderUnitOfWork,
+    ICreateReplacementDeliveryUnitOfWork
 {
     public async Task ExecuteAsync(
         Func<CancellationToken, Task> operation,
