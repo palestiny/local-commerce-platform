@@ -31,7 +31,13 @@ dotnet test .\spikes\AuthValidationSpike.Tests\AuthValidationSpike.Tests.csproj
 
 The dedicated workflow is `.github/workflows/auth-validation-spike.yml`. It restores and tests this isolated test project on pushes to `spike/auth-validation` that change spike/workflow files and on matching pull-request changes. It is separate from the production solution and does not make this spike production code.
 
-The deterministic suite covers missing and malformed tokens, a valid test-signed token, wrong issuer, wrong audience, and expired token. A green CI run verifies these local test cases only; it does not establish real-provider compatibility.
+The deterministic suite covers:
+- Anonymous `/health` succeeds.
+- Missing and malformed bearer tokens are rejected.
+- A valid test-signed token succeeds and returns only the subject identifier.
+- Wrong issuer, wrong audience, expired token, and token signed with an untrusted key are rejected.
+
+A green CI run verifies these deterministic local cases only; it does not establish real-provider compatibility. The latest verified CI for commit `3606cca7dd9f49e1b4513b9b171e77b65ee9f5fd` is linked from the [PR](https://github.com/palestiny/local-commerce-platform/pull/19).
 
 ## Limitations and next evidence required
 
