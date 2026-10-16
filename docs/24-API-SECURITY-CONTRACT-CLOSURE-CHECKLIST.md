@@ -1,10 +1,10 @@
 # API & Security Contract Closure Checklist
 
-Status: **REVIEW CHECKLIST — NO NEW OWNER DECISIONS MADE — HTTP IMPLEMENTATION BLOCKED**
+Status: **OWNER-APPROVED INITIAL ROUTE SCOPE — CONTRACT CLOSURE IN PROGRESS — HTTP IMPLEMENTATION BLOCKED**
 
 ## Purpose and boundary
 
-This checklist converts the remaining items in the API & Security Design Gate (docs/07-API-SECURITY-DESIGN-GATE.md) and API Application Error Taxonomy (docs/19-API-APPLICATION-ERROR-TAXONOMY-PROPOSAL.md) into explicit closure evidence. It is a review aid, not approval of unresolved choices.
+This checklist converts the remaining items in the API & Security Design Gate (docs/07-API-SECURITY-DESIGN-GATE.md) and API Application Error Taxonomy (docs/19-API-APPLICATION-ERROR-TAXONOMY-PROPOSAL.md) into explicit closure evidence. The initial route scope below is owner-approved; unresolved transport, security, and pilot choices remain open.
 
 Current foundation code and application-level error-code tests do not prove an HTTP API is secure or contract-complete. Do not start controllers, authentication integration, or public endpoint implementation from this checklist alone. Do not start Phase B while the pilot wedge remains open.
 
@@ -12,7 +12,7 @@ Current foundation code and application-level error-code tests do not prove an H
 
 | ID | Area | Current baseline | Still required to close | Required evidence |
 |---|---|---|---|---|
-| API-01 | Initial HTTP slice | Customer Order routes are proposed as a smaller first slice; owner approval is not recorded here | Owner chooses customer-only slice or explicitly approves a broader initial route set | Recorded owner decision; route list updated consistently in the gate |
+| API-01 | Initial HTTP slice | Owner approved the customer-only Order slice on 2026-10-16 | Keep the initial slice limited to the three routes below; do not add Merchant, courier, dispatch, or admin routes in this phase | Owner decision recorded in PR #13 discussion; route list kept consistent across API gate and route matrix |
 | API-02 | Route and DTO contract | /api/v1 route matrix is a design baseline; DTO fields and some success semantics remain open | Specify request/response schemas, required/optional fields, identifier formats, nullability, and success status/body/headers for every included route | Reviewed contract table or OpenAPI draft; no Domain entities exposed |
 | API-03 | Identity integration | Provider/framework and token/session lifecycle are OPEN | Select an authentication integration boundary and define credential/session expiry, revocation, and failure behavior for the chosen client strategy | Owner decision and provider/framework-specific design backed by current official documentation |
 | API-04 | Resource authorization | Ownership/assignment checks and concealed customer Order reads are required | Define the permission matrix for every route in the chosen slice; explicitly separate customer ownership checks from role checks | Route × actor × resource authorization matrix; negative tests for cross-owner access |
@@ -22,6 +22,18 @@ Current foundation code and application-level error-code tests do not prove an H
 | API-08 | Observability and audit | Trace ID in errors and audit of privileged/commercial transitions are required | Define which actions need durable audit records in the chosen slice and verify trace propagation and sensitive-field redaction | Audit event list/schema, trace tests, and log/error redaction tests |
 | API-09 | API description and compatibility | OpenAPI review is required before pilot | Define the versioned API description and verify it matches implemented routes, DTOs, statuses, and headers | Generated/maintained OpenAPI artifact and contract consistency test or documented review |
 | API-10 | Pilot scope dependency | Pilot categories, merchant count, service zones, operating split, and success thresholds remain OPEN | Resolve the pilot wedge through the product/design gate; do not infer it from the long-term ambition to support many categories | Explicit owner decision and updated project foundation/open-question/decision records |
+
+## Owner-approved initial HTTP slice (scope only)
+
+Approved on 2026-10-16 and recorded in the PR #13 discussion:
+
+| Operation | Route | Scope note |
+|---|---|---|
+| Create Order | `POST /api/v1/orders` | Customer identity comes from the verified server-side principal; never trust a client-supplied CustomerId. |
+| Get Order Details | `GET /api/v1/orders/{orderId}` | Only the authenticated owning customer may read the Order. Missing and inaccessible Orders should remain indistinguishable at the application contract; final HTTP behavior must be tested. |
+| Cancel Order | `POST /api/v1/orders/{orderId}/cancel` | Customer ownership and order-state eligibility must be checked; exact public status/body and concealment behavior remain to be closed. |
+
+This is an approved route boundary, **not** approval of the DTOs, authentication provider, exact HTTP status codes, idempotency header syntax, or production readiness. Merchant, courier, dispatch, and admin routes are explicitly deferred.
 
 ## Required route-level review template
 
@@ -40,7 +52,7 @@ A route is not contract-complete merely because its application handler exists o
 
 ## Recommended closure order
 
-1. Confirm the initial HTTP slice. The customer-only Order slice is a proposal, not an owner-approved decision in this checklist.
+1. Initial HTTP slice is approved and fixed to the three customer Order routes above; do not expand scope.
 2. Resolve the authentication boundary using the selected client strategy, hosting constraints, budget, and current official provider/framework documentation. Do not assume a provider or pricing.
 3. Complete the route-level DTO, authorization, success, and error contracts for only the approved slice.
 4. Close the idempotency transport details and operational limits with documented rationale.
@@ -50,7 +62,7 @@ A route is not contract-complete merely because its application handler exists o
 
 ## Explicit non-decisions
 
-This checklist does not select an authentication provider, decide web/mobile technology, define admin/dispatch permissions, set numeric rate limits/timeouts/body limits, approve exact DTO fields, choose the first HTTP slice, or approve the pilot wedge. These remain OPEN until the owner decides them and the corresponding records are updated.
+This checklist does not select an authentication provider, decide web/mobile technology, define admin/dispatch permissions, set numeric rate limits/timeouts/body limits, approve exact DTO fields or final HTTP semantics, or approve the pilot wedge. These remain OPEN until the owner decides them and the corresponding records are updated.
 
 ## Gate exit evidence
 
@@ -139,3 +151,8 @@ At the latest review, PR #14 remains Draft and unmerged. Its newest authorizatio
 
 
 CI follow-up on 2026-10-13: PR #14 head `fde2ece976a02dc7e984173cf9b835a273e0cc84` passed GitHub Actions after correcting the first run's compile errors. Verified successful [push run](https://github.com/palestiny/local-commerce-platform/actions/runs/38385596838) and [pull-request run](https://github.com/palestiny/local-commerce-platform/actions/runs/38385600936). This proves the current solution test workflow and configured migration/recovery smoke test pass for that head; it does **not** prove the missing production role/membership authorization adapter or Option B role matrix.
+
+
+## Owner decision log — 2026-10-16
+
+The owner approved the initial API v1 route scope as customer-only: `POST /api/v1/orders`, `GET /api/v1/orders/{orderId}`, and `POST /api/v1/orders/{orderId}/cancel`. This was recorded in the discussion on [PR #13](https://github.com/palestiny/local-commerce-platform/pull/13#issuecomment-6208577333). This decision does not select an authentication provider or waive the remaining API-02 through API-10 evidence requirements. HTTP implementation remains blocked until the gate exit evidence is satisfied.
