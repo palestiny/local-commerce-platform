@@ -1,0 +1,125 @@
+using LocalCommerce.Application.Delivery;
+using LocalCommerce.Application.Ordering;
+using LocalCommerce.Domain.Ordering;
+using Microsoft.EntityFrameworkCore;
+
+namespace LocalCommerce.Infrastructure.Persistence;
+
+public sealed class EfOrderForDeliveryRepository(CommerceDbContext db) :
+    IOrderForDeliveryRepository,
+    IOrderCancellationOrderRepository
+{
+    public Task<Order?> GetAsync(Guid orderId, CancellationToken cancellationToken) =>
+        LoadAsync(orderId, cancellationToken);
+
+    public Task SaveAsync(Order order, CancellationToken cancellationToken) =>
+        SaveInternalAsync(order, cancellationToken);
+
+    private async Task<Order?> LoadAsync(Guid orderId, CancellationToken cancellationToken)
+    {
+        IQueryable<OrderEntity> query;
+
+        if (db.Database.CurrentTransaction is not null)
+        {
+            query = db.Orders.FromSqlInterpolated($"""
+                SELECT *
+                FROM "Orders"
+                WHERE "Id" = {orderId}
+                FOR UPDATE
+                """);
+        }
+        else
+        {
+            query = db.Orders.AsNoTracking().Where(x => x.Id == orderId);
+        }
+
+        var entity = await query.SingleOrDefaultAsync(cancellationToken);
+        if (entity is null)
+            return null;
+
+        var items = await db.OrderItems.AsNoTracking()
+            .Where(x => x.OrderId == entity.Id)
+            .OrderBy(x => x.Id)
+            .Select(x => new OrderItem(
+                x.ProductId,
+                x.StoreId,
+                x.ProductName,
+                x.VariantName,
+                x.UnitPrice,
+                x.Quantity,
+                x.LineDiscount,
+                x.LineTotal))
+            .ToListAsync(cancellationToken);
+
+        return Order.Restore(entity.Id, entity.StoreId, items, entity.Status);
+    }
+
+    private async Task SaveInternalAsync(Order order, CancellationToken cancellationToken)
+    {
+        var entity = await db.Orders.SingleAsync(x => x.Id == order.Id, cancellationToken);
+        entity.Status = order.Status;
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+        await db.SaveChangesAsync(cancellationToken);
+    }
+}
+
+public sealed class EfReplacementDeliveryEligibility(CommerceDbContext db)
+    : IReplacementDeliveryEligibility
+{
+    public async Task<bool> IsOrderEligibleAsync(Guid orderId, CancellationToken cancellationToken)
+    {
+        if (db.Database.CurrentTransaction is null)
+            throw new InvalidOperationException("Replacement eligibility must be checked inside an active transaction.");
+
+        var status = await db.Orders
+            .Where(x => x.Id == orderId)
+            .Select(x => (LocalCommerce.Domain.Ordering.OrderStatus?)x.Status)
+            .SingleOrDefaultAsync(cancellationToken);
+
+        return status == LocalCommerce.Domain.Ordering.OrderStatus.ReadyForPickup;
+    }
+}
+
+public sealed class EfReplacementDeliveryOrderLock(CommerceDbContext db)
+    : LocalCommerce.Application.Delivery.IReplacementDeliveryOrderLock
+{
+    public async Task<bool> LockOrderForMutationAsync(Guid orderId, CancellationToken cancellationToken)
+    {
+        if (db.Database.CurrentTransaction is null)
+            throw new InvalidOperationException("Order mutation locks require an active transaction.");
+
+        var lockedOrder = await db.Orders
+            .FromSqlInterpolated($"""
+                SELECT *
+                FROM "Orders"
+                WHERE "Id" = {orderId}
+                FOR UPDATE
+                """)
+            .SingleOrDefaultAsync(cancellationToken);
+
+        return lockedOrder is not null;
+    }
+}
+
+public sealed class EfOrderDeliveryUnitOfWork(CommerceDbContext db) :
+    IReadyForDeliveryUnitOfWork,
+    ICancelOrderUnitOfWork
+{
+    public async Task ExecuteAsync(
+        Func<CancellationToken, Task> operation,
+        CancellationToken cancellationToken)
+    {
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            await operation(cancellationToken);
+            await db.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
+}
