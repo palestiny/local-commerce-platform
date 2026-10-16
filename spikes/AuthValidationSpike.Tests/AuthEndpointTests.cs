@@ -50,7 +50,7 @@ public sealed class AuthEndpointTests : IClassFixture<AuthSpikeFactory>
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         var body = await response.Content.ReadAsStringAsync();
-        Assert.Equal("{\"subject\":\"test-user-123\"}", body);
+        Assert.Equal("{\\"subject\\":\\"test-user-123\\"}", body);
     }
 
     [Theory]
@@ -141,5 +141,27 @@ public sealed class AuthSpikeFactory : WebApplicationFactory<Program>
             expires: expired ? now.AddMinutes(-5) : now.AddMinutes(5),
             signingCredentials: new SigningCredentials(tokenSigningKey, SecurityAlgorithms.HmacSha256));
         return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+}
+
+public sealed class AuthenticationConfigurationTests
+{
+    [Theory]
+    [InlineData(null, "local-commerce-test")]
+    [InlineData("", "local-commerce-test")]
+    [InlineData("not-a-url", "local-commerce-test")]
+    [InlineData("http://issuer.test", "local-commerce-test")]
+    [InlineData("https://issuer.test", null)]
+    [InlineData("https://issuer.test", "")]
+    public void Invalid_or_missing_authentication_configuration_fails_closed(string? authority, string? audience)
+    {
+        Assert.Throws<InvalidOperationException>(() =>
+            AuthenticationConfiguration.Validate(authority, audience));
+    }
+
+    [Fact]
+    public void Valid_https_authority_and_audience_are_accepted()
+    {
+        AuthenticationConfiguration.Validate("https://issuer.test", "local-commerce-test");
     }
 }
