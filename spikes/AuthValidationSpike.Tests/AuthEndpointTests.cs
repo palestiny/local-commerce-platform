@@ -50,7 +50,7 @@ public sealed class AuthEndpointTests : IClassFixture<AuthSpikeFactory>
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         var body = await response.Content.ReadAsStringAsync();
-        Assert.Equal("{\\"subject\\":\\"test-user-123\\"}", body);
+        Assert.Equal("test-user-123", System.Text.Json.JsonDocument.Parse(body).RootElement.GetProperty("subject").GetString());
     }
 
     [Theory]
