@@ -13,7 +13,8 @@ export function Screen({ children, style }: React.PropsWithChildren<{ style?: Vi
 }
 
 export function SectionHeading({ title, action, onAction }: { title: string; action?: string; onAction?: () => void }) {
-  return <View style={styles.sectionHeading}>
+  const { language } = useAppState();
+  return <View style={[styles.sectionHeading, { flexDirection: language === "ar" ? "row-reverse" : "row" }]}>
     <AppText style={styles.sectionTitle}>{title}</AppText>
     {action ? <Pressable onPress={onAction} hitSlop={8}><AppText style={styles.action}>{action}</AppText></Pressable> : null}
   </View>;
@@ -21,7 +22,7 @@ export function SectionHeading({ title, action, onAction }: { title: string; act
 
 export function SearchInput(props: TextInputProps) {
   const { language } = useAppState();
-  return <View style={styles.search}>
+  return <View style={[styles.search, { flexDirection: language === "ar" ? "row-reverse" : "row" }]}>
     <AppText style={styles.searchIcon}>⌕</AppText>
     <TextInput
       {...props}
