@@ -1,4 +1,5 @@
 import { Tabs } from "expo-router";
+import { Text } from "react-native";
 import { useAppState } from "../../src/state/AppProvider";
 import { colors } from "../../src/theme/tokens";
 
@@ -27,5 +28,5 @@ export default function TabLayout() {
 }
 
 function TabGlyph({ glyph, color }: { glyph: string; color: string }) {
-  return <>{/* Simple glyph keeps the first spike free of an icon-library dependency. */}<span style={{ color }}>{glyph}</span></>;
+  return <Text style={{ color, fontSize: 20, lineHeight: 23 }}>{glyph}</Text>;
 }
