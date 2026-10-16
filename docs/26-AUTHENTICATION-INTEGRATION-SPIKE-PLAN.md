@@ -98,8 +98,14 @@ This spike does not close the wider API/security gate. DTO/status/header semanti
 
 ## Current result
 
-**NOT RUN.** This document defines the spike and acceptance criteria only. No provider tenant has been configured, no runtime code has been added, and no tests are claimed to have run.
+**LOCAL SPIKE TESTS PASS; REAL-PROVIDER INTEGRATION NOT RUN.** The isolated .NET 8 JWT validation test host exists on `spike/auth-validation`. The latest README commit `3ff8e604cf60cdcb2238a3c6f9a0cf51efc13bb3` has completed both relevant CI workflows successfully:
+- [Authentication spike PR workflow — run 38858252951](https://github.com/palestiny/local-commerce-platform/actions/runs/38858252951)
+- [Authentication spike push workflow — run 38858247240](https://github.com/palestiny/local-commerce-platform/actions/runs/38858247240)
+- [Main solution build/test and migration/recovery workflow — run 38858252858](https://github.com/palestiny/local-commerce-platform/actions/runs/38858252858)
 
+The deterministic suite covers anonymous health, missing/malformed bearer credentials, a valid test-signed token, wrong issuer, wrong audience, expiration, and an untrusted signing key. The diagnostic response is asserted to contain only the subject identifier.
+
+**Interpretation:** CI confirms the isolated local validation tests and the main solution checks passed for the current PR head. It does not close the provider integration spike acceptance criteria: no Supabase/Auth0 tenant or provider-issued token has been tested; refresh/logout/revocation, mobile flows, provider-specific claim mapping, key discovery/rotation, and operational behavior remain unverified. ASP.NET Core Identity comparison is documentary, not implemented or benchmarked. No provider is selected and production HTTP/auth implementation remains blocked.
 
 ## Official technical references checked — 2026-10-16
 
@@ -110,16 +116,4 @@ This spike does not close the wider API/security gate. DTO/status/header semanti
 - Auth0, ASP.NET Core API Authentication library: https://auth0.github.io/aspnetcore-api/index.html
   - The official library documents .NET 8 support and wraps JWT bearer authentication with Auth0-specific configuration. Package choice/version and compatibility must still be pinned and verified in the spike.
 
-These references inform the test plan only. They do not establish that either provider has been integrated, that a tenant is configured, or that any test has passed.
-
-
-## Verification update — 2026-10-16
-
-The isolated deterministic JWT validation test host has now been implemented on the separate branch `spike/auth-validation`. CI passed for commit `3606cca7dd9f49e1b4513b9b171e77b65ee9f5fd`:
-- [Authentication spike PR workflow](https://github.com/palestiny/local-commerce-platform/actions/runs/38858117540)
-- [Authentication spike push workflow](https://github.com/palestiny/local-commerce-platform/actions/runs/38858114010)
-- [Main solution build/test and migration/recovery workflow](https://github.com/palestiny/local-commerce-platform/actions/runs/38858117552)
-
-The automated suite covers anonymous health, missing/malformed bearer credentials, a valid test-signed token, wrong issuer, wrong audience, expiration, and an untrusted signing key. The diagnostic response is asserted to contain only the subject identifier.
-
-**Interpretation:** this closes the local JWT-validation test-host milestone only. It does not close the provider integration spike acceptance criteria: no Supabase/Auth0 tenant or provider-issued token has been tested; refresh/logout/revocation, mobile flows, provider-specific claim mapping, key discovery/rotation, and operational behavior remain unverified. ASP.NET Core Identity comparison is also still documentary, not an implemented or benchmarked alternative. No provider is selected and production HTTP/auth implementation remains blocked.
+These references inform the test plan only. They do not establish that either provider has been integrated, that a tenant is configured, or that any real-provider test has passed.
