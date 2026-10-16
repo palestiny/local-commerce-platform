@@ -1,0 +1,29 @@
+name: authentication-validation-spike
+
+on:
+  push:
+    branches:
+      - "spike/auth-validation"
+    paths:
+      - "spikes/AuthValidationSpike/**"
+      - "spikes/AuthValidationSpike.Tests/**"
+      - ".github/workflows/auth-validation-spike.yml"
+  pull_request:
+    paths:
+      - "spikes/AuthValidationSpike/**"
+      - "spikes/AuthValidationSpike.Tests/**"
+      - ".github/workflows/auth-validation-spike.yml"
+
+jobs:
+  test-auth-validation-spike:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Restore spike tests
+        run: dotnet restore spikes/AuthValidationSpike.Tests/AuthValidationSpike.Tests.csproj
+      - name: Test spike
+        run: dotnet test spikes/AuthValidationSpike.Tests/AuthValidationSpike.Tests.csproj --no-restore --verbosity normal
