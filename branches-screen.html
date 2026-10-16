@@ -1,0 +1,1819 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الفروع — معاينة احترافية</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'IBM Plex Sans Arabic', sans-serif; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --primary: #0F766E;
+    --primary-dark: #115E59;
+    --primary-light: #CCFBF1;
+    --primary-soft: #F0FDFA;
+    --accent: #F59E0B;
+    --accent-dark: #D97706;
+    --accent-light: #FEF3C7;
+    --danger: #EF4444;
+    --danger-light: #FEF2F2;
+    --success: #10B981;
+    --success-dark: #059669;
+    --success-light: #ECFDF5;
+    --purple: #8B5CF6;
+    --purple-light: #EDE9FE;
+    --blue: #2563EB;
+    --blue-light: #DBEAFE;
+    --pink: #EC4899;
+    --pink-light: #FCE7F3;
+    --cyan: #06B6D4;
+    --cyan-light: #CFFAFE;
+    --dark: #0F172A;
+    --gray-700: #374151;
+    --gray-600: #4B5563;
+    --gray-500: #6B7280;
+    --gray-400: #9CA3AF;
+    --gray-300: #D1D5DB;
+    --gray-200: #E5E7EB;
+    --gray-100: #F3F4F6;
+    --bg: #F8FAFC;
+    --white: #FFFFFF;
+
+    --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.07);
+    --shadow-lg: 0 10px 30px rgba(15, 23, 42, 0.09);
+    --shadow-xl: 0 20px 40px rgba(15, 23, 42, 0.14);
+    --shadow-primary: 0 8px 24px rgba(15, 118, 110, 0.32);
+
+    --r-sm: 10px;
+    --r-md: 14px;
+    --r-lg: 18px;
+    --r-xl: 24px;
+    --r-full: 999px;
+  }
+
+  body {
+    background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+    min-height: 100vh;
+    padding: 50px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+  }
+
+  .page-header { text-align: center; color: #fff; max-width: 900px; }
+  .page-header h1 {
+    font-size: 30px; font-weight: 700; margin-bottom: 8px;
+    background: linear-gradient(135deg, #fff, #94A3B8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .page-header p { color: #94A3B8; font-size: 14px; }
+
+  .screens-container {
+    display: flex; gap: 40px; flex-wrap: wrap; justify-content: center;
+  }
+  .screen-wrapper {
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+  }
+  .screen-badge {
+    background: rgba(15, 118, 110, 0.15);
+    color: #5EEAD4;
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid rgba(94, 234, 212, 0.25);
+  }
+
+  .phone {
+    width: 375px;
+    height: 812px;
+    background: var(--bg);
+    border-radius: 44px;
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+      0 0 0 10px #0A0F1E,
+      0 0 0 12px #1E293B,
+      0 30px 60px rgba(0, 0, 0, 0.5),
+      0 0 80px rgba(15, 118, 110, 0.15);
+  }
+  .phone::before {
+    content: '';
+    position: absolute;
+    top: 10px; left: 50%;
+    transform: translateX(-50%);
+    width: 110px; height: 28px;
+    background: #0A0F1E;
+    border-radius: 999px;
+    z-index: 999;
+  }
+
+  .status-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 48px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 28px;
+    font-size: 13px; font-weight: 600;
+    z-index: 100;
+    pointer-events: none;
+    color: #fff;
+  }
+  .status-bar.dark { color: var(--dark); }
+  .status-bar .time { margin-top: 4px; }
+  .status-bar .status-icons { display: flex; gap: 5px; margin-top: 4px; align-items: center; }
+  .status-bar svg { width: 15px; height: 15px; }
+
+  .screen {
+    width: 100%; height: 100%;
+    overflow-y: auto; overflow-x: hidden;
+    scrollbar-width: none;
+    padding-top: 48px;
+    padding-bottom: 30px;
+  }
+  .screen::-webkit-scrollbar { display: none; }
+
+  /* ══════════ HERO HEADER ══════════ */
+  .hero-header {
+    padding: 8px 20px 20px;
+    background: linear-gradient(160deg, var(--primary) 0%, var(--primary-dark) 60%, #0F172A 100%);
+    border-radius: 0 0 28px 28px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .hero-header::before {
+    content: '';
+    position: absolute;
+    top: -80px; right: -60px;
+    width: 220px;
+    height: 220px;
+    background: radial-gradient(circle, rgba(255,255,255,0.18), transparent 70%);
+    border-radius: 50%;
+  }
+  .hero-header::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; left: -40px;
+    width: 180px;
+    height: 180px;
+    background: radial-gradient(circle, rgba(245,158,11,0.2), transparent 70%);
+    border-radius: 50%;
+  }
+
+  .app-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 2;
+  }
+  .back-btn {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.18);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.22);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .back-btn:hover { background: rgba(255,255,255,0.28); }
+  .back-btn svg {
+    width: 18px; height: 18px;
+    stroke: #fff;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .app-title-wrap {
+    flex: 1;
+    text-align: center;
+  }
+  .app-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.3px;
+    margin-bottom: 2px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .app-title svg {
+    width: 15px;
+    height: 15px;
+    stroke: #fff;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .app-subtitle {
+    font-size: 10.5px;
+    color: rgba(255,255,255,0.8);
+    font-weight: 600;
+  }
+  .header-icon-btn {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.18);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.22);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .header-icon-btn:hover { background: rgba(255,255,255,0.28); }
+  .header-icon-btn svg {
+    width: 18px; height: 18px;
+    stroke: #fff;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* Brand info */
+  .brand-info {
+    padding: 14px;
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(20px);
+    border-radius: var(--r-lg);
+    border: 1.5px solid rgba(255,255,255,0.18);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+    margin-bottom: 14px;
+  }
+  .brand-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 15px;
+    background: linear-gradient(135deg, #F59E0B, #EA580C);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 22px;
+    font-weight: 800;
+    flex-shrink: 0;
+    position: relative;
+    box-shadow: 0 8px 20px rgba(245,158,11,0.35);
+  }
+  .brand-avatar .v-badge {
+    position: absolute;
+    bottom: -3px;
+    left: -3px;
+    width: 20px;
+    height: 20px;
+    background: var(--primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2.5px solid var(--primary-dark);
+  }
+  .brand-avatar .v-badge svg {
+    width: 9px;
+    height: 9px;
+    stroke: #fff;
+    stroke-width: 3.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .brand-content { flex: 1; min-width: 0; }
+  .brand-name {
+    font-size: 14px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 4px;
+    letter-spacing: -0.2px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .brand-category {
+    font-size: 10.5px;
+    color: rgba(255,255,255,0.8);
+    font-weight: 600;
+  }
+
+  /* Hero Stats */
+  .hero-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    position: relative;
+    z-index: 2;
+  }
+  .hero-stat {
+    padding: 10px 8px;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.15);
+    text-align: center;
+  }
+  .hero-stat-value {
+    font-size: 15px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -0.3px;
+    margin-bottom: 2px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+  }
+  .hero-stat-value .star {
+    width: 11px;
+    height: 11px;
+    fill: #FCD34D;
+    stroke: none;
+  }
+  .hero-stat-label {
+    font-size: 9px;
+    color: rgba(255,255,255,0.75);
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+
+  /* ══════════ SEARCH + FILTER ══════════ */
+  .search-bar {
+    padding: 4px 4px 4px 14px;
+    background: var(--white);
+    border-radius: var(--r-md);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-xs);
+    margin: 0 20px 12px;
+    cursor: text;
+  }
+  .search-bar svg {
+    width: 16px;
+    height: 16px;
+    stroke: var(--gray-400);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+  }
+  .search-bar input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--dark);
+    padding: 10px 0;
+    background: transparent;
+    min-width: 0;
+  }
+  .search-bar input::placeholder {
+    color: var(--gray-400);
+    font-weight: 500;
+  }
+
+  /* View Toggle */
+  .view-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 0 20px 12px;
+  }
+  .result-count {
+    font-size: 11.5px;
+    color: var(--gray-500);
+    font-weight: 700;
+  }
+  .result-count strong {
+    color: var(--dark);
+    font-weight: 900;
+  }
+  .view-toggle {
+    display: flex;
+    gap: 3px;
+    padding: 3px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: 10px;
+    box-shadow: var(--shadow-xs);
+  }
+  .view-btn {
+    width: 32px;
+    height: 28px;
+    border-radius: 7px;
+    background: transparent;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .view-btn.active { background: var(--primary); }
+  .view-btn.active svg { stroke: #fff; }
+  .view-btn svg {
+    width: 14px;
+    height: 14px;
+    stroke: var(--gray-500);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: stroke 0.2s;
+  }
+
+  /* Filter Chips */
+  .filter-chips {
+    display: flex;
+    gap: 6px;
+    padding: 0 20px 12px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .filter-chips::-webkit-scrollbar { display: none; }
+  .filter-chip {
+    flex-shrink: 0;
+    padding: 7px 13px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-full);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--gray-700);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+  }
+  .filter-chip:hover {
+    border-color: var(--primary-light);
+    color: var(--primary);
+  }
+  .filter-chip.active {
+    background: var(--dark);
+    color: #fff;
+    border-color: var(--dark);
+    box-shadow: 0 4px 12px rgba(15,23,42,0.25);
+  }
+  .filter-chip svg {
+    width: 11px;
+    height: 11px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ══════════ MAP PREVIEW ══════════ */
+  .map-preview {
+    margin: 0 20px 16px;
+    height: 200px;
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    position: relative;
+    background: #E8EEF2;
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+  }
+  .map-grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(200,215,220,0.4) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(200,215,220,0.4) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  .map-block-pick {
+    position: absolute;
+    border-radius: 3px;
+    background: linear-gradient(135deg, #D4DCE3, #C7D1D8);
+  }
+  .map-block-pick.park { background: linear-gradient(135deg, #C8E6C9, #A5D6A7); }
+  .map-road-pick {
+    position: absolute;
+    background: #FFFFFF;
+    box-shadow: 0 0 0 1px rgba(180,190,200,0.4);
+  }
+  .map-road-pick.h { height: 12px; left: 0; right: 0; }
+  .map-road-pick.v { width: 12px; top: 0; bottom: 0; }
+  .map-road-pick.major { background: #F8FAFC; height: 18px; }
+
+  /* Markers */
+  .marker-pin {
+    position: absolute;
+    transform: translate(-50%, -100%);
+    z-index: 5;
+  }
+  .marker-pin-body {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(15,118,110,0.45), 0 0 0 3px rgba(255,255,255,0.9);
+    border: 2px solid #fff;
+    position: relative;
+  }
+  .marker-pin-body::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%) rotate(45deg);
+    width: 10px;
+    height: 10px;
+    background: var(--primary-dark);
+    border-radius: 0 0 3px 0;
+    box-shadow: 2px 2px 4px rgba(15,23,42,0.15);
+  }
+  .marker-pin-body svg {
+    width: 16px;
+    height: 16px;
+    stroke: #fff;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    position: relative;
+    z-index: 1;
+  }
+
+  .marker-pin.active .marker-pin-body {
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    box-shadow: 0 4px 12px rgba(245,158,11,0.5), 0 0 0 4px rgba(255,255,255,0.95);
+    animation: markerPulse 2s infinite;
+  }
+  .marker-pin.active .marker-pin-body::after {
+    background: var(--accent-dark);
+  }
+  @keyframes markerPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+  }
+
+  /* Map overlay */
+  .map-overlay-btn {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    padding: 8px 12px;
+    background: var(--white);
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 10.5px;
+    font-weight: 800;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    box-shadow: var(--shadow-md);
+    border: none;
+    z-index: 5;
+  }
+  .map-overlay-btn svg {
+    width: 12px;
+    height: 12px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .map-expand-btn {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: var(--shadow-md);
+    border: none;
+    z-index: 5;
+  }
+  .map-expand-btn svg {
+    width: 14px;
+    height: 14px;
+    stroke: var(--dark);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ══════════ SECTION HEADER ══════════ */
+  .section-header {
+    padding: 0 20px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .section-title {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    letter-spacing: -0.2px;
+  }
+  .section-title::before {
+    content: '';
+    width: 3px;
+    height: 14px;
+    background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+    border-radius: 4px;
+  }
+  .section-link {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    padding: 5px 8px;
+    border-radius: 8px;
+    transition: background 0.2s;
+  }
+  .section-link:hover { background: var(--primary-soft); }
+  .section-link svg {
+    width: 11px;
+    height: 11px;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ══════════ BRANCHES LIST ══════════ */
+  .branches-list {
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .branch-card {
+    background: var(--white);
+    border: 1px solid var(--gray-100);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-xs);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+  }
+  .branch-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: transparent;
+  }
+  .branch-card.nearest {
+    border-color: var(--primary);
+    background: linear-gradient(90deg, var(--primary-soft), var(--white));
+    box-shadow: 0 4px 16px rgba(15,118,110,0.15);
+  }
+
+  /* Nearest Badge */
+  .nearest-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 4px 10px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    border-radius: var(--r-full);
+    font-size: 9px;
+    font-weight: 800;
+    z-index: 3;
+    box-shadow: 0 4px 12px rgba(15,118,110,0.4);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    letter-spacing: 0.2px;
+  }
+  .nearest-badge::before {
+    content: '📍';
+    font-size: 9px;
+  }
+
+  /* Branch Header */
+  .branch-header {
+    padding: 12px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    border-bottom: 1px solid var(--gray-100);
+  }
+
+  .branch-thumb {
+    width: 60px;
+    height: 60px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .branch-thumb.bg-1 { background: linear-gradient(135deg, #0F766E, #14B8A6); }
+  .branch-thumb.bg-2 { background: linear-gradient(135deg, #F59E0B, #EA580C); }
+  .branch-thumb.bg-3 { background: linear-gradient(135deg, #8B5CF6, #6D28D9); }
+  .branch-thumb.bg-4 { background: linear-gradient(135deg, #EC4899, #BE185D); }
+  .branch-thumb.bg-5 { background: linear-gradient(135deg, #3B82F6, #1D4ED8); }
+  .branch-thumb svg {
+    width: 26px;
+    height: 26px;
+    stroke: #fff;
+    stroke-width: 1.6;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.25));
+  }
+  .branch-thumb .status-dot {
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
+    width: 10px;
+    height: 10px;
+    background: var(--success);
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 2px rgba(16,185,129,0.25);
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.15); opacity: 0.7; }
+  }
+
+  .branch-info { flex: 1; min-width: 0; }
+  .branch-name {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 4px;
+    letter-spacing: -0.2px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .branch-name .main-tag {
+    padding: 1px 6px;
+    background: var(--accent-light);
+    color: var(--accent-dark);
+    border-radius: 4px;
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: 0.3px;
+    flex-shrink: 0;
+  }
+  .branch-address {
+    font-size: 10.5px;
+    color: var(--gray-500);
+    font-weight: 600;
+    line-height: 1.4;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .branch-address svg {
+    width: 10px;
+    height: 10px;
+    stroke: var(--primary);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+  }
+  .branch-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: var(--gray-500);
+    font-weight: 600;
+  }
+  .branch-meta .rating {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    color: var(--dark);
+    font-weight: 800;
+  }
+  .branch-meta .rating svg {
+    width: 10px;
+    height: 10px;
+    fill: var(--accent);
+    stroke: none;
+  }
+  .branch-meta .sep {
+    width: 3px;
+    height: 3px;
+    background: var(--gray-300);
+    border-radius: 50%;
+  }
+  .branch-meta .open-status {
+    color: var(--success-dark);
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .branch-meta .open-status::before {
+    content: '';
+    width: 4px;
+    height: 4px;
+    background: var(--success);
+    border-radius: 50%;
+    box-shadow: 0 0 0 1.5px rgba(16,185,129,0.3);
+  }
+  .branch-meta .open-status.closed {
+    color: var(--gray-500);
+  }
+  .branch-meta .open-status.closed::before {
+    background: var(--gray-400);
+    box-shadow: 0 0 0 1.5px rgba(156,163,175,0.3);
+  }
+
+  /* Branch Footer (Features + Distance) */
+  .branch-footer {
+    padding: 10px 12px;
+    background: var(--gray-100);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .branch-features {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .branch-feature {
+    padding: 3px 7px;
+    background: var(--white);
+    border-radius: 5px;
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--gray-600);
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    box-shadow: var(--shadow-xs);
+  }
+  .branch-feature svg {
+    width: 9px;
+    height: 9px;
+    stroke: var(--success);
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .branch-distance-badge {
+    flex-shrink: 0;
+    padding: 5px 9px;
+    background: var(--primary);
+    color: #fff;
+    border-radius: var(--r-full);
+    font-size: 10px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 4px 10px rgba(15,118,110,0.3);
+    white-space: nowrap;
+    letter-spacing: -0.2px;
+  }
+  .branch-distance-badge svg {
+    width: 11px;
+    height: 11px;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Quick Actions Grid */
+  .branch-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 6px;
+    padding: 10px 12px 12px;
+  }
+  .branch-action {
+    padding: 8px 4px;
+    background: var(--gray-100);
+    border: none;
+    border-radius: 9px;
+    font-family: inherit;
+    font-size: 9.5px;
+    font-weight: 800;
+    color: var(--gray-700);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    transition: all 0.2s;
+    letter-spacing: -0.1px;
+  }
+  .branch-action:hover {
+    background: var(--primary);
+    color: #fff;
+  }
+  .branch-action:hover svg { stroke: #fff; }
+  .branch-action.call { background: var(--primary-soft); color: var(--primary); }
+  .branch-action.call:hover { background: var(--primary); color: #fff; }
+  .branch-action.primary-action {
+    background: var(--primary);
+    color: #fff;
+  }
+  .branch-action.primary-action:hover {
+    background: var(--primary-dark);
+  }
+  .branch-action svg {
+    width: 13px;
+    height: 13px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: stroke 0.2s;
+  }
+
+  /* ══════════ INFO CARD ══════════ */
+  .info-card {
+    margin: 16px 20px;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--blue-light), #BFDBFE);
+    border: 1px solid #93C5FD;
+    border-radius: var(--r-md);
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .info-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+    background: rgba(255,255,255,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .info-icon svg {
+    width: 18px;
+    height: 18px;
+    stroke: var(--blue);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .info-content { flex: 1; }
+  .info-title {
+    font-size: 12px;
+    font-weight: 800;
+    color: #1E40AF;
+    margin-bottom: 3px;
+    letter-spacing: -0.2px;
+  }
+  .info-text {
+    font-size: 10.5px;
+    color: #1E40AF;
+    font-weight: 600;
+    line-height: 1.5;
+    opacity: 0.9;
+  }
+
+  /* ══════════ BOTTOM NAV ══════════ */
+  .bottom-nav {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 78px;
+    background: rgba(255,255,255,0.98);
+    backdrop-filter: blur(20px);
+    border-radius: 28px 28px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 10px 14px;
+    z-index: 50;
+    box-shadow: 0 -6px 30px rgba(15, 23, 42, 0.08);
+  }
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 0;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+  }
+  .nav-item .nav-icon {
+    width: 22px; height: 22px;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.25s;
+    position: relative;
+  }
+  .nav-item .nav-icon svg {
+    width: 21px; height: 21px;
+    stroke: var(--gray-400);
+    stroke-width: 1.8;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+    transition: all 0.25s;
+  }
+  .nav-item .nav-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--gray-400);
+    transition: color 0.25s;
+  }
+  .nav-item.active .nav-icon svg { stroke: var(--primary); }
+  .nav-item.active .nav-label { color: var(--primary); font-weight: 700; }
+  .nav-item.active .nav-icon { transform: translateY(-2px); }
+
+  .nav-fab-wrapper {
+    flex: 0 0 auto;
+    margin-top: -28px;
+  }
+  .nav-fab {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--purple), #6D28D9);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(139,92,246,0.35);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 4px solid var(--white);
+  }
+  .nav-fab:hover {
+    transform: scale(1.08) rotate(8deg);
+  }
+  .nav-fab svg {
+    width: 24px; height: 24px;
+    stroke: #fff;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>الفروع — Branches</h1>
+  <p>Hero · Map Preview · 5 Branches · Nearest Badge</p>
+</div>
+
+<div class="screens-container">
+  <div class="screen-wrapper">
+    <div class="phone">
+      <div class="status-bar">
+        <div class="time">9:41</div>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h3v-9H2v9zm5 0h3V9H7v13zm5 0h3V5h-3v17zm5 0h3V2h-3v20z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21l-12-18h24z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm5 4v8h1c.6 0 1-.4 1-1V9c0-.6-.4-1-1-1h-1z"/></svg>
+        </div>
+      </div>
+
+      <div class="screen">
+
+        <!-- Hero Header -->
+        <div class="hero-header">
+
+          <div class="app-bar">
+            <div class="back-btn">
+              <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            <div class="app-title-wrap">
+              <div class="app-title">
+                <svg viewBox="0 0 24 24">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                الفروع
+              </div>
+              <div class="app-subtitle">اختر الأقرب إليك</div>
+            </div>
+            <button class="header-icon-btn">
+              <svg viewBox="0 0 24 24">
+                <circle cx="18" cy="5" r="3"/>
+                <circle cx="6" cy="12" r="3"/>
+                <circle cx="18" cy="19" r="3"/>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Brand Info -->
+          <div class="brand-info">
+            <div class="brand-avatar">
+              ر
+              <div class="v-badge">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+            </div>
+            <div class="brand-content">
+              <div class="brand-name">متجر ريماس للإلكترونيات</div>
+              <div class="brand-category">إلكترونيات وساعات ذكية</div>
+            </div>
+          </div>
+
+          <!-- Hero Stats -->
+          <div class="hero-stats">
+            <div class="hero-stat">
+              <div class="hero-stat-value">5</div>
+              <div class="hero-stat-label">فرع متاح</div>
+            </div>
+            <div class="hero-stat">
+              <div class="hero-stat-value">
+                <svg class="star" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                4.9
+              </div>
+              <div class="hero-stat-label">التقييم</div>
+            </div>
+            <div class="hero-stat">
+              <div class="hero-stat-value">2</div>
+              <div class="hero-stat-label">مفتوح الآن</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Search -->
+        <div class="search-bar">
+          <svg viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" placeholder="ابحث في الفروع بالعنوان...">
+        </div>
+
+        <!-- View Toggle + Result Count -->
+        <div class="view-toggle-row">
+          <div class="result-count"><strong>5</strong> فروع متاحة</div>
+          <div class="view-toggle">
+            <button class="view-btn active">
+              <svg viewBox="0 0 24 24">
+                <line x1="8" y1="6" x2="21" y2="6"/>
+                <line x1="8" y1="12" x2="21" y2="12"/>
+                <line x1="8" y1="18" x2="21" y2="18"/>
+                <line x1="3" y1="6" x2="3.01" y2="6"/>
+                <line x1="3" y1="12" x2="3.01" y2="12"/>
+                <line x1="3" y1="18" x2="3.01" y2="18"/>
+              </svg>
+            </button>
+            <button class="view-btn">
+              <svg viewBox="0 0 24 24">
+                <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+                <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+                <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+                <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+              </svg>
+            </button>
+            <button class="view-btn">
+              <svg viewBox="0 0 24 24">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter Chips -->
+        <div class="filter-chips">
+          <button class="filter-chip active">
+            <svg viewBox="0 0 24 24">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+            الأقرب
+          </button>
+          <button class="filter-chip">مفتوح الآن</button>
+          <button class="filter-chip">الأعلى تقييماً</button>
+          <button class="filter-chip">
+            <svg viewBox="0 0 24 24">
+              <rect x="3" y="4" width="18" height="18" rx="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+            </svg>
+            24 ساعة
+          </button>
+        </div>
+
+        <!-- Map Preview -->
+        <div class="map-preview">
+          <div class="map-grid-bg"></div>
+
+          <!-- Map blocks -->
+          <div class="map-block-pick" style="top: 20px; left: 20px; width: 60px; height: 40px;"></div>
+          <div class="map-block-pick park" style="top: 20px; right: 30px; width: 55px; height: 35px;"></div>
+          <div class="map-block-pick" style="bottom: 30px; left: 30px; width: 70px; height: 40px;"></div>
+          <div class="map-block-pick park" style="bottom: 40px; right: 40px; width: 60px; height: 45px;"></div>
+
+          <!-- Roads -->
+          <div class="map-road-pick h major" style="top: 90px;"></div>
+          <div class="map-road-pick v" style="left: 45%;"></div>
+          <div class="map-road-pick v" style="right: 25%;"></div>
+          <div class="map-road-pick h" style="bottom: 65px;"></div>
+
+          <!-- Markers -->
+          <div class="marker-pin" style="top: 35%; left: 25%;">
+            <div class="marker-pin-body">
+              <svg viewBox="0 0 24 24">
+                <path d="M3 21h18M5 21V7l8-4v18"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="marker-pin active" style="top: 50%; left: 55%;">
+            <div class="marker-pin-body">
+              <svg viewBox="0 0 24 24">
+                <path d="M3 21h18M5 21V7l8-4v18"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="marker-pin" style="top: 40%; left: 80%;">
+            <div class="marker-pin-body">
+              <svg viewBox="0 0 24 24">
+                <path d="M3 21h18M5 21V7l8-4v18"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="marker-pin" style="top: 75%; left: 30%;">
+            <div class="marker-pin-body">
+              <svg viewBox="0 0 24 24">
+                <path d="M3 21h18M5 21V7l8-4v18"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="marker-pin" style="top: 78%; left: 70%;">
+            <div class="marker-pin-body">
+              <svg viewBox="0 0 24 24">
+                <path d="M3 21h18M5 21V7l8-4v18"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Expand button -->
+          <button class="map-expand-btn">
+            <svg viewBox="0 0 24 24">
+              <polyline points="15 3 21 3 21 9"/>
+              <polyline points="9 21 3 21 3 15"/>
+              <line x1="21" y1="3" x2="14" y2="10"/>
+              <line x1="3" y1="21" x2="10" y2="14"/>
+            </svg>
+          </button>
+
+          <!-- My location button -->
+          <button class="map-overlay-btn">
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 2v3"/>
+              <path d="M12 19v3"/>
+              <path d="M2 12h3"/>
+              <path d="M19 12h3"/>
+            </svg>
+            موقعي
+          </button>
+        </div>
+
+        <!-- Section -->
+        <div class="section-header">
+          <div class="section-title">كل الفروع (5)</div>
+          <div class="section-link">
+            ترتيب
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </div>
+        </div>
+
+        <!-- Branches List -->
+        <div class="branches-list">
+
+          <!-- Branch 1 - NEAREST -->
+          <div class="branch-card nearest">
+            <div class="nearest-badge">الأقرب ليك</div>
+
+            <div class="branch-header">
+              <div class="branch-thumb bg-1">
+                <svg viewBox="0 0 24 24">
+                  <path d="M3 21h18M5 21V7l8-4v18"/>
+                </svg>
+                <div class="status-dot"></div>
+              </div>
+              <div class="branch-info">
+                <div class="branch-name">
+                  الفرع الرئيسي
+                  <span class="main-tag">الرئيسي</span>
+                </div>
+                <div class="branch-address">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                    <circle cx="12" cy="10" r="3"/>
+                  </svg>
+                  دكرنس — شارع المستشفى — برج رضا سامي
+                </div>
+                <div class="branch-meta">
+                  <span class="rating">
+                    <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    4.9
+                  </span>
+                  <span class="sep"></span>
+                  <span class="open-status">مفتوح الآن</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="branch-footer">
+              <div class="branch-features">
+                <span class="branch-feature">
+                  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                  واي فاي
+                </span>
+                <span class="branch-feature">
+                  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                  موقف سيارات
+                </span>
+                <span class="branch-feature">
+                  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                  دفع فيزا
+                </span>
+              </div>
+              <div class="branch-distance-badge">
+                <svg viewBox="0 0 24 24">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                0.8 كم
+              </div>
+            </div>
+
+            <div class="branch-actions">
+              <button class="branch-action primary-action">
+                <svg viewBox="0 0 24 24">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                  <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+                زياردة
+              </button>
+              <button class="branch-action call">
+                <svg viewBox="0 0 24 24">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                </svg>
+                اتصال
+              </button>
+              <button class="branch-action">
+                <svg viewBox="0 0 24 24">
+                  <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+                </svg>
+                اتجاهات
+              </button>
+              <button class="branch-action">
+                <svg viewBox="0 0 24 24">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                حجز
+              </button>
+            </div>
+          </div>
+
+          <!-- Branch 2 -->
+          <div class="branch-card">
+            <div class="branch-header">
+              <div class="branch-thumb bg-2">
+                <svg viewBox="0 0 24 24">
+                  <path d="M3 21h18M5 21V7l8-4v18"/>
+                </svg>
+                <div class="status-dot"></div>
+              </div>
+              <div class="branch-info">
+                <div class="branch-name">فرع المنصورة</div>
+                <div class="branch-address">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                    <circle cx="12" cy="10" r="3"/>
+                  </svg>
+                  المنصورة — شارع الجمهورية — أمام المحكمة
+                </div>
+                <div class="branch-meta">
+                  <span class="rating">
+                    <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    4.8
+                  </span>
+                  <span class="sep"></span>
+                  <span class="open-status">مفتوح الآن</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="branch-footer">
+              <div class="branch-features">
+                <span class="branch-feature">
+                  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                  واي فاي
+                </span>
+                <span class="branch-feature">
+                  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                  توصيل
+                </span>
+              </div>
+              <div class="branch-distance-badge">
+                <svg viewBox="0 0 24 24">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                28 كم
+              </div>
+            </div>
+
+            <div class="branch-actions">
+              <button class="branch-action primary-action">
+                <svg viewBox="0 0 24 24">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                  <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+                زيارة
+              </button>
+              <button class="branch-action call">
+                <svg viewBox="0 0 24 24">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                </svg>
+                اتصال
+              </button>
+              <button class="branch-action">
+                <svg viewBox="0 0 24 24">
+                  <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+                </svg>
+                اتجاهات
+              </button>
+              <button class="branch-action">
+                <svg viewBox="0 0 24 24">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                حجز
+              </button>
+            </div>
+          </div>
+
+          <!-- Branch 3 -->
+          <div class="branch-card">
+            <div class="branch-header">
+              <div class="branch-thumb bg-3">
+                <svg viewBox="0 0 24 24">
+                  <path d="M3 21h18M5 21V7l8-4v18"/>
+                </svg>
+              </div>
+              <div class="branch-info">
+                <div class="branch-name">فرع طلخا</div>
+                <div class="branch-address">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                    <circle cx="12" cy="10" r="3"/>
+                  </svg>
+                  طلخا — شارع البحر — برج النيل
+                </div>
+                <div class="branch-meta">
+                  <span class="rating">
+                    <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    4.7
+                  </span>
+                  <span class="sep"></span>
+                  <span class="open-status closed">مغلق</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="branch-footer">
+              <div class="branch-features">
+                <span class="branch-feature">
+                  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                  واي فاي
+                </span>
+              </div>
+              <div class="branch-distance-badge">
+                <svg viewBox="0 0 24 24">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                15 كم
+              </div>
+            </div>
+
+            <div class="branch-actions">
+              <button class="branch-action primary-action">
+                <svg viewBox="0 0 24 24">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                  <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+                زيارة
+              </button>
+              <button class="branch-action call">
+                <svg viewBox="0 0 24 24">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                </svg>
+                اتصال
+              </button>
+              <button class="branch-action">
+                <svg viewBox="0 0 24 24">
+                  <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+                </svg>
+                اتجاهات
+              </button>
+              <button class="branch-action">
+                <svg viewBox="0 0 24 24">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                حجز
+              </button>
+            </div>
+          </div>
+
+          <!-- Branch 4 -->
+          <div class="branch-card">
+            <div class="branch-header">
+              <div class="branch-thumb bg-4">
+                <svg viewBox="0 0 24 24">
+                  <path d="M3 21h18M5 21V7l8-4v18"/>
+                </svg>
+              </div>
+              <div class="branch-info">
+                <div class="branch-name">فرع ميت غمر</div>
+                <div class="branch-address">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                    <circle cx="12" cy="10" r="3"/>
+                  </svg>
+                  ميت غمر — شارع الجيش — برج الأمل
+                </div>
+                <div class="branch-meta">
+                  <span class="rating">
+                    <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    4.6
+                  </span>
+                  <span class="sep"></span>
+                  <span class="open-status closed">مغلق</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="branch-footer">
+              <div class="branch-features">
+                <span class="branch-feature">
+                  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                  موقف سيارات
+                </span>
+              </div>
+              <div class="branch-distance-badge">
+                <svg viewBox="0 0 24 24">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                42 كم
+              </div>
+            </div>
+
+            <div class="branch-actions">
+              <button class="branch-action primary-action">
+                <svg viewBox="0 0 24 24">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                  <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+                زيارة
+              </button>
+              <button class="branch-action call">
+                <svg viewBox="0 0 24 24">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                </svg>
+                اتصال
+              </button>
+              <button class="branch-action">
+                <svg viewBox="0 0 24 24">
+                  <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+                </svg>
+                اتجاهات
+              </button>
+              <button class="branch-action">
+                <svg viewBox="0 0 24 24">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                حجز
+              </button>
+            </div>
+          </div>
+
+          <!-- Branch 5 -->
+          <div class="branch-card">
+            <div class="branch-header">
+              <div class="branch-thumb bg-5">
+                <svg viewBox="0 0 24 24">
+                  <path d="M3 21h18M5 21V7l8-4v18"/>
+                </svg>
+                <div class="status-dot"></div>
+              </div>
+              <div class="branch-info">
+                <div class="branch-name">فرع القاهرة — مدينة نصر</div>
+                <div class="branch-address">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                    <circle cx="12" cy="10" r="3"/>
+                  </svg>
+                  مدينة نصر — شارع عباس العقاد
+                </div>
+                <div class="branch-meta">
+                  <span class="rating">
+                    <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    4.9
+                  </span>
+                  <span class="sep"></span>
+                  <span class="open-status">مفتوح الآن</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="branch-footer">
+              <div class="branch-features">
+                <span class="branch-feature">
+                  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                  واي فاي
+                </span>
+                <span class="branch-feature">
+                  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                  VIP
+                </span>
+                <span class="branch-feature">
+                  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                  توصيل مجاني
+                </span>
+              </div>
+              <div class="branch-distance-badge">
+                <svg viewBox="0 0 24 24">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                120 كم
+              </div>
+            </div>
+
+            <div class="branch-actions">
+              <button class="branch-action primary-action">
+                <svg viewBox="0 0 24 24">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                  <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+                زيارة
+              </button>
+              <button class="branch-action call">
+                <svg viewBox="0 0 24 24">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                </svg>
+                اتصال
+              </button>
+              <button class="branch-action">
+                <svg viewBox="0 0 24 24">
+                  <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+                </svg>
+                اتجاهات
+              </button>
+              <button class="branch-action">
+                <svg viewBox="0 0 24 24">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                حجز
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Info Banner -->
+        <div class="info-card">
+          <div class="info-icon">
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="16" x2="12" y2="12"/>
+              <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+          </div>
+          <div class="info-content">
+            <div class="info-title">💡 معلومة مفيدة</div>
+            <div class="info-text">جميع الفروع تشترك في نفس الأسعار والعروض. اختر الأقرب ليك للاستفادة من سرعة التوصيل!</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Bottom Nav -->
+      <div class="bottom-nav">
+        <div class="nav-item">
+          <div class="nav-icon">
+            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+          <div class="nav-label">الرئيسية</div>
+        </div>
+        <div class="nav-item">
+          <div class="nav-icon">
+            <svg viewBox="0 0 24 24">
+              <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+              <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+              <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+              <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+            </svg>
+          </div>
+          <div class="nav-label">الأقسام</div>
+        </div>
+        <div class="nav-fab-wrapper">
+          <div class="nav-fab">
+            <svg viewBox="0 0 24 24">
+              <path d="M3 9h18l-1.5 11a2 2 0 0 1-2 1.7H6.5a2 2 0 0 1-2-1.7L3 9z"/>
+              <path d="M8 9V6a4 4 0 0 1 8 0v3"/>
+            </svg>
+          </div>
+        </div>
+        <div class="nav-item active">
+          <div class="nav-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+          </div>
+          <div class="nav-label">الفروع</div>
+        </div>
+        <div class="nav-item">
+          <div class="nav-icon">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div class="nav-label">حسابي</div>
+        </div>
+      </div>
+
+    </div>
+    <div class="screen-badge">الفروع</div>
+  </div>
+</div>
+
+</body>
+</html>

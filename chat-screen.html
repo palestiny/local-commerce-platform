@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>المحادثات — معاينة احترافية</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'IBM Plex Sans Arabic', sans-serif; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --primary: #0F766E;
+    --primary-dark: #115E59;
+    --primary-light: #CCFBF1;
+    --primary-soft: #F0FDFA;
+    --accent: #F59E0B;
+    --accent-dark: #D97706;
+    --accent-light: #FEF3C7;
+    --danger: #EF4444;
+    --danger-light: #FEF2F2;
+    --success: #10B981;
+    --success-light: #ECFDF5;
+    --purple: #8B5CF6;
+    --purple-light: #EDE9FE;
+    --blue: #2563EB;
+    --blue-light: #DBEAFE;
+    --pink: #EC4899;
+    --pink-light: #FCE7F3;
+    --dark: #0F172A;
+    --gray-700: #374151;
+    --gray-600: #4B5563;
+    --gray-500: #6B7280;
+    --gray-400: #9CA3AF;
+    --gray-300: #D1D5DB;
+    --gray-200: #E5E7EB;
+    --gray-100: #F3F4F6;
+    --bg: #F8FAFC;
+    --white: #FFFFFF;
+
+    --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.07);
+    --shadow-lg: 0 10px 30px rgba(15, 23, 42, 0.09);
+    --shadow-xl: 0 20px 40px rgba(15, 23, 42, 0.14);
+    --shadow-primary: 0 8px 24px rgba(15, 118, 110, 0.32);
+
+    --r-sm: 10px;
+    --r-md: 14px;
+    --r-lg: 18px;
+    --r-xl: 24px;
+    --r-full: 999px;
+  }
+
+  body {
+    background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+    min-height: 100vh;
+    padding: 50px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+  }
+
+  .page-header { text-align: center; color: #fff; max-width: 900px; }
+  .page-header h1 {
+    font-size: 30px; font-weight: 700; margin-bottom: 8px;
+    background: linear-gradient(135deg, #fff, #94A3B8);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .page-header p { color: #94A3B8; font-size: 14px; }
+
+  .screens-container {
+    display: flex; gap: 40px; flex-wrap: wrap; justify-content: center;
+  }
+  .screen-wrapper {
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+  }
+  .screen-badge {
+    background: rgba(15, 118, 110, 0.15);
+    color: #5EEAD4;
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid rgba(94, 234, 212, 0.25);
+  }
+
+  .phone {
+    width: 375px;
+    height: 812px;
+    background: var(--bg);
+    border-radius: 44px;
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+      0 0 0 10px #0A0F1E,
+      0 0 0 12px #1E293B,
+      0 30px 60px rgba(0, 0, 0, 0.5),
+      0 0 80px rgba(15, 118, 110, 0.15);
+  }
+  .phone::before {
+    content: '';
+    position: absolute;
+    top: 10px; left: 50%;
+    transform: translateX(-50%);
+    width: 110px; height: 28px;
+    background: #0A0F1E;
+    border-radius: 999px;
+    z-index: 999;
+  }
+
+  .status-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 48px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 28px;
+    font-size: 13px; font-weight: 600;
+    z-index: 100;
+    pointer-events: none;
+    color: var(--dark);
+  }
+  .status-bar .time { margin-top: 4px; }
+  .status-bar .status-icons { display: flex; gap: 5px; margin-top: 4px; align-items: center; }
+  .status-bar svg { width: 15px; height: 15px; }
+
+  .screen {
+    width: 100%; height: 100%;
+    overflow-y: auto; overflow-x: hidden;
+    scrollbar-width: none;
+    padding-top: 48px;
+  }
+  .screen::-webkit-scrollbar { display: none; }
+
+  /* ══════════ APP BAR ══════════ */
+  .app-bar {
+    padding: 8px 20px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .app-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--dark);
+    letter-spacing: -0.4px;
+    flex: 1;
+  }
+  .app-icon-btn {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .app-icon-btn:hover { background: var(--gray-100); }
+  .app-icon-btn svg {
+    width: 18px; height: 18px;
+    stroke: var(--gray-700);
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* ══════════ SEARCH BAR ══════════ */
+  .search-bar {
+    margin: 0 20px 12px;
+    padding: 4px 4px 4px 14px;
+    background: var(--white);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-xs);
+  }
+  .search-bar svg.search-icon {
+    width: 17px; height: 17px;
+    stroke: var(--gray-400);
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+    flex-shrink: 0;
+  }
+  .search-bar .search-text {
+    flex: 1;
+    font-size: 13px;
+    color: var(--gray-400);
+    font-weight: 500;
+    padding: 10px 0;
+  }
+  .search-bar .clear-btn {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--gray-100);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+  .search-bar .clear-btn svg {
+    width: 13px; height: 13px;
+    stroke: var(--gray-600);
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* ══════════ FILTER CHIPS ══════════ */
+  .filter-chips {
+    display: flex;
+    gap: 8px;
+    padding: 0 20px 14px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .filter-chips::-webkit-scrollbar { display: none; }
+  .filter-chip {
+    flex-shrink: 0;
+    padding: 7px 14px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-full);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-700);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .filter-chip.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(15,118,110,0.25);
+  }
+  .filter-chip .count-mini {
+    padding: 1px 6px;
+    background: rgba(255,255,255,0.25);
+    border-radius: 5px;
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .filter-chip.active .count-mini { background: rgba(255,255,255,0.3); }
+
+  /* ══════════ CHAT LIST ══════════ */
+  .chat-list {
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .chat-item {
+    background: var(--white);
+    border-radius: var(--r-md);
+    padding: 12px;
+    display: flex;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.25s;
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-xs);
+    position: relative;
+  }
+  .chat-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: transparent;
+  }
+  .chat-item.unread {
+    background: linear-gradient(90deg, var(--primary-soft) 0%, var(--white) 30%);
+    border-color: var(--primary-light);
+  }
+  .chat-item.unread::before {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 20px;
+    bottom: 20px;
+    width: 3px;
+    background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+    border-radius: 3px 0 0 3px;
+  }
+
+  .chat-avatar-wrap {
+    position: relative;
+    flex-shrink: 0;
+  }
+  .chat-avatar {
+    width: 52px; height: 52px;
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    font-weight: 800;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+  .chat-avatar.a1 { background: linear-gradient(135deg, #F59E0B, #EA580C); }
+  .chat-avatar.a2 { background: linear-gradient(135deg, #0F766E, #14B8A6); }
+  .chat-avatar.a3 { background: linear-gradient(135deg, #8B5CF6, #6D28D9); }
+  .chat-avatar.a4 { background: linear-gradient(135deg, #3B82F6, #1D4ED8); }
+  .chat-avatar.a5 { background: linear-gradient(135deg, #EC4899, #BE185D); }
+
+  .chat-avatar-wrap .online-dot {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 14px; height: 14px;
+    background: var(--success);
+    border-radius: 50%;
+    border: 3px solid var(--white);
+    box-shadow: 0 0 0 2px rgba(16,185,129,0.15);
+  }
+  .chat-avatar-wrap .online-dot.offline {
+    background: var(--gray-400);
+    box-shadow: 0 0 0 2px rgba(156,163,175,0.15);
+  }
+
+  .chat-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .chat-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+    gap: 8px;
+  }
+  .chat-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--dark);
+    letter-spacing: -0.2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .chat-name .verified-mini {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--primary);
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .chat-name .verified-mini svg {
+    width: 8px; height: 8px;
+    stroke: #fff;
+    stroke-width: 3.5;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .chat-time {
+    font-size: 10px;
+    color: var(--gray-400);
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .chat-item.unread .chat-time {
+    color: var(--primary);
+    font-weight: 700;
+  }
+
+  .chat-bottom-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .chat-preview {
+    font-size: 12px;
+    color: var(--gray-500);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .chat-preview svg {
+    width: 12px; height: 12px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+    flex-shrink: 0;
+  }
+  .chat-item.unread .chat-preview {
+    color: var(--dark);
+    font-weight: 600;
+  }
+
+  .chat-right-side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .unread-badge {
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 8px rgba(15,118,110,0.3);
+  }
+  .unread-badge.accent {
+    background: var(--accent);
+    box-shadow: 0 3px 8px rgba(245,158,11,0.3);
+  }
+  .pin-icon {
+    width: 16px; height: 16px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .pin-icon svg {
+    width: 13px; height: 13px;
+    stroke: var(--gray-400);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* ══════════ TYPING INDICATOR ══════════ */
+  .typing-text {
+    font-size: 11px;
+    color: var(--primary);
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-style: italic;
+  }
+  .typing-dots {
+    display: inline-flex;
+    gap: 2px;
+  }
+  .typing-dots span {
+    width: 4px; height: 4px;
+    background: var(--primary);
+    border-radius: 50%;
+    animation: typeDot 1.4s infinite;
+  }
+  .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typeDot {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+    30% { transform: translateY(-3px); opacity: 1; }
+  }
+
+  /* ══════════ CHAT SCREEN (Screen 2) ══════════ */
+  .chat-hero {
+    background: var(--white);
+    padding: 8px 16px 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--gray-100);
+    position: sticky;
+    top: 48px;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(15,23,42,0.02);
+  }
+  .chat-hero .back-btn {
+    width: 38px; height: 38px;
+    border-radius: 12px;
+    background: var(--gray-100);
+    border: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .chat-hero .back-btn:hover { background: var(--primary-soft); }
+  .chat-hero .back-btn svg {
+    width: 17px; height: 17px;
+    stroke: var(--gray-700);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  .chat-hero-avatar-wrap {
+    position: relative;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  .chat-hero-avatar {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #F59E0B, #EA580C);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px;
+    font-weight: 800;
+    color: #fff;
+  }
+  .chat-hero-avatar-wrap .online-dot {
+    position: absolute;
+    bottom: -2px;
+    left: -2px;
+    width: 12px; height: 12px;
+    background: var(--success);
+    border-radius: 50%;
+    border: 2.5px solid var(--white);
+  }
+
+  .chat-hero-info {
+    flex: 1;
+    min-width: 0;
+    cursor: pointer;
+  }
+  .chat-hero-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 2px;
+  }
+  .chat-hero-name .verified-mini {
+    width: 13px; height: 13px;
+    border-radius: 50%;
+    background: var(--primary);
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .chat-hero-name .verified-mini svg {
+    width: 7px; height: 7px;
+    stroke: #fff;
+    stroke-width: 3.5;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .chat-hero-status {
+    font-size: 11px;
+    color: var(--success);
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .chat-hero-status::before {
+    content: '';
+    width: 5px; height: 5px;
+    background: var(--success);
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px rgba(16,185,129,0.2);
+  }
+
+  .chat-hero-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .chat-hero-action {
+    width: 34px; height: 34px;
+    border-radius: 10px;
+    background: var(--gray-100);
+    border: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .chat-hero-action:hover { background: var(--primary-soft); }
+  .chat-hero-action:hover svg { stroke: var(--primary); }
+  .chat-hero-action svg {
+    width: 15px; height: 15px;
+    stroke: var(--gray-700);
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+    transition: stroke 0.2s;
+  }
+
+  /* ══════════ CHAT BODY ══════════ */
+  .chat-body {
+    padding: 16px 16px 100px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(15,118,110,0.03), transparent 50%),
+      radial-gradient(circle at 80% 70%, rgba(245,158,11,0.03), transparent 50%),
+      var(--bg);
+  }
+
+  /* Date divider */
+  .date-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 8px 0;
+  }
+  .date-divider span {
+    padding: 4px 12px;
+    background: rgba(15,23,42,0.06);
+    border-radius: var(--r-full);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--gray-500);
+    letter-spacing: 0.3px;
+  }
+
+  /* Message bubbles */
+  .message {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+    max-width: 85%;
+    position: relative;
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .message.incoming {
+    align-self: flex-start;
+  }
+  .message.outgoing {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+  }
+
+  .msg-avatar {
+    width: 28px; height: 28px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #F59E0B, #EA580C);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+  .msg-avatar.hidden { visibility: hidden; }
+
+  .msg-bubble {
+    padding: 10px 14px;
+    border-radius: 16px;
+    font-size: 13px;
+    line-height: 1.6;
+    font-weight: 500;
+    position: relative;
+    box-shadow: var(--shadow-xs);
+    word-wrap: break-word;
+    max-width: 100%;
+  }
+  .message.incoming .msg-bubble {
+    background: var(--white);
+    color: var(--dark);
+    border-bottom-right-radius: 4px;
+    border: 1px solid var(--gray-100);
+  }
+  .message.outgoing .msg-bubble {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 4px 14px rgba(15,118,110,0.25);
+  }
+
+  .msg-meta {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    justify-content: flex-end;
+    margin-top: 4px;
+    font-size: 10px;
+    font-weight: 600;
+  }
+  .message.incoming .msg-meta {
+    color: var(--gray-400);
+  }
+  .message.outgoing .msg-meta {
+    color: rgba(255,255,255,0.75);
+  }
+  .msg-check svg {
+    width: 12px; height: 12px;
+    stroke: currentColor;
+    stroke-width: 2.4;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .msg-check.read {
+    color: #60A5FA;
+  }
+
+  /* Product Card inside chat */
+  .msg-product-card {
+    background: var(--white);
+    border-radius: 14px;
+    overflow: hidden;
+    width: 220px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-100);
+  }
+  .msg-product-img {
+    height: 100px;
+    background: linear-gradient(135deg, #0F172A, #334155);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .msg-product-img svg {
+    width: 40px; height: 40px;
+    stroke: rgba(255,255,255,0.9);
+    stroke-width: 1.5;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .msg-product-body {
+    padding: 10px 12px;
+  }
+  .msg-product-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 4px;
+  }
+  .msg-product-price {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--primary);
+  }
+  .msg-product-price .currency {
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--gray-500);
+  }
+
+  /* Order card inside chat */
+  .msg-order-card {
+    background: var(--white);
+    border-radius: 14px;
+    padding: 12px;
+    width: 240px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-100);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .msg-order-icon {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--success-light), #A7F3D0);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .msg-order-icon svg {
+    width: 18px; height: 18px;
+    stroke: var(--success);
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .msg-order-info { flex: 1; min-width: 0; }
+  .msg-order-label {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--success);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 2px;
+  }
+  .msg-order-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 2px;
+  }
+  .msg-order-status {
+    font-size: 10px;
+    color: var(--gray-500);
+    font-weight: 600;
+  }
+
+  /* Reaction */
+  .msg-reaction {
+    position: absolute;
+    bottom: -8px;
+    left: 16px;
+    background: var(--white);
+    padding: 2px 6px;
+    border-radius: var(--r-full);
+    font-size: 11px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-100);
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    font-weight: 700;
+    z-index: 2;
+  }
+  .message.outgoing .msg-reaction { left: 16px; right: auto; }
+  .message.incoming .msg-reaction { right: 16px; left: auto; }
+
+  /* Typing bubble */
+  .typing-bubble {
+    background: var(--white);
+    padding: 12px 16px;
+    border-radius: 16px;
+    border-bottom-right-radius: 4px;
+    box-shadow: var(--shadow-xs);
+    border: 1px solid var(--gray-100);
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+  }
+  .typing-bubble span {
+    width: 6px; height: 6px;
+    background: var(--gray-400);
+    border-radius: 50%;
+    animation: typeDot 1.4s infinite;
+  }
+  .typing-bubble span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-bubble span:nth-child(3) { animation-delay: 0.4s; }
+
+  /* ══════════ QUICK REPLIES ══════════ */
+  .quick-replies {
+    position: absolute;
+    bottom: 76px;
+    left: 0;
+    right: 0;
+    padding: 8px 16px;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    z-index: 40;
+  }
+  .quick-replies::-webkit-scrollbar { display: none; }
+  .quick-reply {
+    flex-shrink: 0;
+    padding: 8px 14px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-full);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-700);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    box-shadow: var(--shadow-xs);
+  }
+  .quick-reply:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+  }
+
+  /* ══════════ INPUT BAR ══════════ */
+  .chat-input-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 10px 12px 14px;
+    background: rgba(255,255,255,0.98);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--gray-100);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 45;
+    box-shadow: 0 -4px 20px rgba(15,23,42,0.04);
+  }
+  .input-action-btn {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: var(--gray-100);
+    border: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .input-action-btn:hover { background: var(--primary-soft); }
+  .input-action-btn:hover svg { stroke: var(--primary); }
+  .input-action-btn svg {
+    width: 18px; height: 18px;
+    stroke: var(--gray-600);
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+    transition: stroke 0.2s;
+  }
+
+  .chat-input {
+    flex: 1;
+    background: var(--gray-100);
+    border-radius: var(--r-full);
+    padding: 4px 4px 4px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+  }
+  .chat-input input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--dark);
+    padding: 10px 0;
+    min-width: 0;
+  }
+  .chat-input input::placeholder {
+    color: var(--gray-400);
+    font-weight: 500;
+  }
+  .emoji-btn {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: transparent;
+    border: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .emoji-btn:hover { background: var(--white); }
+  .emoji-btn svg {
+    width: 18px; height: 18px;
+    stroke: var(--gray-500);
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  .send-btn {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.25s;
+    flex-shrink: 0;
+    box-shadow: 0 6px 16px rgba(15,118,110,0.3);
+  }
+  .send-btn:hover {
+    transform: scale(1.08);
+    box-shadow: 0 8px 22px rgba(15,118,110,0.4);
+  }
+  .send-btn:active { transform: scale(0.95); }
+  .send-btn svg {
+    width: 20px; height: 20px;
+    stroke: #fff;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* ══════════ EMPTY CHAT LIST ══════════ */
+  .empty-chats {
+    padding: 60px 40px;
+    text-align: center;
+  }
+  .empty-chats-icon {
+    width: 100px; height: 100px;
+    background: linear-gradient(135deg, var(--primary-soft), var(--primary-light));
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .empty-chats-icon svg {
+    width: 40px; height: 40px;
+    stroke: var(--primary);
+    stroke-width: 1.8;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .empty-chats-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 6px;
+  }
+  .empty-chats-text {
+    font-size: 13px;
+    color: var(--gray-500);
+    line-height: 1.7;
+    font-weight: 500;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>المحادثات — تواصل مباشر مع البائعين</h1>
+  <p>شاشتان · قائمة المحادثات + شات تفاعلي · جاهز للتنفيذ</p>
+</div>
+
+<div class="screens-container">
+
+  <!-- ═══════════ SCREEN 1: CHATS LIST ═══════════ -->
+  <div class="screen-wrapper">
+    <div class="phone">
+      <div class="status-bar">
+        <div class="time">9:41</div>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h3v-9H2v9zm5 0h3V9H7v13zm5 0h3V5h-3v17zm5 0h3V2h-3v20z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21l-12-18h24z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm5 4v8h1c.6 0 1-.4 1-1V9c0-.6-.4-1-1-1h-1z"/></svg>
+        </div>
+      </div>
+
+      <div class="screen">
+        <div class="app-bar">
+          <div class="app-title">المحادثات</div>
+          <div class="app-icon-btn">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+          </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-bar">
+          <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <div class="search-text">ابحث في المحادثات...</div>
+          <div class="clear-btn">
+            <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </div>
+        </div>
+
+        <!-- Filter Chips -->
+        <div class="filter-chips">
+          <div class="filter-chip active">
+            الكل
+            <span class="count-mini">5</span>
+          </div>
+          <div class="filter-chip">
+            غير مقروءة
+            <span class="count-mini">2</span>
+          </div>
+          <div class="filter-chip">
+            مثبتة
+          </div>
+          <div class="filter-chip">
+            طلبات
+          </div>
+        </div>
+
+        <!-- Chat List -->
+        <div class="chat-list">
+
+          <!-- Chat Item 1 - Unread -->
+          <div class="chat-item unread">
+            <div class="chat-avatar-wrap">
+              <div class="chat-avatar a1">ر</div>
+              <div class="online-dot"></div>
+            </div>
+            <div class="chat-content">
+              <div class="chat-top-row">
+                <div class="chat-name">
+                  متجر ريماس
+                  <div class="verified-mini"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+                </div>
+                <div class="chat-time">دقيقتين</div>
+              </div>
+              <div class="chat-bottom-row">
+                <div class="chat-preview">تمام، هشحن الطلب خلال ساعتين 👍</div>
+                <div class="chat-right-side">
+                  <div class="unread-badge">2</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chat Item 2 - Typing -->
+          <div class="chat-item unread">
+            <div class="chat-avatar-wrap">
+              <div class="chat-avatar a2">ع</div>
+              <div class="online-dot"></div>
+            </div>
+            <div class="chat-content">
+              <div class="chat-top-row">
+                <div class="chat-name">
+                  عيادة د. أحمد
+                  <div class="verified-mini"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+                </div>
+                <div class="chat-time">الآن</div>
+              </div>
+              <div class="chat-bottom-row">
+                <div class="chat-preview typing-text">
+                  يكتب الآن
+                  <span class="typing-dots"><span></span><span></span><span></span></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chat Item 3 -->
+          <div class="chat-item">
+            <div class="chat-avatar-wrap">
+              <div class="chat-avatar a3">م</div>
+              <div class="online-dot offline"></div>
+            </div>
+            <div class="chat-content">
+              <div class="chat-top-row">
+                <div class="chat-name">مطعم البيت الدمشقي</div>
+                <div class="chat-time">أمس</div>
+              </div>
+              <div class="chat-bottom-row">
+                <div class="chat-preview">
+                  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                  شكراً على طلبك، نتمنى لك وجبة سعيدة
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chat Item 4 - With Order -->
+          <div class="chat-item">
+            <div class="chat-avatar-wrap">
+              <div class="chat-avatar a4">ط</div>
+              <div class="online-dot offline"></div>
+            </div>
+            <div class="chat-content">
+              <div class="chat-top-row">
+                <div class="chat-name">طنط يمنى بتاعة اللعب</div>
+                <div class="chat-time">الثلاثاء</div>
+              </div>
+              <div class="chat-bottom-row">
+                <div class="chat-preview">
+                  <svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/></svg>
+                  المنتج وصل؟ نتمنى يعجبك ❤️
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chat Item 5 - Pinned -->
+          <div class="chat-item">
+            <div class="chat-avatar-wrap">
+              <div class="chat-avatar a5">ص</div>
+              <div class="online-dot"></div>
+            </div>
+            <div class="chat-content">
+              <div class="chat-top-row">
+                <div class="chat-name">صيدلية العزبي</div>
+                <div class="chat-time">الأحد</div>
+              </div>
+              <div class="chat-bottom-row">
+                <div class="chat-preview">الطلب جاهز للاستلام</div>
+                <div class="chat-right-side">
+                  <div class="pin-icon">
+                    <svg viewBox="0 0 24 24"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24z"/></svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    <div class="screen-badge">1 · قائمة المحادثات</div>
+  </div>
+
+  <!-- ═══════════ SCREEN 2: CHAT SCREEN ═══════════ -->
+  <div class="screen-wrapper">
+    <div class="phone">
+      <div class="status-bar">
+        <div class="time">9:41</div>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h3v-9H2v9zm5 0h3V9H7v13zm5 0h3V5h-3v17zm5 0h3V2h-3v20z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21l-12-18h24z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm5 4v8h1c.6 0 1-.4 1-1V9c0-.6-.4-1-1-1h-1z"/></svg>
+        </div>
+      </div>
+
+      <div class="screen" style="padding-top: 48px;">
+        <!-- Chat Hero -->
+        <div class="chat-hero">
+          <button class="back-btn">
+            <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <div class="chat-hero-avatar-wrap">
+            <div class="chat-hero-avatar">ر</div>
+            <div class="online-dot"></div>
+          </div>
+          <div class="chat-hero-info">
+            <div class="chat-hero-name">
+              متجر ريماس
+              <div class="verified-mini"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+            </div>
+            <div class="chat-hero-status">نشط الآن</div>
+          </div>
+          <div class="chat-hero-actions">
+            <button class="chat-hero-action">
+              <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </button>
+            <button class="chat-hero-action">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Chat Body -->
+        <div class="chat-body">
+          <div class="date-divider">
+            <span>اليوم</span>
+          </div>
+
+          <!-- Incoming -->
+          <div class="message incoming">
+            <div class="msg-avatar">ر</div>
+            <div class="msg-bubble">
+              أهلاً خالد! 👋 كيف أقدر أساعدك؟
+              <div class="msg-meta">
+                <span>10:24 ص</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Outgoing -->
+          <div class="message outgoing">
+            <div class="msg-bubble">
+              مرحباً! عايز أستفسر عن ساعة T800 Ultra
+              <div class="msg-meta">
+                <span>10:25 ص</span>
+                <span class="msg-check read">
+                  <svg viewBox="0 0 24 24">
+                    <polyline points="18 6 7 17 2 12"/>
+                    <polyline points="22 6 11 17 8 14"/>
+                  </svg>
+                </span>
+              </div>
+            </div>
+            <div class="msg-avatar hidden"></div>
+          </div>
+
+          <!-- Incoming with product card -->
+          <div class="message incoming">
+            <div class="msg-avatar">ر</div>
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <div class="msg-bubble" style="padding-bottom: 12px;">
+                أكيد! دي تفاصيل المنتج، متوفر حالياً بالأسود والفضي
+              </div>
+              <div class="msg-product-card">
+                <div class="msg-product-img">
+                  <svg viewBox="0 0 24 24">
+                    <rect x="6" y="2" width="12" height="20" rx="3"/>
+                    <rect x="9" y="4.5" width="6" height="15" rx="1.5"/>
+                  </svg>
+                </div>
+                <div class="msg-product-body">
+                  <div class="msg-product-name">ساعة T800 Ultra</div>
+                  <div class="msg-product-price">350 <span class="currency">ج.م</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Outgoing -->
+          <div class="message outgoing">
+            <div class="msg-bubble">
+              السعر نهائي ولا فيه خصم للأعضاء الذهبيين؟
+              <div class="msg-meta">
+                <span>10:28 ص</span>
+                <span class="msg-check read">
+                  <svg viewBox="0 0 24 24">
+                    <polyline points="18 6 7 17 2 12"/>
+                    <polyline points="22 6 11 17 8 14"/>
+                  </svg>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Incoming -->
+          <div class="message incoming">
+            <div class="msg-avatar">ر</div>
+            <div class="msg-bubble">
+              خصم 10% على كل المنتجات للأعضاء الذهبيين 🎉
+              <div class="msg-meta">
+                <span>10:29 ص</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Outgoing with order -->
+          <div class="message outgoing">
+            <div class="msg-bubble" style="padding-bottom: 12px;">
+              تمام، طلبت واحدة أسود 44mm
+              <div class="msg-order-card" style="margin-top: 10px;">
+                <div class="msg-order-icon">
+                  <svg viewBox="0 0 24 24">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </div>
+                <div class="msg-order-info">
+                  <div class="msg-order-label">تم الطلب</div>
+                  <div class="msg-order-name">طلب #12340</div>
+                  <div class="msg-order-status">350 ج.م · قيد التجهيز</div>
+                </div>
+              </div>
+              <div class="msg-meta" style="margin-top: 8px;">
+                <span>10:30 ص</span>
+                <span class="msg-check read">
+                  <svg viewBox="0 0 24 24">
+                    <polyline points="18 6 7 17 2 12"/>
+                    <polyline points="22 6 11 17 8 14"/>
+                  </svg>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Incoming with reaction -->
+          <div class="message incoming">
+            <div class="msg-avatar">ر</div>
+            <div class="msg-bubble" style="padding-bottom: 14px;">
+              تمام، هشحن الطلب خلال ساعتين 👍
+              <div class="msg-meta">
+                <span>10:31 ص</span>
+              </div>
+              <div class="msg-reaction">❤️ 1</div>
+            </div>
+          </div>
+
+          <!-- Typing -->
+          <div class="message incoming">
+            <div class="msg-avatar">ر</div>
+            <div class="typing-bubble">
+              <span></span><span></span><span></span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Quick Replies -->
+      <div class="quick-replies">
+        <div class="quick-reply">تمام، شكراً 🙏</div>
+        <div class="quick-reply">ممكن تفاصيل أكتر؟</div>
+        <div class="quick-reply">إمتى الشحن؟</div>
+        <div class="quick-reply">الضمان كام سنة؟</div>
+        <div class="quick-reply">شكراً على التعامل</div>
+      </div>
+
+      <!-- Input Bar -->
+      <div class="chat-input-bar">
+        <button class="input-action-btn">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+        <div class="chat-input">
+          <input type="text" placeholder="اكتب رسالة...">
+          <button class="emoji-btn">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+          </button>
+        </div>
+        <button class="send-btn">
+          <svg viewBox="0 0 24 24">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
+
+    </div>
+    <div class="screen-badge">2 · شاشة المحادثة</div>
+  </div>
+
+</div>
+
+</body>
+</html>

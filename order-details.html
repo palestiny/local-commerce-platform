@@ -1,0 +1,1908 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تفاصيل الطلب — معاينة احترافية</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'IBM Plex Sans Arabic', sans-serif; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --primary: #0F766E;
+    --primary-dark: #115E59;
+    --primary-light: #CCFBF1;
+    --primary-soft: #F0FDFA;
+    --accent: #F59E0B;
+    --accent-dark: #D97706;
+    --accent-light: #FEF3C7;
+    --danger: #EF4444;
+    --danger-light: #FEF2F2;
+    --success: #10B981;
+    --success-dark: #059669;
+    --success-light: #ECFDF5;
+    --purple: #8B5CF6;
+    --purple-light: #EDE9FE;
+    --blue: #2563EB;
+    --blue-light: #DBEAFE;
+    --pink: #EC4899;
+    --pink-light: #FCE7F3;
+    --cyan: #06B6D4;
+    --cyan-light: #CFFAFE;
+    --dark: #0F172A;
+    --gray-700: #374151;
+    --gray-600: #4B5563;
+    --gray-500: #6B7280;
+    --gray-400: #9CA3AF;
+    --gray-300: #D1D5DB;
+    --gray-200: #E5E7EB;
+    --gray-100: #F3F4F6;
+    --bg: #F8FAFC;
+    --white: #FFFFFF;
+
+    --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.07);
+    --shadow-lg: 0 10px 30px rgba(15, 23, 42, 0.09);
+    --shadow-xl: 0 20px 40px rgba(15, 23, 42, 0.14);
+    --shadow-primary: 0 8px 24px rgba(15, 118, 110, 0.32);
+
+    --r-sm: 10px;
+    --r-md: 14px;
+    --r-lg: 18px;
+    --r-xl: 24px;
+    --r-full: 999px;
+  }
+
+  body {
+    background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+    min-height: 100vh;
+    padding: 50px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+  }
+
+  .page-header { text-align: center; color: #fff; max-width: 900px; }
+  .page-header h1 {
+    font-size: 30px; font-weight: 700; margin-bottom: 8px;
+    background: linear-gradient(135deg, #fff, #94A3B8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .page-header p { color: #94A3B8; font-size: 14px; }
+
+  .screens-container {
+    display: flex; gap: 40px; flex-wrap: wrap; justify-content: center;
+  }
+  .screen-wrapper {
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+  }
+  .screen-badge {
+    background: rgba(37, 99, 235, 0.15);
+    color: #93C5FD;
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid rgba(147, 197, 253, 0.25);
+  }
+
+  .phone {
+    width: 375px;
+    height: 812px;
+    background: var(--bg);
+    border-radius: 44px;
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+      0 0 0 10px #0A0F1E,
+      0 0 0 12px #1E293B,
+      0 30px 60px rgba(0, 0, 0, 0.5),
+      0 0 80px rgba(37, 99, 235, 0.15);
+  }
+  .phone::before {
+    content: '';
+    position: absolute;
+    top: 10px; left: 50%;
+    transform: translateX(-50%);
+    width: 110px; height: 28px;
+    background: #0A0F1E;
+    border-radius: 999px;
+    z-index: 999;
+  }
+
+  .status-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 48px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 28px;
+    font-size: 13px; font-weight: 600;
+    z-index: 100;
+    pointer-events: none;
+    color: #fff;
+  }
+  .status-bar.dark { color: var(--dark); }
+  .status-bar .time { margin-top: 4px; }
+  .status-bar .status-icons { display: flex; gap: 5px; margin-top: 4px; align-items: center; }
+  .status-bar svg { width: 15px; height: 15px; }
+
+  .screen {
+    width: 100%; height: 100%;
+    overflow-y: auto; overflow-x: hidden;
+    scrollbar-width: none;
+    padding-bottom: 30px;
+  }
+  .screen::-webkit-scrollbar { display: none; }
+
+  /* ══════════ HERO HEADER ══════════ */
+  .hero-header {
+    padding: 8px 20px 24px;
+    background: linear-gradient(160deg, #1E293B 0%, #0F172A 100%);
+    border-radius: 0 0 32px 32px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .hero-header::before {
+    content: '';
+    position: absolute;
+    top: -80px; right: -60px;
+    width: 220px;
+    height: 220px;
+    background: radial-gradient(circle, rgba(15,118,110,0.25), transparent 70%);
+    border-radius: 50%;
+  }
+  .hero-header::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; left: -40px;
+    width: 180px;
+    height: 180px;
+    background: radial-gradient(circle, rgba(245,158,11,0.2), transparent 70%);
+    border-radius: 50%;
+  }
+
+  .app-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+    position: relative;
+    z-index: 2;
+  }
+  .back-btn {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.18);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .back-btn:hover { background: rgba(255,255,255,0.2); }
+  .back-btn svg {
+    width: 18px; height: 18px;
+    stroke: #fff;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .app-title-wrap {
+    flex: 1;
+    text-align: center;
+  }
+  .app-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.3px;
+    margin-bottom: 2px;
+  }
+  .app-subtitle {
+    font-size: 10.5px;
+    color: rgba(255,255,255,0.7);
+    font-weight: 600;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.5px;
+  }
+  .header-icon-btn {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.18);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .header-icon-btn:hover { background: rgba(255,255,255,0.2); }
+  .header-icon-btn svg {
+    width: 18px; height: 18px;
+    stroke: #fff;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* Status Card */
+  .status-card {
+    padding: 16px;
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(20px);
+    border-radius: var(--r-lg);
+    border: 1.5px solid rgba(255,255,255,0.15);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+    margin-bottom: 14px;
+  }
+  .status-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 8px 20px rgba(15,118,110,0.4);
+    position: relative;
+  }
+  .status-icon svg {
+    width: 26px;
+    height: 26px;
+    stroke: #fff;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .status-icon .pulse-dot {
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    width: 14px;
+    height: 14px;
+    background: var(--success);
+    border-radius: 50%;
+    border: 3px solid #1E293B;
+    box-shadow: 0 0 0 3px rgba(16,185,129,0.25);
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.15); opacity: 0.7; }
+  }
+
+  .status-info { flex: 1; min-width: 0; }
+  .status-label {
+    font-size: 10px;
+    color: rgba(255,255,255,0.65);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+  .status-value {
+    font-size: 17px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.4px;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .status-value .live-tag {
+    padding: 2px 7px;
+    background: var(--success);
+    color: #fff;
+    border-radius: var(--r-full);
+    font-size: 8.5px;
+    font-weight: 900;
+    letter-spacing: 0.3px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .status-value .live-tag::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    background: #fff;
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+  }
+  .status-time {
+    font-size: 11px;
+    color: rgba(255,255,255,0.75);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .status-time svg {
+    width: 11px;
+    height: 11px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Quick Stats Row */
+  .quick-stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    position: relative;
+    z-index: 2;
+  }
+  .qs-item {
+    padding: 10px 8px;
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.1);
+    text-align: center;
+  }
+  .qs-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    margin: 0 auto 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.12);
+  }
+  .qs-icon svg {
+    width: 13px;
+    height: 13px;
+    stroke: #5EEAD4;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .qs-value {
+    font-size: 12px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.3px;
+    margin-bottom: 2px;
+  }
+  .qs-label {
+    font-size: 8.5px;
+    color: rgba(255,255,255,0.65);
+    font-weight: 700;
+  }
+
+  /* ══════════ SECTION HEADER ══════════ */
+  .section-header {
+    padding: 0 20px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .section-title {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    letter-spacing: -0.2px;
+  }
+  .section-title::before {
+    content: '';
+    width: 3px;
+    height: 14px;
+    background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+    border-radius: 4px;
+  }
+  .section-link {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    padding: 5px 8px;
+    border-radius: 8px;
+    transition: background 0.2s;
+  }
+  .section-link:hover { background: var(--primary-soft); }
+  .section-link svg {
+    width: 11px;
+    height: 11px;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ══════════ TIMELINE TRACKING ══════════ */
+  .timeline-card {
+    margin: 0 20px 16px;
+    padding: 16px;
+    background: var(--white);
+    border-radius: var(--r-lg);
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-xs);
+  }
+  .timeline-track {
+    display: flex;
+    flex-direction: column;
+  }
+  .timeline-step {
+    display: flex;
+    gap: 14px;
+    position: relative;
+    padding-bottom: 20px;
+  }
+  .timeline-step:last-child { padding-bottom: 0; }
+  .timeline-step:last-child .timeline-line { display: none; }
+
+  .timeline-marker {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+    background: var(--white);
+    border: 2px solid var(--gray-200);
+    transition: all 0.3s;
+  }
+  .timeline-marker svg {
+    width: 14px;
+    height: 14px;
+    stroke: var(--gray-400);
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .timeline-step.completed .timeline-marker {
+    background: linear-gradient(135deg, var(--success), var(--success-dark));
+    border-color: var(--success);
+    box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+  }
+  .timeline-step.completed .timeline-marker svg { stroke: #fff; }
+  .timeline-step.active .timeline-marker {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-color: var(--primary);
+    box-shadow: 0 0 0 5px rgba(15,118,110,0.15), 0 4px 12px rgba(15,118,110,0.3);
+    animation: markerPulse 2s infinite;
+  }
+  @keyframes markerPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+  .timeline-step.active .timeline-marker svg { stroke: #fff; }
+
+  .timeline-line {
+    position: absolute;
+    top: 32px;
+    right: 15px;
+    width: 2px;
+    height: calc(100% - 32px);
+    background: var(--gray-200);
+    z-index: 1;
+  }
+  .timeline-step.completed .timeline-line {
+    background: var(--success);
+  }
+  .timeline-step.active .timeline-line {
+    background: linear-gradient(180deg, var(--primary), var(--gray-200));
+  }
+
+  .timeline-content {
+    flex: 1;
+    min-width: 0;
+    padding-top: 4px;
+  }
+  .timeline-title {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 3px;
+    letter-spacing: -0.2px;
+  }
+  .timeline-step:not(.completed):not(.active) .timeline-title {
+    color: var(--gray-500);
+  }
+  .timeline-desc {
+    font-size: 10.5px;
+    color: var(--gray-500);
+    font-weight: 600;
+    line-height: 1.5;
+  }
+  .timeline-time {
+    font-size: 10px;
+    color: var(--gray-400);
+    font-weight: 700;
+    margin-top: 3px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .timeline-time svg {
+    width: 9px;
+    height: 9px;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .timeline-step.completed .timeline-time { color: var(--success); }
+  .timeline-step.active .timeline-time { color: var(--primary); font-weight: 800; }
+
+  /* ══════════ ORDER ITEMS ══════════ */
+  .items-card {
+    margin: 0 20px 16px;
+    background: var(--white);
+    border-radius: var(--r-lg);
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-xs);
+    overflow: hidden;
+  }
+  .items-header {
+    padding: 12px 14px;
+    background: linear-gradient(135deg, var(--primary-soft), var(--primary-light));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .items-header-title {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--primary-dark);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .items-header-title svg {
+    width: 13px;
+    height: 13px;
+    stroke: var(--primary);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .items-header-count {
+    padding: 3px 9px;
+    background: var(--white);
+    border-radius: var(--r-full);
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--primary);
+  }
+
+  .item-row {
+    padding: 12px 14px;
+    display: flex;
+    gap: 12px;
+    border-bottom: 1px dashed var(--gray-100);
+    align-items: center;
+  }
+  .item-row:last-child { border-bottom: none; }
+  .item-thumb {
+    width: 54px;
+    height: 54px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .item-thumb.bg-1 { background: linear-gradient(135deg, #0F172A, #334155); }
+  .item-thumb.bg-2 { background: linear-gradient(135deg, #0F766E, #14B8A6); }
+  .item-thumb svg {
+    width: 24px;
+    height: 24px;
+    stroke: #fff;
+    stroke-width: 1.8;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .item-qty-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    background: var(--dark);
+    color: #fff;
+    border-radius: 10px;
+    font-size: 9.5px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--white);
+  }
+
+  .item-info { flex: 1; min-width: 0; }
+  .item-name {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 4px;
+    line-height: 1.3;
+    letter-spacing: -0.2px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .item-meta {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-bottom: 5px;
+  }
+  .item-tag {
+    padding: 2px 7px;
+    font-size: 9.5px;
+    font-weight: 700;
+    color: var(--gray-600);
+    background: var(--gray-100);
+    border-radius: 5px;
+  }
+  .item-tag.color {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .item-tag .color-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--dark);
+  }
+  .item-price-row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  .item-price {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: var(--primary);
+    letter-spacing: -0.3px;
+  }
+  .item-price .currency {
+    font-size: 9px;
+    color: var(--gray-500);
+    font-weight: 600;
+  }
+  .item-price-old {
+    font-size: 10.5px;
+    color: var(--gray-400);
+    text-decoration: line-through;
+    font-weight: 600;
+  }
+  .item-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .item-action-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    background: var(--gray-100);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .item-action-btn:hover {
+    background: var(--primary);
+  }
+  .item-action-btn:hover svg { stroke: #fff; }
+  .item-action-btn svg {
+    width: 13px;
+    height: 13px;
+    stroke: var(--gray-600);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: stroke 0.2s;
+  }
+
+  /* ══════════ PRICING BREAKDOWN ══════════ */
+  .pricing-card {
+    margin: 0 20px 16px;
+    background: var(--white);
+    border-radius: var(--r-md);
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-xs);
+    padding: 14px;
+  }
+  .price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 0;
+    font-size: 12px;
+  }
+  .price-row:not(:last-child):not(.total-row) {
+    border-bottom: 1px dashed var(--gray-100);
+  }
+  .price-label {
+    color: var(--gray-600);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .price-label svg {
+    width: 13px;
+    height: 13px;
+    stroke: var(--gray-400);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .price-value {
+    color: var(--dark);
+    font-weight: 700;
+  }
+  .price-value.discount {
+    color: var(--success);
+    font-weight: 800;
+  }
+  .price-value.discount::before {
+    content: '-';
+    margin-left: 2px;
+  }
+  .total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0 0;
+    margin-top: 6px;
+    border-top: 1.5px solid var(--gray-200);
+  }
+  .total-label {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .total-label svg {
+    width: 14px;
+    height: 14px;
+    stroke: var(--accent);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .total-value {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--primary);
+    letter-spacing: -0.6px;
+    display: flex;
+    align-items: baseline;
+    gap: 3px;
+  }
+  .total-value .currency {
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  /* Savings banner */
+  .savings-banner {
+    padding: 10px 12px;
+    background: linear-gradient(135deg, var(--success-light), #D1FAE5);
+    border-radius: 10px;
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .savings-banner svg {
+    width: 14px;
+    height: 14px;
+    stroke: var(--success);
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+  }
+  .savings-banner-text {
+    flex: 1;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--success-dark);
+  }
+
+  /* ══════════ DELIVERY ADDRESS ══════════ */
+  .address-card {
+    margin: 0 20px 16px;
+    padding: 14px;
+    background: var(--white);
+    border-radius: var(--r-md);
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-xs);
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .address-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: var(--primary-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .address-icon svg {
+    width: 18px;
+    height: 18px;
+    stroke: var(--primary);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .address-content { flex: 1; min-width: 0; }
+  .address-label {
+    font-size: 10px;
+    color: var(--gray-500);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .address-label .main-tag {
+    padding: 1px 6px;
+    background: var(--accent-light);
+    color: var(--accent-dark);
+    border-radius: 4px;
+    font-size: 8.5px;
+    font-weight: 900;
+    letter-spacing: 0.2px;
+  }
+  .address-value {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--dark);
+    line-height: 1.5;
+    margin-bottom: 6px;
+    letter-spacing: -0.2px;
+  }
+  .address-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10.5px;
+    color: var(--gray-500);
+    font-weight: 600;
+  }
+  .address-meta .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .address-meta .meta-item svg {
+    width: 10px;
+    height: 10px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .address-meta .sep {
+    width: 3px;
+    height: 3px;
+    background: var(--gray-300);
+    border-radius: 50%;
+  }
+
+  /* ══════════ DRIVER CARD ══════════ */
+  .driver-card {
+    margin: 0 20px 16px;
+    padding: 14px;
+    background: var(--white);
+    border-radius: var(--r-md);
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-xs);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .driver-avatar {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #F59E0B, #EA580C);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 800;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .driver-avatar .v-badge {
+    position: absolute;
+    bottom: -3px;
+    left: -3px;
+    width: 18px;
+    height: 18px;
+    background: var(--primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--white);
+  }
+  .driver-avatar .v-badge svg {
+    width: 8px;
+    height: 8px;
+    stroke: #fff;
+    stroke-width: 3.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .driver-info { flex: 1; min-width: 0; }
+  .driver-name {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 3px;
+    letter-spacing: -0.2px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .driver-name .role-tag {
+    padding: 1px 6px;
+    background: var(--primary-soft);
+    color: var(--primary);
+    border-radius: 4px;
+    font-size: 8.5px;
+    font-weight: 900;
+    letter-spacing: 0.2px;
+  }
+  .driver-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10.5px;
+    color: var(--gray-500);
+    font-weight: 600;
+  }
+  .driver-meta .rating {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    color: var(--dark);
+    font-weight: 800;
+  }
+  .driver-meta .rating svg {
+    width: 10px;
+    height: 10px;
+    fill: var(--accent);
+    stroke: none;
+  }
+  .driver-meta .sep {
+    width: 3px;
+    height: 3px;
+    background: var(--gray-300);
+    border-radius: 50%;
+  }
+  .driver-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .driver-action-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+  }
+  .driver-action-btn.call {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    box-shadow: 0 4px 10px rgba(15,118,110,0.3);
+  }
+  .driver-action-btn.chat {
+    background: var(--gray-100);
+  }
+  .driver-action-btn:hover { transform: translateY(-2px); }
+  .driver-action-btn.call svg { stroke: #fff; }
+  .driver-action-btn.chat svg { stroke: var(--gray-700); }
+  .driver-action-btn svg {
+    width: 15px;
+    height: 15px;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ══════════ PAYMENT METHOD ══════════ */
+  .payment-card {
+    margin: 0 20px 16px;
+    padding: 14px;
+    background: var(--white);
+    border-radius: var(--r-md);
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-xs);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .payment-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #1E40AF, #3B82F6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .payment-icon svg {
+    width: 20px;
+    height: 20px;
+    stroke: #fff;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .payment-info { flex: 1; min-width: 0; }
+  .payment-name {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 3px;
+    letter-spacing: -0.2px;
+  }
+  .payment-desc {
+    font-size: 10.5px;
+    color: var(--gray-500);
+    font-weight: 600;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.5px;
+  }
+  .payment-status {
+    padding: 4px 10px;
+    background: var(--success-light);
+    color: var(--success-dark);
+    border-radius: var(--r-full);
+    font-size: 9.5px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    letter-spacing: 0.2px;
+  }
+  .payment-status::before {
+    content: '✓';
+    font-weight: 900;
+    font-size: 10px;
+  }
+
+  /* ══════════ ACTION GRID ══════════ */
+  .action-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    padding: 0 20px 16px;
+  }
+  .action-btn {
+    padding: 14px 8px;
+    background: var(--white);
+    border: 1px solid var(--gray-100);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-xs);
+    cursor: pointer;
+    transition: all 0.25s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+    text-align: center;
+    font-family: inherit;
+  }
+  .action-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: transparent;
+  }
+  .action-btn.danger:hover {
+    border-color: var(--danger-light);
+  }
+  .action-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.25s;
+  }
+  .action-btn:hover .action-icon { transform: scale(1.1); }
+  .action-icon.teal { background: var(--primary-soft); }
+  .action-icon.teal svg { stroke: var(--primary); }
+  .action-icon.blue { background: var(--blue-light); }
+  .action-icon.blue svg { stroke: var(--blue); }
+  .action-icon.purple { background: var(--purple-light); }
+  .action-icon.purple svg { stroke: var(--purple); }
+  .action-icon.orange { background: var(--accent-light); }
+  .action-icon.orange svg { stroke: var(--accent-dark); }
+  .action-icon.pink { background: var(--pink-light); }
+  .action-icon.pink svg { stroke: var(--pink); }
+  .action-icon.danger { background: var(--danger-light); }
+  .action-icon.danger svg { stroke: var(--danger); }
+  .action-icon svg {
+    width: 17px;
+    height: 17px;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .action-label {
+    font-size: 10.5px;
+    font-weight: 800;
+    color: var(--dark);
+    letter-spacing: -0.2px;
+    line-height: 1.2;
+  }
+  .action-btn.danger .action-label { color: var(--danger); }
+
+  /* ══════════ HELP CARD ══════════ */
+  .help-card {
+    margin: 0 20px 16px;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--blue-light), #BFDBFE);
+    border: 1px solid #93C5FD;
+    border-radius: var(--r-md);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+  .help-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+  .help-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-xs);
+  }
+  .help-icon svg {
+    width: 18px;
+    height: 18px;
+    stroke: var(--blue);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .help-info { flex: 1; min-width: 0; }
+  .help-title {
+    font-size: 12px;
+    font-weight: 800;
+    color: #1E40AF;
+    margin-bottom: 2px;
+    letter-spacing: -0.2px;
+  }
+  .help-desc {
+    font-size: 10.5px;
+    color: #1E40AF;
+    font-weight: 600;
+    opacity: 0.85;
+    line-height: 1.4;
+  }
+  .help-arrow {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .help-card:hover .help-arrow { background: var(--blue); }
+  .help-arrow svg {
+    width: 11px;
+    height: 11px;
+    stroke: var(--blue);
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: stroke 0.2s;
+  }
+  .help-card:hover .help-arrow svg { stroke: #fff; }
+
+  /* ══════════ STICKY CTA ══════════ */
+  .sticky-bottom {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 12px 20px 20px;
+    background: linear-gradient(180deg, rgba(248,250,252,0) 0%, var(--bg) 30%, var(--bg) 100%);
+    z-index: 50;
+  }
+  .sticky-inner {
+    background: var(--white);
+    border-radius: var(--r-lg);
+    padding: 8px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    box-shadow: 0 8px 28px rgba(15,23,42,0.14), 0 2px 8px rgba(15,23,42,0.06);
+    border: 1px solid var(--gray-100);
+  }
+  .sticky-btn-track {
+    flex: 1;
+    padding: 13px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    box-shadow: var(--shadow-primary);
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+    letter-spacing: -0.2px;
+  }
+  .sticky-btn-track::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    bottom: 0;
+    width: 60px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+    animation: shine 3s infinite;
+  }
+  @keyframes shine {
+    0% { transform: translateX(-100%); }
+    60% { transform: translateX(500%); }
+    100% { transform: translateX(500%); }
+  }
+  .sticky-btn-track:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(15,118,110,0.4);
+  }
+  .sticky-btn-track svg {
+    width: 16px;
+    height: 16px;
+    stroke: #fff;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    position: relative;
+    z-index: 1;
+  }
+  .sticky-btn-track span { position: relative; z-index: 1; }
+
+  .sticky-btn-receipt {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.25s;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-sm);
+  }
+  .sticky-btn-receipt:hover {
+    border-color: var(--primary);
+  }
+  .sticky-btn-receipt:hover svg { stroke: var(--primary); }
+  .sticky-btn-receipt svg {
+    width: 20px;
+    height: 20px;
+    stroke: var(--gray-700);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: stroke 0.2s;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>تفاصيل الطلب — Order Details</h1>
+  <p>Hero داكن · Timeline حي · تفاصيل كاملة · 6 إجراءات</p>
+</div>
+
+<div class="screens-container">
+  <div class="screen-wrapper">
+    <div class="phone">
+      <div class="status-bar">
+        <div class="time">9:41</div>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h3v-9H2v9zm5 0h3V9H7v13zm5 0h3V5h-3v17zm5 0h3V2h-3v20z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21l-12-18h24z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm5 4v8h1c.6 0 1-.4 1-1V9c0-.6-.4-1-1-1h-1z"/></svg>
+        </div>
+      </div>
+
+      <div class="screen">
+
+        <!-- Hero Header -->
+        <div class="hero-header">
+
+          <!-- App Bar -->
+          <div class="app-bar">
+            <div class="back-btn">
+              <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            <div class="app-title-wrap">
+              <div class="app-title">تفاصيل الطلب</div>
+              <div class="app-subtitle">#ORD-2026-8874</div>
+            </div>
+            <button class="header-icon-btn">
+              <svg viewBox="0 0 24 24">
+                <circle cx="18" cy="5" r="3"/>
+                <circle cx="6" cy="12" r="3"/>
+                <circle cx="18" cy="19" r="3"/>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Status Card -->
+          <div class="status-card">
+            <div class="status-icon">
+              <svg viewBox="0 0 24 24">
+                <rect x="1" y="3" width="15" height="13"/>
+                <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+                <circle cx="5.5" cy="18.5" r="2.5"/>
+                <circle cx="18.5" cy="18.5" r="2.5"/>
+              </svg>
+              <div class="pulse-dot"></div>
+            </div>
+            <div class="status-info">
+              <div class="status-label">حالة الطلب</div>
+              <div class="status-value">
+                في الطريق إليك
+                <span class="live-tag">LIVE</span>
+              </div>
+              <div class="status-time">
+                <svg viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+                الوصول المتوقع خلال 18 دقيقة
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Stats Row -->
+          <div class="quick-stats-row">
+            <div class="qs-item">
+              <div class="qs-icon">
+                <svg viewBox="0 0 24 24">
+                  <rect x="1" y="3" width="15" height="13"/>
+                  <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+                </svg>
+              </div>
+              <div class="qs-value">18 دقيقة</div>
+              <div class="qs-label">الوقت المتبقي</div>
+            </div>
+            <div class="qs-item">
+              <div class="qs-icon">
+                <svg viewBox="0 0 24 24">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+              </div>
+              <div class="qs-value">1.2 كم</div>
+              <div class="qs-label">المسافة</div>
+            </div>
+            <div class="qs-item">
+              <div class="qs-icon">
+                <svg viewBox="0 0 24 24">
+                  <line x1="12" y1="1" x2="12" y2="23"/>
+                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+              </div>
+              <div class="qs-value">1,230 ج.م</div>
+              <div class="qs-label">الإجمالي</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="section-header">
+          <div class="section-title">حالة الطلب</div>
+          <div class="section-link">
+            تتبع مباشر
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </div>
+        </div>
+
+        <div class="timeline-card">
+          <div class="timeline-track">
+            <div class="timeline-step completed">
+              <div class="timeline-line"></div>
+              <div class="timeline-marker">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="timeline-content">
+                <div class="timeline-title">تم تأكيد الطلب</div>
+                <div class="timeline-desc">استلمنا طلبك وتم تأكيده بنجاح</div>
+                <div class="timeline-time">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  3:12 م
+                </div>
+              </div>
+            </div>
+
+            <div class="timeline-step completed">
+              <div class="timeline-line"></div>
+              <div class="timeline-marker">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="timeline-content">
+                <div class="timeline-title">جاري التجهيز</div>
+                <div class="timeline-desc">تم تجهيز منتجاتك بعناية</div>
+                <div class="timeline-time">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  3:18 م
+                </div>
+              </div>
+            </div>
+
+            <div class="timeline-step active">
+              <div class="timeline-line"></div>
+              <div class="timeline-marker">
+                <svg viewBox="0 0 24 24">
+                  <rect x="1" y="3" width="15" height="13"/>
+                  <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+                  <circle cx="5.5" cy="18.5" r="2.5"/>
+                  <circle cx="18.5" cy="18.5" r="2.5"/>
+                </svg>
+              </div>
+              <div class="timeline-content">
+                <div class="timeline-title">في الطريق إليك</div>
+                <div class="timeline-desc">المندوب أحمد في الطريق</div>
+                <div class="timeline-time">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  3:42 م · الآن
+                </div>
+              </div>
+            </div>
+
+            <div class="timeline-step">
+              <div class="timeline-line"></div>
+              <div class="timeline-marker">
+                <svg viewBox="0 0 24 24">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+              </div>
+              <div class="timeline-content">
+                <div class="timeline-title">قريب من موقعك</div>
+                <div class="timeline-desc">المندوب على بعد دقائق</div>
+                <div class="timeline-time">متوقع ~4:00 م</div>
+              </div>
+            </div>
+
+            <div class="timeline-step">
+              <div class="timeline-marker">
+                <svg viewBox="0 0 24 24">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                  <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+              </div>
+              <div class="timeline-content">
+                <div class="timeline-title">تم التسليم</div>
+                <div class="timeline-desc">استلم طلبك واستمتع به</div>
+                <div class="timeline-time">متوقع ~4:05 م</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Order Items -->
+        <div class="section-header">
+          <div class="section-title">منتجات الطلب</div>
+        </div>
+
+        <div class="items-card">
+          <div class="items-header">
+            <div class="items-header-title">
+              <svg viewBox="0 0 24 24">
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                <line x1="3" y1="6" x2="21" y2="6"/>
+              </svg>
+              #ORD-2026-8874
+            </div>
+            <div class="items-header-count">2 منتجات</div>
+          </div>
+
+          <div class="item-row">
+            <div class="item-thumb bg-1">
+              <svg viewBox="0 0 24 24">
+                <rect x="6" y="2" width="12" height="20" rx="3"/>
+                <rect x="9" y="4.5" width="6" height="15" rx="1.5"/>
+              </svg>
+              <div class="item-qty-badge">×1</div>
+            </div>
+            <div class="item-info">
+              <div class="item-name">ساعة T800 Ultra — تصميم عصري</div>
+              <div class="item-meta">
+                <span class="item-tag color">
+                  <span class="color-dot"></span>
+                  أسود
+                </span>
+                <span class="item-tag">44mm</span>
+              </div>
+              <div class="item-price-row">
+                <span class="item-price">350 <span class="currency">ج.م</span></span>
+                <span class="item-price-old">600 ج.م</span>
+              </div>
+            </div>
+            <div class="item-actions">
+              <button class="item-action-btn">
+                <svg viewBox="0 0 24 24">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="item-row">
+            <div class="item-thumb bg-2">
+              <svg viewBox="0 0 24 24">
+                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                <line x1="2" y1="10" x2="22" y2="10"/>
+              </svg>
+              <div class="item-qty-badge">×1</div>
+            </div>
+            <div class="item-info">
+              <div class="item-name">إيربودز برو 2 لاسلكية</div>
+              <div class="item-meta">
+                <span class="item-tag">أبيض</span>
+              </div>
+              <div class="item-price-row">
+                <span class="item-price">850 <span class="currency">ج.م</span></span>
+              </div>
+            </div>
+            <div class="item-actions">
+              <button class="item-action-btn">
+                <svg viewBox="0 0 24 24">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pricing Breakdown -->
+        <div class="section-header">
+          <div class="section-title">تفاصيل الدفع</div>
+        </div>
+
+        <div class="pricing-card">
+          <div class="price-row">
+            <div class="price-label">
+              <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              المجموع الفرعي
+            </div>
+            <div class="price-value">1,200 ج.م</div>
+          </div>
+          <div class="price-row">
+            <div class="price-label">
+              <svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/></svg>
+              الشحن السريع
+            </div>
+            <div class="price-value">80 ج.م</div>
+          </div>
+          <div class="price-row">
+            <div class="price-label">
+              <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.83z"/></svg>
+              كوبون SAVE50
+            </div>
+            <div class="price-value discount">50 ج.م</div>
+          </div>
+          <div class="total-row">
+            <div class="total-label">
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              الإجمالي
+            </div>
+            <div class="total-value">1,230 <span class="currency">ج.م</span></div>
+          </div>
+
+          <div class="savings-banner">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+            <div class="savings-banner-text">وفّرت 300 ج.م في هذا الطلب!</div>
+          </div>
+        </div>
+
+        <!-- Delivery Address -->
+        <div class="section-header">
+          <div class="section-title">عنوان التوصيل</div>
+        </div>
+
+        <div class="address-card">
+          <div class="address-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+          </div>
+          <div class="address-content">
+            <div class="address-label">
+              المنزل
+              <span class="main-tag">الرئيسي</span>
+            </div>
+            <div class="address-value">دكرنس — شارع المستشفى — برج رضا سامي — الدور الثالث</div>
+            <div class="address-meta">
+              <span class="meta-item">
+                <svg viewBox="0 0 24 24">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                </svg>
+                01002272549
+              </span>
+              <span class="sep"></span>
+              <span class="meta-item">أحمد محمود</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Driver Card -->
+        <div class="section-header">
+          <div class="section-title">المندوب</div>
+        </div>
+
+        <div class="driver-card">
+          <div class="driver-avatar">
+            أ
+            <div class="v-badge">
+              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+          </div>
+          <div class="driver-info">
+            <div class="driver-name">
+              أحمد محمود
+              <span class="role-tag">مندوب</span>
+            </div>
+            <div class="driver-meta">
+              <span class="rating">
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                4.9
+              </span>
+              <span class="sep"></span>
+              <span>342 توصيلة</span>
+            </div>
+          </div>
+          <div class="driver-actions">
+            <button class="driver-action-btn call">
+              <svg viewBox="0 0 24 24">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+            </button>
+            <button class="driver-action-btn chat">
+              <svg viewBox="0 0 24 24">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Payment Method -->
+        <div class="section-header">
+          <div class="section-title">طريقة الدفع</div>
+        </div>
+
+        <div class="payment-card">
+          <div class="payment-icon">
+            <svg viewBox="0 0 24 24">
+              <rect x="2" y="6" width="20" height="14" rx="2"/>
+              <line x1="2" y1="10" x2="22" y2="10"/>
+            </svg>
+          </div>
+          <div class="payment-info">
+            <div class="payment-name">بطاقة فيزا</div>
+            <div class="payment-desc">•••• •••• •••• 4321</div>
+          </div>
+          <div class="payment-status">مدفوع</div>
+        </div>
+
+        <!-- Action Grid -->
+        <div class="section-header">
+          <div class="section-title">إجراءات سريعة</div>
+        </div>
+
+        <div class="action-grid">
+          <button class="action-btn">
+            <div class="action-icon teal">
+              <svg viewBox="0 0 24 24">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+            </div>
+            <div class="action-label">تتبع مباشر</div>
+          </button>
+
+          <button class="action-btn">
+            <div class="action-icon blue">
+              <svg viewBox="0 0 24 24">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+            </div>
+            <div class="action-label">تواصل معنا</div>
+          </button>
+
+          <button class="action-btn">
+            <div class="action-icon purple">
+              <svg viewBox="0 0 24 24">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+              </svg>
+            </div>
+            <div class="action-label">الفاتورة</div>
+          </button>
+
+          <button class="action-btn">
+            <div class="action-icon orange">
+              <svg viewBox="0 0 24 24">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </div>
+            <div class="action-label">اطلب تاني</div>
+          </button>
+
+          <button class="action-btn">
+            <div class="action-icon pink">
+              <svg viewBox="0 0 24 24">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+            </div>
+            <div class="action-label">قيّم الطلب</div>
+          </button>
+
+          <button class="action-btn danger">
+            <div class="action-icon danger">
+              <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="15" y1="9" x2="9" y2="15"/>
+                <line x1="9" y1="9" x2="15" y2="15"/>
+              </svg>
+            </div>
+            <div class="action-label">إلغاء الطلب</div>
+          </button>
+        </div>
+
+        <!-- Help Card -->
+        <div class="help-card">
+          <div class="help-icon">
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </div>
+          <div class="help-info">
+            <div class="help-title">عندك مشكلة في الطلب؟</div>
+            <div class="help-desc">تواصل مع فريق الدعم خلال دقائق</div>
+          </div>
+          <div class="help-arrow">
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Sticky Bottom -->
+      <div class="sticky-bottom">
+        <div class="sticky-inner">
+          <button class="sticky-btn-track">
+            <svg viewBox="0 0 24 24">
+              <rect x="1" y="3" width="15" height="13"/>
+              <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+              <circle cx="5.5" cy="18.5" r="2.5"/>
+              <circle cx="18.5" cy="18.5" r="2.5"/>
+            </svg>
+            <span>تتبع الطلب مباشرة</span>
+          </button>
+          <button class="sticky-btn-receipt">
+            <svg viewBox="0 0 24 24">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+    </div>
+    <div class="screen-badge">تفاصيل الطلب</div>
+  </div>
+</div>
+
+</body>
+</html>

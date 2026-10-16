@@ -1,0 +1,1844 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>صفحة العروض — معاينة احترافية</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'IBM Plex Sans Arabic', sans-serif; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --primary: #0F766E;
+    --primary-dark: #115E59;
+    --primary-light: #CCFBF1;
+    --primary-soft: #F0FDFA;
+    --accent: #F59E0B;
+    --accent-dark: #D97706;
+    --accent-light: #FEF3C7;
+    --danger: #EF4444;
+    --danger-dark: #DC2626;
+    --danger-light: #FEF2F2;
+    --success: #10B981;
+    --success-light: #ECFDF5;
+    --purple: #8B5CF6;
+    --purple-light: #EDE9FE;
+    --blue: #2563EB;
+    --blue-light: #DBEAFE;
+    --pink: #EC4899;
+    --pink-light: #FCE7F3;
+    --dark: #0F172A;
+    --gray-700: #374151;
+    --gray-600: #4B5563;
+    --gray-500: #6B7280;
+    --gray-400: #9CA3AF;
+    --gray-300: #D1D5DB;
+    --gray-200: #E5E7EB;
+    --gray-100: #F3F4F6;
+    --bg: #F8FAFC;
+    --white: #FFFFFF;
+
+    --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.07);
+    --shadow-lg: 0 10px 30px rgba(15, 23, 42, 0.09);
+    --shadow-xl: 0 20px 40px rgba(15, 23, 42, 0.14);
+    --shadow-primary: 0 8px 24px rgba(15, 118, 110, 0.32);
+    --shadow-danger: 0 8px 24px rgba(239, 68, 68, 0.32);
+
+    --r-sm: 10px;
+    --r-md: 14px;
+    --r-lg: 18px;
+    --r-xl: 24px;
+    --r-full: 999px;
+  }
+
+  body {
+    background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+    min-height: 100vh;
+    padding: 50px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+  }
+
+  .page-header { text-align: center; color: #fff; max-width: 900px; }
+  .page-header h1 {
+    font-size: 30px; font-weight: 700; margin-bottom: 8px;
+    background: linear-gradient(135deg, #fff, #94A3B8);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .page-header p { color: #94A3B8; font-size: 14px; }
+
+  .screens-container {
+    display: flex; gap: 40px; flex-wrap: wrap; justify-content: center;
+  }
+  .screen-wrapper {
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+  }
+  .screen-badge {
+    background: rgba(15, 118, 110, 0.15);
+    color: #5EEAD4;
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid rgba(94, 234, 212, 0.25);
+  }
+
+  .phone {
+    width: 375px;
+    height: 812px;
+    background: var(--bg);
+    border-radius: 44px;
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+      0 0 0 10px #0A0F1E,
+      0 0 0 12px #1E293B,
+      0 30px 60px rgba(0, 0, 0, 0.5),
+      0 0 80px rgba(15, 118, 110, 0.15);
+  }
+  .phone::before {
+    content: '';
+    position: absolute;
+    top: 10px; left: 50%;
+    transform: translateX(-50%);
+    width: 110px; height: 28px;
+    background: #0A0F1E;
+    border-radius: 999px;
+    z-index: 999;
+  }
+
+  .status-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 48px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 28px;
+    font-size: 13px; font-weight: 600;
+    z-index: 100;
+    pointer-events: none;
+    color: #fff;
+  }
+  .status-bar.dark { color: var(--dark); }
+  .status-bar .time { margin-top: 4px; }
+  .status-bar .status-icons { display: flex; gap: 5px; margin-top: 4px; align-items: center; }
+  .status-bar svg { width: 15px; height: 15px; }
+
+  .screen {
+    width: 100%; height: 100%;
+    overflow-y: auto; overflow-x: hidden;
+    scrollbar-width: none;
+    padding-bottom: 30px;
+  }
+  .screen::-webkit-scrollbar { display: none; }
+
+  /* ══════════ APP BAR ══════════ */
+  .app-bar {
+    padding: 8px 20px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+  .back-btn {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .back-btn:hover { background: var(--gray-100); }
+  .back-btn svg {
+    width: 18px; height: 18px;
+    stroke: var(--gray-700);
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .app-title-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .app-title {
+    font-size: 19px;
+    font-weight: 800;
+    color: var(--dark);
+    letter-spacing: -0.4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .app-title .fire-icon {
+    animation: fireWiggle 1.5s ease-in-out infinite;
+  }
+  @keyframes fireWiggle {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(-10deg) scale(1.05); }
+  }
+  .app-badge {
+    padding: 3px 9px;
+    background: var(--danger);
+    color: #fff;
+    border-radius: var(--r-full);
+    font-size: 10px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .app-badge::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    background: #fff;
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .search-btn {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .search-btn:hover { background: var(--gray-100); }
+  .search-btn svg {
+    width: 18px; height: 18px;
+    stroke: var(--gray-700);
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* ══════════ HERO BANNER ══════════ */
+  .hero-banner {
+    margin: 0 20px 16px;
+    padding: 22px 20px;
+    background: linear-gradient(135deg, #DC2626 0%, #991B1B 60%, #7F1D1D 100%);
+    border-radius: var(--r-xl);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 12px 32px rgba(220,38,38,0.35);
+  }
+  .hero-banner::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -40px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(255,255,255,0.18), transparent 70%);
+    border-radius: 50%;
+  }
+  .hero-banner::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; left: -40px;
+    width: 180px; height: 180px;
+    background: radial-gradient(circle, rgba(245,158,11,0.3), transparent 70%);
+    border-radius: 50%;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 11px;
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(10px);
+    border-radius: var(--r-full);
+    font-size: 10px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 10px;
+    position: relative;
+    z-index: 2;
+    border: 1px solid rgba(255,255,255,0.25);
+  }
+  .hero-badge svg {
+    width: 11px;
+    height: 11px;
+    fill: currentColor;
+    stroke: none;
+    animation: fireWiggle 1.5s ease-in-out infinite;
+  }
+
+  .hero-title {
+    font-size: 24px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.25;
+    letter-spacing: -0.6px;
+    margin-bottom: 8px;
+    position: relative;
+    z-index: 2;
+  }
+  .hero-title .highlight {
+    color: #FDE68A;
+    position: relative;
+  }
+  .hero-subtitle {
+    font-size: 12px;
+    color: rgba(255,255,255,0.9);
+    font-weight: 600;
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 2;
+    line-height: 1.5;
+  }
+
+  /* Countdown Timer */
+  .countdown-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: rgba(0,0,0,0.25);
+    backdrop-filter: blur(10px);
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.15);
+    position: relative;
+    z-index: 2;
+    margin-bottom: 14px;
+  }
+  .countdown-label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.85);
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .countdown-timer {
+    display: flex;
+    gap: 4px;
+    margin-right: auto;
+  }
+  .timer-block {
+    min-width: 32px;
+    padding: 5px 4px;
+    background: #fff;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+  }
+  .timer-num {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--danger-dark);
+    line-height: 1;
+    letter-spacing: -0.5px;
+  }
+  .timer-label {
+    font-size: 7px;
+    font-weight: 700;
+    color: var(--gray-500);
+    margin-top: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .timer-sep {
+    font-size: 16px;
+    font-weight: 800;
+    color: #fff;
+    margin-top: -6px;
+  }
+
+  /* Hero CTA */
+  .hero-cta {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+  }
+  .hero-cta-btn {
+    flex: 1;
+    padding: 12px 16px;
+    background: var(--white);
+    color: var(--danger-dark);
+    border: none;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.25s;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+  .hero-cta-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+  }
+  .hero-cta-btn svg {
+    width: 15px;
+    height: 15px;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* ══════════ STATS STRIP ══════════ */
+  .stats-strip {
+    margin: 0 20px 16px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .stats-item {
+    background: var(--white);
+    border-radius: var(--r-md);
+    padding: 12px 8px;
+    text-align: center;
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-xs);
+    transition: all 0.25s;
+  }
+  .stats-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+  .stats-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    margin: 0 auto 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .stats-icon svg {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .stats-icon.red { background: var(--danger-light); }
+  .stats-icon.red svg { stroke: var(--danger); }
+  .stats-icon.orange { background: var(--accent-light); }
+  .stats-icon.orange svg { stroke: var(--accent-dark); }
+  .stats-icon.green { background: var(--success-light); }
+  .stats-icon.green svg { stroke: var(--success); }
+
+  .stats-num {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--dark);
+    letter-spacing: -0.4px;
+    margin-bottom: 1px;
+  }
+  .stats-label {
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--gray-500);
+  }
+
+  /* ══════════ FILTER CHIPS ══════════ */
+  .filter-chips {
+    display: flex;
+    gap: 8px;
+    padding: 0 20px 14px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .filter-chips::-webkit-scrollbar { display: none; }
+  .filter-chip {
+    flex-shrink: 0;
+    padding: 8px 14px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-full);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-700);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+  .filter-chip:hover {
+    border-color: var(--primary-light);
+    color: var(--primary);
+  }
+  .filter-chip.active {
+    background: var(--dark);
+    border-color: var(--dark);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(15,23,42,0.25);
+  }
+  .filter-chip svg {
+    width: 12px;
+    height: 12px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .filter-chip .chip-count {
+    padding: 1px 6px;
+    background: var(--gray-100);
+    border-radius: 6px;
+    font-size: 9px;
+    font-weight: 800;
+    color: var(--gray-600);
+  }
+  .filter-chip.active .chip-count {
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+  }
+
+  /* ══════════ FLASH DEALS ══════════ */
+  .section-header {
+    padding: 8px 20px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .section-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .section-title-icon.flash {
+    background: linear-gradient(135deg, var(--danger), var(--danger-dark));
+    box-shadow: 0 4px 12px rgba(239,68,68,0.3);
+    animation: flashPulse 1.5s ease-in-out infinite;
+  }
+  @keyframes flashPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+  .section-title-icon.flash svg {
+    width: 15px;
+    height: 15px;
+    fill: #fff;
+    stroke: none;
+  }
+  .section-title-icon.premium {
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    box-shadow: 0 4px 12px rgba(245,158,11,0.3);
+  }
+  .section-title-icon.premium svg {
+    width: 15px;
+    height: 15px;
+    fill: #fff;
+    stroke: none;
+  }
+  .section-title-icon.recent {
+    background: var(--primary-soft);
+  }
+  .section-title-icon.recent svg {
+    width: 15px;
+    height: 15px;
+    stroke: var(--primary);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .section-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--dark);
+    letter-spacing: -0.3px;
+  }
+  .section-subtitle {
+    font-size: 10px;
+    color: var(--gray-500);
+    font-weight: 600;
+    margin-top: 1px;
+  }
+  .section-link {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    padding: 5px 8px;
+    border-radius: 8px;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .section-link:hover { background: var(--primary-soft); }
+  .section-link svg {
+    width: 11px;
+    height: 11px;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Flash Deals Horizontal Scroll */
+  .flash-deals-scroll {
+    display: flex;
+    gap: 10px;
+    padding: 0 20px 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    scroll-snap-type: x mandatory;
+  }
+  .flash-deals-scroll::-webkit-scrollbar { display: none; }
+
+  .flash-card {
+    flex-shrink: 0;
+    width: 180px;
+    background: var(--white);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--gray-100);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    scroll-snap-align: start;
+    position: relative;
+  }
+  .flash-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+  }
+  .flash-image {
+    height: 110px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .flash-image.bg-1 { background: linear-gradient(135deg, #0F172A, #334155); }
+  .flash-image.bg-2 { background: linear-gradient(135deg, #0F766E, #14B8A6); }
+  .flash-image.bg-3 { background: linear-gradient(135deg, #8B5CF6, #6D28D9); }
+  .flash-image.bg-4 { background: linear-gradient(135deg, #EC4899, #BE185D); }
+  .flash-image svg {
+    width: 40px;
+    height: 40px;
+    stroke: rgba(255,255,255,0.95);
+    stroke-width: 1.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
+  }
+  .flash-image::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.4) 100%);
+  }
+
+  .flash-discount {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 6px 10px;
+    background: linear-gradient(135deg, var(--danger), var(--danger-dark));
+    color: #fff;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 800;
+    z-index: 2;
+    box-shadow: 0 4px 12px rgba(239,68,68,0.4);
+    letter-spacing: -0.3px;
+  }
+  .flash-discount .percent {
+    font-size: 10px;
+    margin-right: 1px;
+  }
+  .flash-timer {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    left: 8px;
+    padding: 4px 8px;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(8px);
+    border-radius: var(--r-full);
+    font-size: 9px;
+    font-weight: 800;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    z-index: 2;
+  }
+  .flash-timer svg {
+    width: 10px;
+    height: 10px;
+    stroke: #FDE68A;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .flash-body { padding: 10px 12px 12px; }
+  .flash-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 5px;
+    line-height: 1.35;
+    letter-spacing: -0.2px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 32px;
+  }
+  .flash-store {
+    font-size: 10px;
+    color: var(--gray-500);
+    font-weight: 600;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .flash-store svg {
+    width: 10px;
+    height: 10px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+  }
+  .flash-price-row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  .flash-price {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--danger-dark);
+    letter-spacing: -0.5px;
+  }
+  .flash-price .currency {
+    font-size: 9px;
+    color: var(--gray-500);
+    font-weight: 600;
+  }
+  .flash-price-old {
+    font-size: 11px;
+    color: var(--gray-400);
+    text-decoration: line-through;
+    font-weight: 600;
+  }
+
+  /* ══════════ FEATURED OFFERS ══════════ */
+  .offers-list {
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .offer-card {
+    background: var(--white);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--gray-100);
+    transition: all 0.3s;
+    position: relative;
+  }
+  .offer-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+    border-color: transparent;
+  }
+  .offer-card.featured {
+    border: 1.5px solid var(--accent-light);
+    box-shadow: 0 4px 16px rgba(245,158,11,0.12);
+  }
+
+  /* Featured Ribbon */
+  .featured-ribbon {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    padding: 5px 11px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    color: #fff;
+    border-radius: var(--r-full);
+    font-size: 10px;
+    font-weight: 800;
+    z-index: 3;
+    box-shadow: 0 4px 12px rgba(245,158,11,0.4);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .featured-ribbon svg {
+    width: 10px;
+    height: 10px;
+    fill: #fff;
+    stroke: none;
+  }
+
+  /* Offer Header */
+  .offer-header {
+    display: flex;
+    gap: 12px;
+    padding: 14px;
+    align-items: center;
+  }
+  .offer-thumb {
+    width: 90px;
+    height: 90px;
+    border-radius: 16px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .offer-thumb.bg-1 { background: linear-gradient(135deg, #0F172A, #334155); }
+  .offer-thumb.bg-2 { background: linear-gradient(135deg, #0F766E, #14B8A6); }
+  .offer-thumb.bg-3 { background: linear-gradient(135deg, #F59E0B, #EA580C); }
+  .offer-thumb.bg-4 { background: linear-gradient(135deg, #8B5CF6, #6D28D9); }
+  .offer-thumb svg {
+    width: 36px;
+    height: 36px;
+    stroke: rgba(255,255,255,0.9);
+    stroke-width: 1.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 3px 8px rgba(0,0,0,0.25));
+  }
+  .thumb-badge {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    padding: 3px 7px;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(8px);
+    border-radius: 6px;
+    font-size: 9px;
+    font-weight: 800;
+    color: var(--danger);
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+  .thumb-badge svg {
+    width: 8px;
+    height: 8px;
+    stroke: currentColor;
+    stroke-width: 3;
+    fill: none;
+  }
+
+  .offer-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .offer-type {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 9px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 5px;
+    margin-bottom: 5px;
+    letter-spacing: 0.3px;
+  }
+  .offer-type.discount {
+    color: var(--danger);
+    background: var(--danger-light);
+  }
+  .offer-type.bogo {
+    color: var(--purple);
+    background: var(--purple-light);
+  }
+  .offer-type.free {
+    color: var(--success);
+    background: var(--success-light);
+  }
+  .offer-type.flash {
+    color: var(--accent-dark);
+    background: var(--accent-light);
+  }
+
+  .offer-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 5px;
+    line-height: 1.4;
+    letter-spacing: -0.2px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .offer-store {
+    font-size: 11px;
+    color: var(--gray-500);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 4px;
+  }
+  .offer-store svg {
+    width: 11px;
+    height: 11px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+  }
+  .offer-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: var(--gray-500);
+    font-weight: 600;
+  }
+  .offer-meta .views {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .offer-meta .views svg {
+    width: 10px;
+    height: 10px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .offer-meta .sep {
+    width: 3px;
+    height: 3px;
+    background: var(--gray-300);
+    border-radius: 50%;
+  }
+
+  /* Discount Display */
+  .offer-discount-badge {
+    width: 70px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .offer-discount-value {
+    font-size: 26px;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--danger), var(--danger-dark));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -1.5px;
+    line-height: 1;
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+  }
+  .offer-discount-value .percent {
+    font-size: 14px;
+    font-weight: 800;
+  }
+  .offer-discount-label {
+    font-size: 9px;
+    font-weight: 800;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-top: 2px;
+  }
+
+  /* Offer Footer */
+  .offer-footer {
+    padding: 10px 14px 12px;
+    border-top: 1px dashed var(--gray-100);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .offer-expiry {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--gray-600);
+  }
+  .offer-expiry svg {
+    width: 13px;
+    height: 13px;
+    stroke: var(--danger);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .offer-expiry.urgent {
+    color: var(--danger-dark);
+  }
+  .offer-expiry.urgent svg {
+    animation: pulse 1.5s infinite;
+  }
+
+  .coupon-btn {
+    padding: 8px 12px;
+    background: var(--primary-soft);
+    border: 1.5px dashed var(--primary);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .coupon-btn:hover {
+    background: var(--primary);
+    color: #fff;
+    border-style: solid;
+  }
+  .coupon-btn:hover svg { stroke: #fff; }
+  .coupon-btn svg {
+    width: 12px;
+    height: 12px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: stroke 0.2s;
+  }
+  .coupon-code {
+    font-family: 'Courier New', monospace;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+  }
+
+  /* Progress Bar (usage) */
+  .offer-progress {
+    padding: 0 14px 12px;
+  }
+  .progress-labels {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .progress-used {
+    color: var(--danger);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .progress-used::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    background: var(--danger);
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+  }
+  .progress-total {
+    color: var(--gray-500);
+  }
+  .progress-track {
+    height: 5px;
+    background: var(--gray-100);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s;
+  }
+  .progress-fill.danger {
+    background: linear-gradient(90deg, var(--danger), var(--danger-dark));
+  }
+  .progress-fill.orange {
+    background: linear-gradient(90deg, var(--accent), var(--accent-dark));
+  }
+  .progress-fill.green {
+    background: linear-gradient(90deg, var(--success), #059669);
+  }
+
+  /* ══════════ RECENT OFFERS ══════════ */
+  .recent-grid {
+    padding: 0 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .recent-card {
+    background: var(--white);
+    border-radius: var(--r-md);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: var(--shadow-xs);
+    border: 1px solid var(--gray-100);
+    position: relative;
+  }
+  .recent-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: transparent;
+  }
+  .recent-image {
+    aspect-ratio: 1.2;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .recent-image.bg-1 { background: linear-gradient(135deg, #3B82F6, #1D4ED8); }
+  .recent-image.bg-2 { background: linear-gradient(135deg, #EC4899, #BE185D); }
+  .recent-image.bg-3 { background: linear-gradient(135deg, #F59E0B, #EA580C); }
+  .recent-image.bg-4 { background: linear-gradient(135deg, #10B981, #059669); }
+  .recent-image svg {
+    width: 40px;
+    height: 40px;
+    stroke: rgba(255,255,255,0.9);
+    stroke-width: 1.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 3px 8px rgba(0,0,0,0.25));
+  }
+  .recent-discount {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 4px 9px;
+    background: rgba(15,23,42,0.85);
+    backdrop-filter: blur(8px);
+    color: #fff;
+    border-radius: 7px;
+    font-size: 11px;
+    font-weight: 800;
+    z-index: 2;
+    letter-spacing: -0.3px;
+  }
+  .recent-body {
+    padding: 10px 11px 12px;
+  }
+  .recent-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 4px;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 32px;
+  }
+  .recent-store {
+    font-size: 10px;
+    color: var(--gray-500);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .recent-store svg {
+    width: 10px;
+    height: 10px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+  }
+  .recent-expiry {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--danger);
+    background: var(--danger-light);
+    padding: 3px 7px;
+    border-radius: 5px;
+    width: fit-content;
+  }
+  .recent-expiry svg {
+    width: 10px;
+    height: 10px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ══════════ COUPON COPY TOAST ══════════ */
+  .copy-toast {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    padding: 14px 20px;
+    background: var(--dark);
+    color: #fff;
+    border-radius: var(--r-lg);
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s;
+    white-space: nowrap;
+  }
+  .copy-toast.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  .copy-toast svg {
+    width: 18px;
+    height: 18px;
+    stroke: var(--success);
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>صفحة العروض — مركز التوفير</h1>
+  <p>تصميم محفّز · عروض حية · جاهز للتنفيذ</p>
+</div>
+
+<div class="screens-container">
+  <div class="screen-wrapper">
+    <div class="phone">
+      <div class="status-bar">
+        <div class="time">9:41</div>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h3v-9H2v9zm5 0h3V9H7v13zm5 0h3V5h-3v17zm5 0h3V2h-3v20z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21l-12-18h24z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm5 4v8h1c.6 0 1-.4 1-1V9c0-.6-.4-1-1-1h-1z"/></svg>
+        </div>
+      </div>
+
+      <div class="screen">
+
+        <!-- App Bar -->
+        <div class="app-bar">
+          <div class="back-btn">
+            <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+          <div class="app-title-wrap">
+            <div class="app-title">
+              <span class="fire-icon">🔥</span>
+              العروض
+            </div>
+            <span class="app-badge">LIVE</span>
+          </div>
+          <button class="search-btn">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </button>
+        </div>
+
+        <!-- Hero Banner -->
+        <div class="hero-banner">
+          <div class="hero-badge">
+            <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            عرض الأسبوع
+          </div>
+          <div class="hero-title">
+            خصومات تصل إلى <span class="highlight">50%</span>
+          </div>
+          <div class="hero-subtitle">
+            على أكتر من 200 نشاط في دكرنس · عرض محدود
+          </div>
+
+          <!-- Countdown Timer -->
+          <div class="countdown-wrap">
+            <div class="countdown-label">ينتهي خلال</div>
+            <div class="countdown-timer">
+              <div class="timer-block">
+                <div class="timer-num">02</div>
+                <div class="timer-label">أيام</div>
+              </div>
+              <div class="timer-sep">:</div>
+              <div class="timer-block">
+                <div class="timer-num">14</div>
+                <div class="timer-label">ساعة</div>
+              </div>
+              <div class="timer-sep">:</div>
+              <div class="timer-block">
+                <div class="timer-num">36</div>
+                <div class="timer-label">دقيقة</div>
+              </div>
+              <div class="timer-sep">:</div>
+              <div class="timer-block">
+                <div class="timer-num">52</div>
+                <div class="timer-label">ثانية</div>
+              </div>
+            </div>
+          </div>
+
+          <button class="hero-cta-btn">
+            <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            استفد من كل العروض
+          </button>
+        </div>
+
+        <!-- Stats Strip -->
+        <div class="stats-strip">
+          <div class="stats-item">
+            <div class="stats-icon red">
+              <svg viewBox="0 0 24 24"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+            </div>
+            <div class="stats-num">247</div>
+            <div class="stats-label">عرض متاح</div>
+          </div>
+          <div class="stats-item">
+            <div class="stats-icon orange">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div class="stats-num">12</div>
+            <div class="stats-label">ينتهي اليوم</div>
+          </div>
+          <div class="stats-item">
+            <div class="stats-icon green">
+              <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            </div>
+            <div class="stats-num">4.8K</div>
+            <div class="stats-label">توفير شهري</div>
+          </div>
+        </div>
+
+        <!-- Filter Chips -->
+        <div class="filter-chips">
+          <div class="filter-chip active">
+            الكل
+            <span class="chip-count">247</span>
+          </div>
+          <div class="filter-chip">
+            <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            عروض خاطفة
+            <span class="chip-count">18</span>
+          </div>
+          <div class="filter-chip">
+            <svg viewBox="0 0 24 24"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+            أعلى خصم
+          </div>
+          <div class="filter-chip">
+            <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            الأقرب
+          </div>
+          <div class="filter-chip">
+            <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            الأكثر مشاهدة
+          </div>
+          <div class="filter-chip">
+            <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            مميزة
+          </div>
+        </div>
+
+        <!-- Flash Deals Section -->
+        <div class="section-header">
+          <div class="section-title-wrap">
+            <div class="section-title-icon flash">
+              <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            </div>
+            <div>
+              <div class="section-title">صفقات خاطفة ⚡</div>
+              <div class="section-subtitle">خصومات كبيرة · وقت محدود</div>
+            </div>
+          </div>
+          <div class="section-link">
+            المزيد
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </div>
+        </div>
+
+        <div class="flash-deals-scroll">
+          <div class="flash-card">
+            <div class="flash-image bg-1">
+              <svg viewBox="0 0 24 24">
+                <rect x="6" y="2" width="12" height="20" rx="3"/>
+                <rect x="9" y="4.5" width="6" height="15" rx="1.5"/>
+              </svg>
+              <div class="flash-discount">
+                <span class="percent">%</span>60
+              </div>
+              <div class="flash-timer">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                02:14:36
+              </div>
+            </div>
+            <div class="flash-body">
+              <div class="flash-name">ساعة T800 Ultra — نسخة احترافية</div>
+              <div class="flash-store">
+                <svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>
+                متجر ريماس
+              </div>
+              <div class="flash-price-row">
+                <div class="flash-price">240 <span class="currency">ج.م</span></div>
+                <div class="flash-price-old">600</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flash-card">
+            <div class="flash-image bg-2">
+              <svg viewBox="0 0 24 24">
+                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                <line x1="2" y1="10" x2="22" y2="10"/>
+              </svg>
+              <div class="flash-discount">
+                <span class="percent">%</span>45
+              </div>
+              <div class="flash-timer">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                04:32:18
+              </div>
+            </div>
+            <div class="flash-body">
+              <div class="flash-name">إيربودز برو 2 لاسلكية</div>
+              <div class="flash-store">
+                <svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>
+                متجر ريماس
+              </div>
+              <div class="flash-price-row">
+                <div class="flash-price">467 <span class="currency">ج.م</span></div>
+                <div class="flash-price-old">850</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flash-card">
+            <div class="flash-image bg-3">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+              </svg>
+              <div class="flash-discount">
+                <span class="percent">%</span>50
+              </div>
+              <div class="flash-timer">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                08:45:00
+              </div>
+            </div>
+            <div class="flash-body">
+              <div class="flash-name">كشف جلدية + استشارة مجانية</div>
+              <div class="flash-store">
+                <svg viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+                عيادة سيليــن
+              </div>
+              <div class="flash-price-row">
+                <div class="flash-price">100 <span class="currency">ج.م</span></div>
+                <div class="flash-price-old">200</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flash-card">
+            <div class="flash-image bg-4">
+              <svg viewBox="0 0 24 24">
+                <circle cx="9" cy="21" r="1"/>
+                <circle cx="20" cy="21" r="1"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+              </svg>
+              <div class="flash-discount">
+                <span class="percent">%</span>35
+              </div>
+              <div class="flash-timer">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                12:20:45
+              </div>
+            </div>
+            <div class="flash-body">
+              <div class="flash-name">ساعات إكسسوارات متنوعة</div>
+              <div class="flash-store">
+                <svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l8-4v18"/></svg>
+                متجر ريماس
+              </div>
+              <div class="flash-price-row">
+                <div class="flash-price">150 <span class="currency">ج.م</span></div>
+                <div class="flash-price-old">230</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Featured Offers Section -->
+        <div class="section-header" style="margin-top: 20px;">
+          <div class="section-title-wrap">
+            <div class="section-title-icon premium">
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+            <div>
+              <div class="section-title">عروض مميزة</div>
+              <div class="section-subtitle">مختارة خصيصاً ليك</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="offers-list">
+
+          <!-- Featured Offer 1 -->
+          <div class="offer-card featured">
+            <div class="featured-ribbon">
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              مميز
+            </div>
+
+            <div class="offer-header">
+              <div class="offer-thumb bg-1">
+                <svg viewBox="0 0 24 24">
+                  <rect x="6" y="2" width="12" height="20" rx="3"/>
+                  <rect x="9" y="4.5" width="6" height="15" rx="1.5"/>
+                </svg>
+                <div class="thumb-badge">
+                  <svg viewBox="0 0 24 24"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+                  60%
+                </div>
+              </div>
+              <div class="offer-info">
+                <span class="offer-type discount">🔥 خصم مميز</span>
+                <div class="offer-name">ساعة T800 Ultra — تصميم عصري</div>
+                <div class="offer-store">
+                  <svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>
+                  متجر ريماس · دكرنس
+                </div>
+                <div class="offer-meta">
+                  <span class="views">
+                    <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    347 مشاهدة
+                  </span>
+                  <span class="sep"></span>
+                  <span>آخر 3 أيام</span>
+                </div>
+              </div>
+              <div class="offer-discount-badge">
+                <div class="offer-discount-value">60<span class="percent">%</span></div>
+                <div class="offer-discount-label">خصم</div>
+              </div>
+            </div>
+
+            <div class="offer-progress">
+              <div class="progress-labels">
+                <div class="progress-used">⚡ 8 كوبونات متبقية</div>
+                <div class="progress-total">من 50</div>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill danger" style="width: 84%;"></div>
+              </div>
+            </div>
+
+            <div class="offer-footer">
+              <div class="offer-expiry urgent">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                ينتهي بعد ساعتين
+              </div>
+              <button class="coupon-btn" onclick="showToast()">
+                <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                نسخ <span class="coupon-code">REM60</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Featured Offer 2 -->
+          <div class="offer-card featured">
+            <div class="featured-ribbon">
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              مميز
+            </div>
+
+            <div class="offer-header">
+              <div class="offer-thumb bg-3">
+                <svg viewBox="0 0 24 24">
+                  <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+                </svg>
+                <div class="thumb-badge">
+                  <svg viewBox="0 0 24 24"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+                  50%
+                </div>
+              </div>
+              <div class="offer-info">
+                <span class="offer-type free">🎁 عرض طبي</span>
+                <div class="offer-name">كشف جلدية مجاني + خصم 50% على الجلسة الأولى</div>
+                <div class="offer-store">
+                  <svg viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+                  عيادة سيليــن · دكرنس
+                </div>
+                <div class="offer-meta">
+                  <span class="views">
+                    <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    892 مشاهدة
+                  </span>
+                  <span class="sep"></span>
+                  <span>الآن</span>
+                </div>
+              </div>
+              <div class="offer-discount-badge">
+                <div class="offer-discount-value" style="background: linear-gradient(135deg, var(--success), #059669); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">50<span class="percent">%</span></div>
+                <div class="offer-discount-label">خصم</div>
+              </div>
+            </div>
+
+            <div class="offer-footer">
+              <div class="offer-expiry">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                ينتهي 31 أكتوبر
+              </div>
+              <button class="coupon-btn" onclick="showToast()">
+                <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                نسخ <span class="coupon-code">CLEAN50</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Featured Offer 3 - BOGO -->
+          <div class="offer-card">
+            <div class="offer-header">
+              <div class="offer-thumb bg-4">
+                <svg viewBox="0 0 24 24">
+                  <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/>
+                  <path d="M7 2v20"/>
+                  <path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Z"/>
+                </svg>
+              </div>
+              <div class="offer-info">
+                <span class="offer-type bogo">✨ اشترِ 1 احصل على 1</span>
+                <div class="offer-name">عرض 1+1 على جميع المشويات</div>
+                <div class="offer-store">
+                  <svg viewBox="0 0 24 24"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/></svg>
+                  مطعم البيت الدمشقي
+                </div>
+                <div class="offer-meta">
+                  <span class="views">
+                    <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    124 مشاهدة
+                  </span>
+                  <span class="sep"></span>
+                  <span>منذ 3 أيام</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="offer-progress">
+              <div class="progress-labels">
+                <div class="progress-used">🔥 العرض نشط</div>
+                <div class="progress-total">متاح</div>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill green" style="width: 100%;"></div>
+              </div>
+            </div>
+
+            <div class="offer-footer">
+              <div class="offer-expiry">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                ينتهي 30 أكتوبر
+              </div>
+              <button class="coupon-btn" onclick="showToast()">
+                <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                نسخ <span class="coupon-code">BOGO1</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Recent Offers Section -->
+        <div class="section-header" style="margin-top: 20px;">
+          <div class="section-title-wrap">
+            <div class="section-title-icon recent">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div>
+              <div class="section-title">عروض قريبة الانتهاء</div>
+              <div class="section-subtitle">اطلبها قبل ما تخلص</div>
+            </div>
+          </div>
+          <div class="section-link">
+            الكل
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </div>
+        </div>
+
+        <div class="recent-grid">
+          <div class="recent-card">
+            <div class="recent-image bg-1">
+              <svg viewBox="0 0 24 24">
+                <rect x="6" y="2" width="12" height="20" rx="3"/>
+                <rect x="9" y="4.5" width="6" height="15" rx="1.5"/>
+              </svg>
+              <div class="recent-discount">-35%</div>
+            </div>
+            <div class="recent-body">
+              <div class="recent-name">ساعة Ultra Max 47mm</div>
+              <div class="recent-store">
+                <svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l8-4v18"/></svg>
+                متجر ريماس
+              </div>
+              <div class="recent-expiry">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                باقي 3 ساعات
+              </div>
+            </div>
+          </div>
+
+          <div class="recent-card">
+            <div class="recent-image bg-2">
+              <svg viewBox="0 0 24 24">
+                <circle cx="9" cy="21" r="1"/>
+                <circle cx="20" cy="21" r="1"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+              </svg>
+              <div class="recent-discount">-25%</div>
+            </div>
+            <div class="recent-body">
+              <div class="recent-name">خصم على كل الكماليات</div>
+              <div class="recent-store">
+                <svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l8-4v18"/></svg>
+                Loly Store
+              </div>
+              <div class="recent-expiry">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                باقي 6 ساعات
+              </div>
+            </div>
+          </div>
+
+          <div class="recent-card">
+            <div class="recent-image bg-3">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+              </svg>
+              <div class="recent-discount">-40%</div>
+            </div>
+            <div class="recent-body">
+              <div class="recent-name">عرض خاص لصحة وجمال بشرتك</div>
+              <div class="recent-store">
+                <svg viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+                عيادة د. أحمد
+              </div>
+              <div class="recent-expiry">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                باقي 8 ساعات
+              </div>
+            </div>
+          </div>
+
+          <div class="recent-card">
+            <div class="recent-image bg-4">
+              <svg viewBox="0 0 24 24">
+                <path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
+              </svg>
+              <div class="recent-discount">-30%</div>
+            </div>
+            <div class="recent-body">
+              <div class="recent-name">هدايا عيد ميلاد بخصم خاص</div>
+              <div class="recent-store">
+                <svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l8-4v18"/></svg>
+                Kifo Store
+              </div>
+              <div class="recent-expiry">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                باقي 12 ساعة
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="screen-badge">صفحة العروض</div>
+  </div>
+</div>
+
+<!-- Copy Toast -->
+<div class="copy-toast" id="copyToast">
+  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+  تم نسخ الكود بنجاح!
+</div>
+
+<script>
+  function showToast() {
+    const toast = document.getElementById('copyToast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
+  }
+</script>
+
+</body>
+</html>

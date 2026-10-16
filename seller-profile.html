@@ -1,0 +1,1690 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>صفحة البائع — معاينة احترافية</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'IBM Plex Sans Arabic', sans-serif; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --primary: #0F766E;
+    --primary-dark: #115E59;
+    --primary-light: #CCFBF1;
+    --primary-soft: #F0FDFA;
+    --accent: #F59E0B;
+    --accent-dark: #D97706;
+    --accent-light: #FEF3C7;
+    --danger: #EF4444;
+    --danger-light: #FEF2F2;
+    --success: #10B981;
+    --success-light: #ECFDF5;
+    --purple: #8B5CF6;
+    --purple-light: #EDE9FE;
+    --blue: #2563EB;
+    --blue-light: #DBEAFE;
+    --pink: #EC4899;
+    --pink-light: #FCE7F3;
+    --dark: #0F172A;
+    --gray-700: #374151;
+    --gray-600: #4B5563;
+    --gray-500: #6B7280;
+    --gray-400: #9CA3AF;
+    --gray-300: #D1D5DB;
+    --gray-200: #E5E7EB;
+    --gray-100: #F3F4F6;
+    --bg: #F8FAFC;
+    --white: #FFFFFF;
+
+    --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.07);
+    --shadow-lg: 0 10px 30px rgba(15, 23, 42, 0.09);
+    --shadow-xl: 0 20px 40px rgba(15, 23, 42, 0.14);
+    --shadow-primary: 0 8px 24px rgba(15, 118, 110, 0.32);
+
+    --r-sm: 10px;
+    --r-md: 14px;
+    --r-lg: 18px;
+    --r-xl: 24px;
+    --r-full: 999px;
+  }
+
+  body {
+    background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+    min-height: 100vh;
+    padding: 50px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+  }
+
+  .page-header { text-align: center; color: #fff; max-width: 900px; }
+  .page-header h1 {
+    font-size: 30px; font-weight: 700; margin-bottom: 8px;
+    background: linear-gradient(135deg, #fff, #94A3B8);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .page-header p { color: #94A3B8; font-size: 14px; }
+
+  .screens-container {
+    display: flex; gap: 40px; flex-wrap: wrap; justify-content: center;
+  }
+  .screen-wrapper {
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+  }
+  .screen-badge {
+    background: rgba(15, 118, 110, 0.15);
+    color: #5EEAD4;
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid rgba(94, 234, 212, 0.25);
+  }
+
+  .phone {
+    width: 375px;
+    height: 812px;
+    background: var(--bg);
+    border-radius: 44px;
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+      0 0 0 10px #0A0F1E,
+      0 0 0 12px #1E293B,
+      0 30px 60px rgba(0, 0, 0, 0.5),
+      0 0 80px rgba(15, 118, 110, 0.15);
+  }
+  .phone::before {
+    content: '';
+    position: absolute;
+    top: 10px; left: 50%;
+    transform: translateX(-50%);
+    width: 110px; height: 28px;
+    background: #0A0F1E;
+    border-radius: 999px;
+    z-index: 999;
+  }
+
+  .status-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 48px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 28px;
+    font-size: 13px; font-weight: 600;
+    z-index: 100;
+    pointer-events: none;
+    color: var(--dark);
+  }
+  .status-bar.light { color: #fff; }
+  .status-bar .time { margin-top: 4px; }
+  .status-bar .status-icons { display: flex; gap: 5px; margin-top: 4px; align-items: center; }
+  .status-bar svg { width: 15px; height: 15px; }
+
+  .screen {
+    width: 100%; height: 100%;
+    overflow-y: auto; overflow-x: hidden;
+    scrollbar-width: none;
+    padding-bottom: 30px;
+  }
+  .screen::-webkit-scrollbar { display: none; }
+
+  /* ══════════ COVER ══════════ */
+  .store-cover {
+    height: 180px;
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 30% 20%, rgba(245,158,11,0.4), transparent 60%),
+      radial-gradient(circle at 80% 80%, rgba(15,118,110,0.5), transparent 60%),
+      linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+  }
+  /* Pattern */
+  .store-cover::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      repeating-linear-gradient(45deg, transparent 0, transparent 20px, rgba(255,255,255,0.03) 20px, rgba(255,255,255,0.03) 40px);
+  }
+  .store-cover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, transparent 30%, transparent 60%, rgba(0,0,0,0.5) 100%);
+  }
+
+  /* Cover pattern decoration */
+  .cover-pattern {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0.08;
+    z-index: 1;
+  }
+  .cover-pattern svg {
+    width: 200px;
+    height: 200px;
+    stroke: #fff;
+    stroke-width: 0.6;
+    fill: none;
+  }
+
+  /* Top actions */
+  .cover-actions {
+    position: absolute;
+    top: 56px;
+    right: 16px;
+    left: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 5;
+  }
+  .cover-action-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .cover-action-btn:hover {
+    background: rgba(0,0,0,0.6);
+    transform: scale(1.05);
+  }
+  .cover-action-btn svg {
+    width: 18px;
+    height: 18px;
+    stroke: #fff;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .cover-actions-group {
+    display: flex;
+    gap: 8px;
+  }
+
+  /* Status badge on cover */
+  .cover-status-badge {
+    position: absolute;
+    bottom: 60px;
+    right: 20px;
+    padding: 6px 12px;
+    background: rgba(16,185,129,0.95);
+    backdrop-filter: blur(10px);
+    border-radius: var(--r-full);
+    font-size: 10px;
+    font-weight: 800;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    z-index: 5;
+    box-shadow: 0 4px 12px rgba(16,185,129,0.4);
+  }
+  .cover-status-badge::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.3);
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  /* ══════════ STORE INFO CARD ══════════ */
+  .store-info-card {
+    background: var(--white);
+    border-radius: var(--r-xl) var(--r-xl) 0 0;
+    padding: 20px;
+    margin-top: -28px;
+    position: relative;
+    z-index: 3;
+    box-shadow: 0 -8px 24px rgba(15,23,42,0.06);
+  }
+
+  /* Avatar Row */
+  .store-header-row {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  .store-avatar-wrap {
+    position: relative;
+    flex-shrink: 0;
+    margin-top: -50px;
+  }
+  .store-avatar {
+    width: 84px;
+    height: 84px;
+    border-radius: 22px;
+    background: linear-gradient(135deg, #F59E0B, #EA580C);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 34px;
+    font-weight: 800;
+    border: 4px solid var(--white);
+    box-shadow: 0 8px 20px rgba(245,158,11,0.3);
+    position: relative;
+  }
+  .store-avatar .verified-badge {
+    position: absolute;
+    bottom: -4px;
+    left: -4px;
+    width: 26px;
+    height: 26px;
+    background: var(--primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid var(--white);
+    box-shadow: 0 4px 8px rgba(15,118,110,0.3);
+  }
+  .store-avatar .verified-badge svg {
+    width: 12px;
+    height: 12px;
+    stroke: #fff;
+    stroke-width: 3.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .store-title-section {
+    flex: 1;
+    min-width: 0;
+    padding-top: 6px;
+  }
+  .store-name {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--dark);
+    letter-spacing: -0.4px;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .store-name .verified-inline {
+    width: 16px;
+    height: 16px;
+    background: var(--primary);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .store-name .verified-inline svg {
+    width: 9px;
+    height: 9px;
+    stroke: #fff;
+    stroke-width: 3.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .store-category-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--primary);
+    background: var(--primary-soft);
+    padding: 4px 10px;
+    border-radius: var(--r-full);
+    margin-bottom: 8px;
+  }
+  .store-category-tag svg {
+    width: 10px;
+    height: 10px;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    fill: none;
+  }
+
+  .store-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--gray-500);
+    font-weight: 500;
+    flex-wrap: wrap;
+  }
+  .store-meta-row .rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    color: var(--dark);
+    font-weight: 700;
+  }
+  .store-meta-row .rating svg {
+    width: 11px;
+    height: 11px;
+    fill: var(--accent);
+    stroke: none;
+  }
+  .store-meta-row .sep {
+    width: 3px;
+    height: 3px;
+    background: var(--gray-300);
+    border-radius: 50%;
+  }
+
+  /* Badges Row */
+  .store-badges {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .store-badge {
+    padding: 4px 10px;
+    border-radius: var(--r-full);
+    font-size: 9.5px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .store-badge svg {
+    width: 10px;
+    height: 10px;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .store-badge.teal {
+    background: var(--primary-soft);
+    color: var(--primary-dark);
+  }
+  .store-badge.teal svg { stroke: var(--primary); }
+  .store-badge.gold {
+    background: var(--accent-light);
+    color: var(--accent-dark);
+  }
+  .store-badge.gold svg { fill: var(--accent); stroke: none; }
+  .store-badge.purple {
+    background: var(--purple-light);
+    color: var(--purple);
+  }
+  .store-badge.purple svg { stroke: var(--purple); }
+  .store-badge.blue {
+    background: var(--blue-light);
+    color: var(--blue);
+  }
+  .store-badge.blue svg { stroke: var(--blue); }
+
+  /* Action Buttons */
+  .store-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .store-action-btn {
+    padding: 10px 6px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 12px;
+    background: var(--white);
+    font-family: inherit;
+    font-size: 10.5px;
+    font-weight: 800;
+    color: var(--gray-700);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.25s;
+  }
+  .store-action-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-soft);
+    transform: translateY(-2px);
+  }
+  .store-action-btn:hover svg { stroke: var(--primary); }
+  .store-action-btn.follow-btn {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(15,118,110,0.3);
+  }
+  .store-action-btn.follow-btn:hover {
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+    color: #fff;
+    transform: translateY(-2px);
+  }
+  .store-action-btn.follow-btn svg { stroke: #fff; }
+  .store-action-btn svg {
+    width: 16px;
+    height: 16px;
+    stroke: var(--gray-700);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: stroke 0.2s;
+  }
+
+  /* Stats Bar */
+  .store-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    padding: 14px 0;
+    border-top: 1px solid var(--gray-100);
+  }
+  .stat-item {
+    text-align: center;
+    padding: 4px 2px;
+  }
+  .stat-value {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--dark);
+    letter-spacing: -0.4px;
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+  }
+  .stat-value .unit {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--gray-500);
+  }
+  .stat-value .star-icon {
+    width: 12px;
+    height: 12px;
+    fill: var(--accent);
+    stroke: none;
+  }
+  .stat-label {
+    font-size: 9.5px;
+    color: var(--gray-500);
+    font-weight: 600;
+  }
+
+  /* ══════════ TABS ══════════ */
+  .store-tabs {
+    display: flex;
+    gap: 6px;
+    padding: 12px 20px 10px;
+    background: var(--bg);
+    overflow-x: auto;
+    scrollbar-width: none;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 1px solid var(--gray-100);
+  }
+  .store-tabs::-webkit-scrollbar { display: none; }
+  .store-tab {
+    flex-shrink: 0;
+    padding: 9px 16px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-full);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--gray-600);
+    cursor: pointer;
+    transition: all 0.25s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+  .store-tab:hover {
+    border-color: var(--primary-light);
+    color: var(--primary);
+  }
+  .store-tab.active {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(15,118,110,0.28);
+  }
+  .store-tab .tab-count {
+    padding: 1px 6px;
+    background: var(--gray-100);
+    border-radius: 5px;
+    font-size: 10px;
+    font-weight: 800;
+  }
+  .store-tab.active .tab-count {
+    background: rgba(255,255,255,0.25);
+    color: #fff;
+  }
+
+  /* ══════════ FILTER CHIPS ══════════ */
+  .filter-chips {
+    display: flex;
+    gap: 6px;
+    padding: 12px 20px 10px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .filter-chips::-webkit-scrollbar { display: none; }
+  .filter-chip {
+    flex-shrink: 0;
+    padding: 7px 13px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-full);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--gray-700);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .filter-chip:hover {
+    border-color: var(--primary-light);
+    color: var(--primary);
+  }
+  .filter-chip.active {
+    background: var(--dark);
+    color: #fff;
+    border-color: var(--dark);
+    box-shadow: 0 4px 12px rgba(15,23,42,0.25);
+  }
+  .filter-chip svg {
+    width: 12px;
+    height: 12px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ══════════ PRODUCTS GRID ══════════ */
+  .products-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 0 20px 16px;
+  }
+  .product-card {
+    background: var(--white);
+    border-radius: var(--r-md);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: var(--shadow-xs);
+    border: 1px solid var(--gray-100);
+    position: relative;
+  }
+  .product-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: transparent;
+  }
+
+  .product-image {
+    aspect-ratio: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .product-image.bg-1 { background: linear-gradient(135deg, #0F172A, #334155); }
+  .product-image.bg-2 { background: linear-gradient(135deg, #0F766E, #14B8A6); }
+  .product-image.bg-3 { background: linear-gradient(135deg, #F59E0B, #EA580C); }
+  .product-image.bg-4 { background: linear-gradient(135deg, #8B5CF6, #6D28D9); }
+  .product-image.bg-5 { background: linear-gradient(135deg, #3B82F6, #1D4ED8); }
+  .product-image.bg-6 { background: linear-gradient(135deg, #EC4899, #BE185D); }
+  .product-image svg {
+    width: 44px;
+    height: 44px;
+    stroke: rgba(255,255,255,0.9);
+    stroke-width: 1.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.25));
+  }
+
+  .product-discount {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 3px 8px;
+    background: var(--danger);
+    color: #fff;
+    border-radius: var(--r-full);
+    font-size: 9px;
+    font-weight: 800;
+    z-index: 2;
+    box-shadow: 0 3px 8px rgba(239,68,68,0.35);
+  }
+  .product-fav {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 2;
+    transition: transform 0.2s;
+    border: none;
+  }
+  .product-fav:hover { transform: scale(1.1); }
+  .product-fav svg {
+    width: 13px;
+    height: 13px;
+    stroke: var(--gray-600);
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .product-fav.active svg {
+    stroke: var(--danger);
+    fill: var(--danger);
+  }
+
+  .product-body {
+    padding: 10px 12px 12px;
+  }
+  .product-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 5px;
+    line-height: 1.35;
+    letter-spacing: -0.2px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 32px;
+  }
+  .product-rate-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--gray-500);
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  .product-rate-row svg {
+    width: 10px;
+    height: 10px;
+    fill: var(--accent);
+    stroke: none;
+  }
+  .product-price-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .product-price {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--primary);
+    letter-spacing: -0.4px;
+  }
+  .product-price .currency {
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--gray-500);
+  }
+  .product-add-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(15,118,110,0.3);
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .product-add-btn:hover {
+    transform: scale(1.1);
+  }
+  .product-add-btn svg {
+    width: 14px;
+    height: 14px;
+    stroke: #fff;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ══════════ ABOUT SECTION ══════════ */
+  .about-card {
+    margin: 0 20px 16px;
+    padding: 16px;
+    background: var(--white);
+    border-radius: var(--r-md);
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-xs);
+  }
+  .about-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    letter-spacing: -0.2px;
+  }
+  .about-title svg {
+    width: 14px;
+    height: 14px;
+    stroke: var(--primary);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .about-text {
+    font-size: 12px;
+    color: var(--gray-600);
+    line-height: 1.75;
+    font-weight: 500;
+  }
+
+  /* Info rows */
+  .info-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--gray-100);
+    font-size: 12px;
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: var(--primary-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .info-icon svg {
+    width: 15px;
+    height: 15px;
+    stroke: var(--primary);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .info-content { flex: 1; min-width: 0; }
+  .info-label {
+    font-size: 10px;
+    color: var(--gray-500);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 2px;
+  }
+  .info-value {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--dark);
+    letter-spacing: -0.2px;
+  }
+  .info-value.green {
+    color: var(--success);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .info-value.green::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--success);
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px rgba(16,185,129,0.2);
+  }
+
+  /* Working hours table */
+  .hours-table {
+    margin-top: 8px;
+  }
+  .hours-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 0;
+    font-size: 11.5px;
+    border-bottom: 1px dashed var(--gray-100);
+  }
+  .hours-row:last-child { border-bottom: none; }
+  .hours-row.today {
+    background: linear-gradient(90deg, var(--primary-soft), transparent);
+    margin: 0 -16px;
+    padding: 9px 16px;
+    border-radius: 0;
+    position: relative;
+  }
+  .hours-row.today::before {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0; bottom: 0;
+    width: 3px;
+    background: var(--primary);
+  }
+  .hours-day {
+    font-weight: 700;
+    color: var(--gray-700);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .hours-day .today-tag {
+    font-size: 8.5px;
+    background: var(--primary);
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 800;
+  }
+  .hours-row.today .hours-day { color: var(--primary-dark); font-weight: 800; }
+  .hours-time {
+    color: var(--gray-500);
+    font-weight: 600;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+  }
+  .hours-row.today .hours-time {
+    color: var(--primary);
+    font-weight: 800;
+  }
+  .hours-time.closed { color: var(--danger); font-weight: 800; }
+
+  /* ══════════ REVIEWS ══════════ */
+  .reviews-summary-card {
+    margin: 0 20px 14px;
+    padding: 16px;
+    background: var(--white);
+    border-radius: var(--r-md);
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-xs);
+    display: flex;
+    gap: 18px;
+    align-items: center;
+  }
+  .rev-summary-left {
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .rev-summary-score {
+    font-size: 40px;
+    font-weight: 800;
+    color: var(--dark);
+    letter-spacing: -2px;
+    line-height: 1;
+  }
+  .rev-summary-stars {
+    display: flex;
+    gap: 2px;
+    justify-content: center;
+    margin: 6px 0 4px;
+  }
+  .rev-summary-stars svg {
+    width: 13px;
+    height: 13px;
+    fill: var(--accent);
+    stroke: none;
+  }
+  .rev-summary-count {
+    font-size: 10px;
+    color: var(--gray-500);
+    font-weight: 700;
+  }
+
+  .rev-summary-bars {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .rev-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--gray-500);
+  }
+  .rev-bar-track {
+    flex: 1;
+    height: 5px;
+    background: var(--gray-100);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .rev-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-dark));
+  }
+  .rev-bar-row .num { min-width: 25px; text-align: left; }
+
+  /* Individual Reviews */
+  .review-item {
+    margin: 0 20px 8px;
+    padding: 12px;
+    background: var(--white);
+    border-radius: var(--r-md);
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-xs);
+  }
+  .review-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .review-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+  .review-avatar.blue { background: linear-gradient(135deg, var(--blue-light), #BFDBFE); color: var(--blue); }
+  .review-avatar.pink { background: linear-gradient(135deg, var(--pink-light), #FBCFE8); color: var(--pink); }
+  .review-info { flex: 1; min-width: 0; }
+  .review-name {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .review-name svg {
+    width: 10px;
+    height: 10px;
+    fill: var(--primary);
+    stroke: none;
+  }
+  .review-stars {
+    display: flex;
+    gap: 1px;
+  }
+  .review-stars svg {
+    width: 10px;
+    height: 10px;
+    fill: var(--accent);
+    stroke: none;
+  }
+  .review-time {
+    font-size: 10px;
+    color: var(--gray-400);
+    font-weight: 600;
+  }
+  .review-text {
+    font-size: 11.5px;
+    color: var(--gray-700);
+    line-height: 1.7;
+    font-weight: 500;
+  }
+  .review-reply {
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: var(--primary-soft);
+    border-radius: 10px;
+    border-right: 3px solid var(--primary);
+  }
+  .review-reply-header {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--primary-dark);
+    margin-bottom: 4px;
+  }
+  .review-reply-header svg {
+    width: 10px;
+    height: 10px;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .review-reply-text {
+    font-size: 11px;
+    color: var(--primary-dark);
+    line-height: 1.6;
+    font-weight: 500;
+  }
+
+  /* ══════════ CONTACT CTA ══════════ */
+  .contact-cta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin: 0 20px 16px;
+  }
+  .contact-btn {
+    padding: 12px;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.25s;
+    border: none;
+  }
+  .contact-btn.primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(15,118,110,0.28);
+  }
+  .contact-btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(15,118,110,0.4);
+  }
+  .contact-btn.whatsapp {
+    background: linear-gradient(135deg, #10B981, #059669);
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(16,185,129,0.28);
+  }
+  .contact-btn.whatsapp:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(16,185,129,0.4);
+  }
+  .contact-btn svg {
+    width: 15px;
+    height: 15px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ══════════ STICKY BOTTOM BAR ══════════ */
+  .store-bottom-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 12px 20px 20px;
+    background: linear-gradient(180deg, rgba(248,250,252,0) 0%, var(--bg) 30%, var(--bg) 100%);
+    z-index: 50;
+  }
+  .bottom-bar-inner {
+    background: var(--white);
+    border-radius: var(--r-lg);
+    padding: 8px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    box-shadow: 0 8px 28px rgba(15,23,42,0.14), 0 2px 8px rgba(15,23,42,0.06);
+    border: 1px solid var(--gray-100);
+  }
+  .bottom-bar-btn {
+    padding: 11px 14px;
+    background: var(--gray-100);
+    border: none;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--gray-700);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .bottom-bar-btn:hover {
+    background: var(--primary-soft);
+    color: var(--primary);
+  }
+  .bottom-bar-btn svg {
+    width: 15px;
+    height: 15px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .bottom-bar-cta {
+    flex: 1;
+    padding: 13px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    box-shadow: var(--shadow-primary);
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+  }
+  .bottom-bar-cta::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    bottom: 0;
+    width: 60px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+    animation: shine 3s infinite;
+  }
+  @keyframes shine {
+    0% { transform: translateX(-100%); }
+    60% { transform: translateX(500%); }
+    100% { transform: translateX(500%); }
+  }
+  .bottom-bar-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(15,118,110,0.4);
+  }
+  .bottom-bar-cta svg {
+    width: 16px;
+    height: 16px;
+    stroke: #fff;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    position: relative;
+    z-index: 1;
+  }
+  .bottom-bar-cta span { position: relative; z-index: 1; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>صفحة البائع — Seller Profile</h1>
+  <p>Cover · Badges · Stats · 4 Tabs · Products Grid</p>
+</div>
+
+<div class="screens-container">
+  <div class="screen-wrapper">
+    <div class="phone">
+      <div class="status-bar light">
+        <div class="time">9:41</div>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h3v-9H2v9zm5 0h3V9H7v13zm5 0h3V5h-3v17zm5 0h3V2h-3v20z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21l-12-18h24z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm5 4v8h1c.6 0 1-.4 1-1V9c0-.6-.4-1-1-1h-1z"/></svg>
+        </div>
+      </div>
+
+      <div class="screen">
+
+        <!-- Cover -->
+        <div class="store-cover">
+          <div class="cover-pattern">
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/>
+              <circle cx="12" cy="12" r="6"/>
+              <circle cx="12" cy="12" r="2"/>
+            </svg>
+          </div>
+
+          <div class="cover-actions">
+            <div class="cover-action-btn">
+              <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            <div class="cover-actions-group">
+              <div class="cover-action-btn">
+                <svg viewBox="0 0 24 24">
+                  <circle cx="18" cy="5" r="3"/>
+                  <circle cx="6" cy="12" r="3"/>
+                  <circle cx="18" cy="19" r="3"/>
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                </svg>
+              </div>
+              <div class="cover-action-btn">
+                <svg viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="1"/>
+                  <circle cx="19" cy="12" r="1"/>
+                  <circle cx="5" cy="12" r="1"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="cover-status-badge">مفتوح الآن</div>
+        </div>
+
+        <!-- Store Info Card -->
+        <div class="store-info-card">
+
+          <!-- Header Row -->
+          <div class="store-header-row">
+            <div class="store-avatar-wrap">
+              <div class="store-avatar">
+                ر
+                <div class="verified-badge">
+                  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+              </div>
+            </div>
+
+            <div class="store-title-section">
+              <div class="store-name">
+                متجر ريماس
+                <div class="verified-inline"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              </div>
+              <div class="store-category-tag">
+                <svg viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+                إلكترونيات وساعات ذكية
+              </div>
+              <div class="store-meta-row">
+                <span class="rating">
+                  <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  4.9
+                  <span style="color: var(--gray-500); font-weight: 500;">(1,247)</span>
+                </span>
+                <span class="sep"></span>
+                <span>دكرنس · 1.2 كم</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Badges -->
+          <div class="store-badges">
+            <div class="store-badge teal">
+              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              بائع موثّق
+            </div>
+            <div class="store-badge gold">
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              Top Seller
+            </div>
+            <div class="store-badge purple">
+              <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              شحن سريع
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="store-actions">
+            <button class="store-action-btn follow-btn">
+              <svg viewBox="0 0 24 24">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="8.5" cy="7" r="4"/>
+                <line x1="20" y1="8" x2="20" y2="14"/>
+                <line x1="23" y1="11" x2="17" y2="11"/>
+              </svg>
+              متابعة
+            </button>
+            <button class="store-action-btn">
+              <svg viewBox="0 0 24 24">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+              محادثة
+            </button>
+            <button class="store-action-btn">
+              <svg viewBox="0 0 24 24">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+              اتصال
+            </button>
+            <button class="store-action-btn">
+              <svg viewBox="0 0 24 24">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+              الموقع
+            </button>
+          </div>
+
+          <!-- Stats -->
+          <div class="store-stats">
+            <div class="stat-item">
+              <div class="stat-value">250<span class="unit">+</span></div>
+              <div class="stat-label">منتج</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">1.2<span class="unit">K</span></div>
+              <div class="stat-label">متابع</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">2.5<span class="unit">K</span></div>
+              <div class="stat-label">عملية بيع</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">
+                <svg class="star-icon" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                4.9
+              </div>
+              <div class="stat-label">التقييم</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Tabs -->
+        <div class="store-tabs">
+          <div class="store-tab active">
+            المنتجات
+            <span class="tab-count">250</span>
+          </div>
+          <div class="store-tab">
+            الخدمات
+            <span class="tab-count">18</span>
+          </div>
+          <div class="store-tab">
+            التقييمات
+          </div>
+          <div class="store-tab">
+            معلومات
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-chips">
+          <div class="filter-chip active">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+            الكل
+          </div>
+          <div class="filter-chip">الأحدث</div>
+          <div class="filter-chip">الأعلى تقييماً</div>
+          <div class="filter-chip">
+            <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            الأكثر مبيعاً
+          </div>
+          <div class="filter-chip">عروض</div>
+          <div class="filter-chip">الأرخص</div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="products-grid">
+
+          <!-- Product 1 -->
+          <div class="product-card">
+            <div class="product-image bg-1">
+              <svg viewBox="0 0 24 24">
+                <rect x="6" y="2" width="12" height="20" rx="3"/>
+                <rect x="9" y="4.5" width="6" height="15" rx="1.5"/>
+              </svg>
+              <div class="product-discount">-42%</div>
+              <button class="product-fav active">
+                <svg viewBox="0 0 24 24">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+              </button>
+            </div>
+            <div class="product-body">
+              <div class="product-name">ساعة T800 Ultra — تصميم عصري</div>
+              <div class="product-rate-row">
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                4.8 (127)
+              </div>
+              <div class="product-price-row">
+                <div class="product-price">350 <span class="currency">ج.م</span></div>
+                <button class="product-add-btn">
+                  <svg viewBox="0 0 24 24">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Product 2 -->
+          <div class="product-card">
+            <div class="product-image bg-2">
+              <svg viewBox="0 0 24 24">
+                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                <line x1="2" y1="10" x2="22" y2="10"/>
+              </svg>
+              <button class="product-fav">
+                <svg viewBox="0 0 24 24">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+              </button>
+            </div>
+            <div class="product-body">
+              <div class="product-name">إيربودز برو 2 لاسلكية</div>
+              <div class="product-rate-row">
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                4.7 (89)
+              </div>
+              <div class="product-price-row">
+                <div class="product-price">850 <span class="currency">ج.م</span></div>
+                <button class="product-add-btn">
+                  <svg viewBox="0 0 24 24">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Product 3 -->
+          <div class="product-card">
+            <div class="product-image bg-3">
+              <svg viewBox="0 0 24 24">
+                <rect x="6" y="2" width="12" height="20" rx="3"/>
+                <rect x="9" y="4.5" width="6" height="15" rx="1.5"/>
+              </svg>
+              <div class="product-discount">-35%</div>
+              <button class="product-fav">
+                <svg viewBox="0 0 24 24">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+              </button>
+            </div>
+            <div class="product-body">
+              <div class="product-name">ساعة Ultra Max 47mm</div>
+              <div class="product-rate-row">
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                4.6 (54)
+              </div>
+              <div class="product-price-row">
+                <div class="product-price">550 <span class="currency">ج.م</span></div>
+                <button class="product-add-btn">
+                  <svg viewBox="0 0 24 24">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Product 4 -->
+          <div class="product-card">
+            <div class="product-image bg-4">
+              <svg viewBox="0 0 24 24">
+                <circle cx="9" cy="21" r="1"/>
+                <circle cx="20" cy="21" r="1"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+              </svg>
+              <button class="product-fav">
+                <svg viewBox="0 0 24 24">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+              </button>
+            </div>
+            <div class="product-body">
+              <div class="product-name">حافظة ساعة فاخرة</div>
+              <div class="product-rate-row">
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                4.9 (203)
+              </div>
+              <div class="product-price-row">
+                <div class="product-price">95 <span class="currency">ج.م</span></div>
+                <button class="product-add-btn">
+                  <svg viewBox="0 0 24 24">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Product 5 -->
+          <div class="product-card">
+            <div class="product-image bg-5">
+              <svg viewBox="0 0 24 24">
+                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                <line x1="2" y1="10" x2="22" y2="10"/>
+              </svg>
+              <button class="product-fav">
+                <svg viewBox="0 0 24 24">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+              </button>
+            </div>
+            <div class="product-body">
+              <div class="product-name">شاحن لاسلكي 30W</div>
+              <div class="product-rate-row">
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                4.8 (67)
+              </div>
+              <div class="product-price-row">
+                <div class="product-price">180 <span class="currency">ج.م</span></div>
+                <button class="product-add-btn">
+                  <svg viewBox="0 0 24 24">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Product 6 -->
+          <div class="product-card">
+            <div class="product-image bg-6">
+              <svg viewBox="0 0 24 24">
+                <rect x="6" y="2" width="12" height="20" rx="3"/>
+                <rect x="9" y="4.5" width="6" height="15" rx="1.5"/>
+              </svg>
+              <div class="product-discount">-20%</div>
+              <button class="product-fav">
+                <svg viewBox="0 0 24 24">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+              </button>
+            </div>
+            <div class="product-body">
+              <div class="product-name">ساعة Fit 3 الرياضية</div>
+              <div class="product-rate-row">
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                4.5 (42)
+              </div>
+              <div class="product-price-row">
+                <div class="product-price">310 <span class="currency">ج.م</span></div>
+                <button class="product-add-btn">
+                  <svg viewBox="0 0 24 24">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Bottom Bar -->
+      <div class="store-bottom-bar">
+        <div class="bottom-bar-inner">
+          <button class="bottom-bar-btn">
+            <svg viewBox="0 0 24 24">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            محادثة
+          </button>
+          <button class="bottom-bar-cta">
+            <svg viewBox="0 0 24 24">
+              <circle cx="9" cy="21" r="1"/>
+              <circle cx="20" cy="21" r="1"/>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+            </svg>
+            <span>تصفح المنتجات</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+    <div class="screen-badge">صفحة البائع</div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,1593 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>المحفظة — معاينة احترافية</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'IBM Plex Sans Arabic', sans-serif; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --primary: #0F766E;
+    --primary-dark: #115E59;
+    --primary-light: #CCFBF1;
+    --primary-soft: #F0FDFA;
+    --accent: #F59E0B;
+    --accent-dark: #D97706;
+    --accent-light: #FEF3C7;
+    --gold: #F59E0B;
+    --gold-dark: #B45309;
+    --gold-light: #FEF3C7;
+    --danger: #EF4444;
+    --danger-light: #FEF2F2;
+    --success: #10B981;
+    --success-dark: #059669;
+    --success-light: #ECFDF5;
+    --purple: #8B5CF6;
+    --purple-light: #EDE9FE;
+    --blue: #2563EB;
+    --blue-light: #DBEAFE;
+    --pink: #EC4899;
+    --pink-light: #FCE7F3;
+    --cyan: #06B6D4;
+    --cyan-light: #CFFAFE;
+    --dark: #0F172A;
+    --gray-700: #374151;
+    --gray-600: #4B5563;
+    --gray-500: #6B7280;
+    --gray-400: #9CA3AF;
+    --gray-300: #D1D5DB;
+    --gray-200: #E5E7EB;
+    --gray-100: #F3F4F6;
+    --bg: #F8FAFC;
+    --white: #FFFFFF;
+
+    --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.07);
+    --shadow-lg: 0 10px 30px rgba(15, 23, 42, 0.09);
+    --shadow-xl: 0 20px 40px rgba(15, 23, 42, 0.14);
+    --shadow-primary: 0 8px 24px rgba(15, 118, 110, 0.32);
+    --shadow-gold: 0 12px 32px rgba(245, 158, 11, 0.35);
+
+    --r-sm: 10px;
+    --r-md: 14px;
+    --r-lg: 18px;
+    --r-xl: 24px;
+    --r-full: 999px;
+  }
+
+  body {
+    background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+    min-height: 100vh;
+    padding: 50px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+  }
+
+  .page-header { text-align: center; color: #fff; max-width: 900px; }
+  .page-header h1 {
+    font-size: 30px; font-weight: 700; margin-bottom: 8px;
+    background: linear-gradient(135deg, #fff, #94A3B8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .page-header p { color: #94A3B8; font-size: 14px; }
+
+  .screens-container {
+    display: flex; gap: 40px; flex-wrap: wrap; justify-content: center;
+  }
+  .screen-wrapper {
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+  }
+  .screen-badge {
+    background: rgba(15, 118, 110, 0.15);
+    color: #5EEAD4;
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid rgba(94, 234, 212, 0.25);
+  }
+
+  .phone {
+    width: 375px;
+    height: 812px;
+    background: var(--bg);
+    border-radius: 44px;
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+      0 0 0 10px #0A0F1E,
+      0 0 0 12px #1E293B,
+      0 30px 60px rgba(0, 0, 0, 0.5),
+      0 0 80px rgba(15, 118, 110, 0.15);
+  }
+  .phone::before {
+    content: '';
+    position: absolute;
+    top: 10px; left: 50%;
+    transform: translateX(-50%);
+    width: 110px; height: 28px;
+    background: #0A0F1E;
+    border-radius: 999px;
+    z-index: 999;
+  }
+
+  .status-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 48px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 28px;
+    font-size: 13px; font-weight: 600;
+    z-index: 100;
+    pointer-events: none;
+    color: var(--dark);
+  }
+  .status-bar.light { color: #fff; }
+  .status-bar .time { margin-top: 4px; }
+  .status-bar .status-icons { display: flex; gap: 5px; margin-top: 4px; align-items: center; }
+  .status-bar svg { width: 15px; height: 15px; }
+
+  .screen {
+    width: 100%; height: 100%;
+    overflow-y: auto; overflow-x: hidden;
+    scrollbar-width: none;
+    padding-top: 48px;
+    padding-bottom: 30px;
+  }
+  .screen::-webkit-scrollbar { display: none; }
+
+  /* ══════════ HERO HEADER ══════════ */
+  .hero-header {
+    padding: 8px 20px 24px;
+    background: linear-gradient(160deg, var(--primary) 0%, var(--primary-dark) 50%, #0F172A 100%);
+    border-radius: 0 0 32px 32px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .hero-header::before {
+    content: '';
+    position: absolute;
+    top: -80px; right: -60px;
+    width: 220px;
+    height: 220px;
+    background: radial-gradient(circle, rgba(255,255,255,0.15), transparent 70%);
+    border-radius: 50%;
+  }
+  .hero-header::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; left: -40px;
+    width: 180px;
+    height: 180px;
+    background: radial-gradient(circle, rgba(245,158,11,0.25), transparent 70%);
+    border-radius: 50%;
+  }
+
+  .app-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+    position: relative;
+    z-index: 2;
+  }
+  .back-btn {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .back-btn:hover { background: rgba(255,255,255,0.25); }
+  .back-btn svg {
+    width: 18px; height: 18px;
+    stroke: #fff;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .app-title-wrap {
+    flex: 1;
+    text-align: center;
+  }
+  .app-title {
+    font-size: 17px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.3px;
+    margin-bottom: 2px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .app-title svg {
+    width: 17px;
+    height: 17px;
+    stroke: #fff;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .app-subtitle {
+    font-size: 10.5px;
+    color: rgba(255,255,255,0.8);
+    font-weight: 600;
+  }
+  .header-icon-btn {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .header-icon-btn:hover { background: rgba(255,255,255,0.25); }
+  .header-icon-btn svg {
+    width: 18px; height: 18px;
+    stroke: #fff;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* Membership Card */
+  .membership-card {
+    padding: 18px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.08));
+    backdrop-filter: blur(20px);
+    border-radius: var(--r-lg);
+    border: 1.5px solid rgba(255,255,255,0.25);
+    box-shadow:
+      0 12px 32px rgba(0,0,0,0.2),
+      inset 0 2px 0 rgba(255,255,255,0.35);
+    position: relative;
+    overflow: hidden;
+    z-index: 2;
+  }
+  .membership-card::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -30%;
+    width: 160%; height: 200%;
+    background: conic-gradient(from 0deg, transparent 0deg, rgba(255,255,255,0.12) 180deg, transparent 360deg);
+    animation: shineRotate 6s linear infinite;
+  }
+  @keyframes shineRotate {
+    to { transform: rotate(360deg); }
+  }
+
+  .mc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    position: relative;
+    z-index: 2;
+  }
+  .mc-brand {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .mc-brand-logo {
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, #FCD34D, #F59E0B);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(245,158,11,0.4);
+  }
+  .mc-brand-logo svg {
+    width: 15px;
+    height: 15px;
+    stroke: #fff;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .mc-brand-name {
+    font-size: 11.5px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.2px;
+  }
+  .mc-badge {
+    padding: 3px 9px;
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(10px);
+    border-radius: var(--r-full);
+    font-size: 9px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 0.3px;
+    border: 1px solid rgba(255,255,255,0.25);
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .mc-badge::before {
+    content: '🔒';
+    font-size: 8px;
+  }
+
+  .mc-label {
+    font-size: 10px;
+    color: rgba(255,255,255,0.7);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 4px;
+    position: relative;
+    z-index: 2;
+  }
+  .mc-balance {
+    font-size: 32px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -1.2px;
+    line-height: 1;
+    margin-bottom: 14px;
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    text-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  }
+  .mc-balance .currency {
+    font-size: 14px;
+    font-weight: 700;
+    opacity: 0.9;
+  }
+
+  .mc-footer {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 10px;
+    padding-top: 12px;
+    border-top: 1px dashed rgba(255,255,255,0.25);
+    position: relative;
+    z-index: 2;
+  }
+  .mc-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .mc-info-label {
+    font-size: 8.5px;
+    color: rgba(255,255,255,0.65);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 3px;
+  }
+  .mc-info-value {
+    font-size: 12px;
+    font-weight: 800;
+    color: #fff;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1.5px;
+  }
+  .mc-points {
+    padding: 6px 10px;
+    background: linear-gradient(135deg, #FCD34D, #F59E0B);
+    border-radius: var(--r-full);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    box-shadow: 0 4px 12px rgba(245,158,11,0.4);
+  }
+  .mc-points svg {
+    width: 12px;
+    height: 12px;
+    fill: #fff;
+    stroke: none;
+  }
+  .mc-points-text {
+    font-size: 10.5px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -0.2px;
+  }
+
+  /* ══════════ QUICK ACTIONS ══════════ */
+  .quick-actions-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    padding: 16px 20px 16px;
+  }
+  .qa-btn {
+    padding: 10px 4px;
+    background: var(--white);
+    border: 1px solid var(--gray-100);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-xs);
+    cursor: pointer;
+    transition: all 0.25s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    font-family: inherit;
+  }
+  .qa-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: transparent;
+  }
+  .qa-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.25s;
+  }
+  .qa-btn:hover .qa-icon { transform: scale(1.1); }
+  .qa-icon.teal { background: var(--primary-soft); }
+  .qa-icon.teal svg { stroke: var(--primary); }
+  .qa-icon.blue { background: var(--blue-light); }
+  .qa-icon.blue svg { stroke: var(--blue); }
+  .qa-icon.purple { background: var(--purple-light); }
+  .qa-icon.purple svg { stroke: var(--purple); }
+  .qa-icon.orange { background: var(--accent-light); }
+  .qa-icon.orange svg { stroke: var(--accent-dark); }
+  .qa-icon.pink { background: var(--pink-light); }
+  .qa-icon.pink svg { stroke: var(--pink); }
+  .qa-icon svg {
+    width: 17px;
+    height: 17px;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .qa-label {
+    font-size: 9px;
+    font-weight: 800;
+    color: var(--dark);
+    letter-spacing: -0.2px;
+    text-align: center;
+    line-height: 1.15;
+  }
+
+  /* ══════════ SECTION HEADER ══════════ */
+  .section-header {
+    padding: 0 20px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .section-title {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    letter-spacing: -0.2px;
+  }
+  .section-title::before {
+    content: '';
+    width: 3px;
+    height: 14px;
+    background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+    border-radius: 4px;
+  }
+  .section-link {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    padding: 5px 8px;
+    border-radius: 8px;
+    transition: background 0.2s;
+  }
+  .section-link:hover { background: var(--primary-soft); }
+  .section-link svg {
+    width: 11px;
+    height: 11px;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ══════════ QUICK STATS ══════════ */
+  .quick-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 0 20px 16px;
+  }
+  .qs-card {
+    padding: 12px;
+    background: var(--white);
+    border: 1px solid var(--gray-100);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-xs);
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .qs-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .qs-icon.green { background: var(--success-light); }
+  .qs-icon.green svg { stroke: var(--success); }
+  .qs-icon.red { background: var(--danger-light); }
+  .qs-icon.red svg { stroke: var(--danger); }
+  .qs-icon svg {
+    width: 17px;
+    height: 17px;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .qs-info { flex: 1; min-width: 0; }
+  .qs-label {
+    font-size: 10px;
+    color: var(--gray-500);
+    font-weight: 700;
+    margin-bottom: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .qs-value {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--dark);
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: baseline;
+    gap: 3px;
+  }
+  .qs-value .currency {
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--gray-500);
+  }
+
+  /* ══════════ SPENDING CHART ══════════ */
+  .chart-card {
+    margin: 0 20px 16px;
+    padding: 14px;
+    background: var(--white);
+    border: 1px solid var(--gray-100);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-xs);
+  }
+  .chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .chart-title {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--dark);
+    letter-spacing: -0.2px;
+  }
+  .chart-total {
+    font-size: 12.5px;
+    font-weight: 900;
+    color: var(--primary);
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: baseline;
+    gap: 3px;
+  }
+  .chart-total .currency {
+    font-size: 9px;
+    color: var(--gray-500);
+    font-weight: 600;
+  }
+  .chart-bars {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 6px;
+    height: 70px;
+    padding: 0 2px;
+  }
+  .chart-bar-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .chart-bar {
+    width: 100%;
+    border-radius: 6px 6px 3px 3px;
+    background: linear-gradient(180deg, #E2E8F0, #CBD5E1);
+    transition: all 0.4s;
+  }
+  .chart-bar.active {
+    background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+    box-shadow: 0 4px 10px rgba(15,118,110,0.3);
+  }
+  .chart-label {
+    font-size: 8.5px;
+    color: var(--gray-400);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .chart-bar-wrapper.active .chart-label {
+    color: var(--primary);
+  }
+
+  /* ══════════ PAYMENT METHOD CARD ══════════ */
+  .payment-method-card {
+    margin: 0 20px 16px;
+    padding: 12px 14px;
+    background: var(--white);
+    border: 1px solid var(--gray-100);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-xs);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+  .payment-method-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: transparent;
+  }
+  .pm-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #1E40AF, #3B82F6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .pm-icon svg {
+    width: 20px;
+    height: 20px;
+    stroke: #fff;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .pm-info { flex: 1; min-width: 0; }
+  .pm-name {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 3px;
+    letter-spacing: -0.2px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .pm-name .main-badge {
+    padding: 1px 6px;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 4px;
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: 0.2px;
+  }
+  .pm-desc {
+    font-size: 10.5px;
+    color: var(--gray-500);
+    font-weight: 600;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.5px;
+  }
+  .pm-arrow {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--gray-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .payment-method-card:hover .pm-arrow {
+    background: var(--primary);
+  }
+  .pm-arrow svg {
+    width: 11px;
+    height: 11px;
+    stroke: var(--gray-500);
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: stroke 0.2s;
+  }
+  .payment-method-card:hover .pm-arrow svg { stroke: #fff; }
+
+  /* ══════════ FILTER TABS ══════════ */
+  .filter-tabs {
+    display: flex;
+    gap: 6px;
+    padding: 0 20px 12px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .filter-tabs::-webkit-scrollbar { display: none; }
+  .filter-tab {
+    flex-shrink: 0;
+    padding: 7px 13px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-full);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--gray-600);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+  .filter-tab:hover {
+    border-color: var(--primary-light);
+    color: var(--primary);
+  }
+  .filter-tab.active {
+    background: var(--dark);
+    color: #fff;
+    border-color: var(--dark);
+    box-shadow: 0 4px 12px rgba(15,23,42,0.25);
+  }
+  .filter-tab .count-mini {
+    padding: 1px 6px;
+    background: var(--gray-100);
+    border-radius: 5px;
+    font-size: 9.5px;
+    font-weight: 800;
+    color: var(--gray-600);
+  }
+  .filter-tab.active .count-mini {
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+  }
+
+  /* ══════════ TRANSACTIONS ══════════ */
+  .transactions-list {
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .transaction-group-label {
+    padding: 8px 4px 4px;
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .transaction-item {
+    padding: 12px;
+    background: var(--white);
+    border: 1px solid var(--gray-100);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-xs);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+  .transaction-item:hover {
+    transform: translateX(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: transparent;
+  }
+  .transaction-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .transaction-icon.in { background: var(--success-light); }
+  .transaction-icon.in svg { stroke: var(--success); }
+  .transaction-icon.out { background: var(--danger-light); }
+  .transaction-icon.out svg { stroke: var(--danger); }
+  .transaction-icon.topup { background: var(--blue-light); }
+  .transaction-icon.topup svg { stroke: var(--blue); }
+  .transaction-icon.withdraw { background: var(--accent-light); }
+  .transaction-icon.withdraw svg { stroke: var(--accent-dark); }
+  .transaction-icon.reward { background: var(--purple-light); }
+  .transaction-icon.reward svg { stroke: var(--purple); }
+  .transaction-icon svg {
+    width: 18px;
+    height: 18px;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .transaction-info { flex: 1; min-width: 0; }
+  .transaction-title {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 3px;
+    letter-spacing: -0.2px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .transaction-title .tag {
+    padding: 1px 6px;
+    background: var(--gray-100);
+    color: var(--gray-600);
+    border-radius: 4px;
+    font-size: 8.5px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    flex-shrink: 0;
+  }
+  .transaction-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: var(--gray-500);
+    font-weight: 600;
+  }
+  .transaction-meta svg {
+    width: 9px;
+    height: 9px;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .transaction-meta .sep {
+    width: 3px;
+    height: 3px;
+    background: var(--gray-300);
+    border-radius: 50%;
+  }
+  .transaction-amount {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    flex-shrink: 0;
+    text-align: left;
+  }
+  .transaction-amount.plus { color: var(--success); }
+  .transaction-amount.minus { color: var(--dark); }
+  .transaction-amount .currency {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--gray-500);
+  }
+  .transaction-amount .sign {
+    font-size: 11px;
+    font-weight: 900;
+    margin-left: 1px;
+  }
+
+  /* ══════════ SECURITY + LIMITS CARD ══════════ */
+  .security-card {
+    margin: 16px 20px;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--primary-soft), var(--primary-light));
+    border: 1px solid var(--primary-light);
+    border-radius: var(--r-md);
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .security-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-xs);
+  }
+  .security-icon svg {
+    width: 18px;
+    height: 18px;
+    stroke: var(--primary);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .security-content { flex: 1; min-width: 0; }
+  .security-title {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--primary-dark);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .security-title .new-badge {
+    padding: 1px 6px;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 4px;
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: 0.3px;
+  }
+  .security-desc {
+    font-size: 10.5px;
+    color: var(--primary-dark);
+    font-weight: 600;
+    line-height: 1.5;
+    margin-bottom: 10px;
+    opacity: 0.85;
+  }
+  .security-limits {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .limit-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .limit-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--primary-dark);
+  }
+  .limit-header .limit-value {
+    font-weight: 900;
+  }
+  .limit-track {
+    height: 5px;
+    background: rgba(255,255,255,0.6);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .limit-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+  }
+
+  /* ══════════ STICKY BOTTOM ══════════ */
+  .sticky-bottom {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 12px 20px 20px;
+    background: linear-gradient(180deg, rgba(248,250,252,0) 0%, var(--bg) 30%, var(--bg) 100%);
+    z-index: 50;
+  }
+  .sticky-inner {
+    background: var(--white);
+    border-radius: var(--r-lg);
+    padding: 8px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    box-shadow: 0 8px 28px rgba(15,23,42,0.14), 0 2px 8px rgba(15,23,42,0.06);
+    border: 1px solid var(--gray-100);
+  }
+  .sticky-btn-statement {
+    flex: 1;
+    padding: 13px;
+    background: var(--white);
+    color: var(--gray-700);
+    border: 1.5px solid var(--gray-200);
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    transition: all 0.25s;
+    letter-spacing: -0.2px;
+  }
+  .sticky-btn-statement:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  .sticky-btn-statement svg {
+    width: 15px;
+    height: 15px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .sticky-btn-topup {
+    flex: 1.3;
+    padding: 13px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    box-shadow: var(--shadow-primary);
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+    letter-spacing: -0.2px;
+  }
+  .sticky-btn-topup::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    bottom: 0;
+    width: 50px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shine 3s infinite;
+  }
+  @keyframes shine {
+    0% { transform: translateX(-100%); }
+    60% { transform: translateX(500%); }
+    100% { transform: translateX(500%); }
+  }
+  .sticky-btn-topup:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(15,118,110,0.4);
+  }
+  .sticky-btn-topup svg {
+    width: 15px;
+    height: 15px;
+    stroke: #fff;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    position: relative;
+    z-index: 1;
+  }
+  .sticky-btn-topup span { position: relative; z-index: 1; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>المحفظة — Wallet</h1>
+  <p>بطاقة بنكية · 5 إجراءات · Transactions · أمان</p>
+</div>
+
+<div class="screens-container">
+  <div class="screen-wrapper">
+    <div class="phone">
+      <div class="status-bar light">
+        <div class="time">9:41</div>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h3v-9H2v9zm5 0h3V9H7v13zm5 0h3V5h-3v17zm5 0h3V2h-3v20z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21l-12-18h24z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm5 4v8h1c.6 0 1-.4 1-1V9c0-.6-.4-1-1-1h-1z"/></svg>
+        </div>
+      </div>
+
+      <div class="screen">
+
+        <!-- Hero Header -->
+        <div class="hero-header">
+
+          <!-- App Bar -->
+          <div class="app-bar">
+            <div class="back-btn">
+              <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            <div class="app-title-wrap">
+              <div class="app-title">
+                <svg viewBox="0 0 24 24">
+                  <rect x="2" y="6" width="20" height="14" rx="2"/>
+                  <path d="M2 10h20"/>
+                </svg>
+                محفظتي
+              </div>
+              <div class="app-subtitle">إدارة أموالك بأمان</div>
+            </div>
+            <button class="header-icon-btn">
+              <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="1"/>
+                <circle cx="19" cy="12" r="1"/>
+                <circle cx="5" cy="12" r="1"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Membership Card -->
+          <div class="membership-card">
+            <div class="mc-header">
+              <div class="mc-brand">
+                <div class="mc-brand-logo">
+                  <svg viewBox="0 0 24 24">
+                    <rect x="2" y="6" width="20" height="14" rx="2"/>
+                    <path d="M2 10h20"/>
+                  </svg>
+                </div>
+                <div class="mc-brand-name">Dakahlia Wallet</div>
+              </div>
+              <div class="mc-badge">آمن ومشفّر</div>
+            </div>
+
+            <div class="mc-label">الرصيد الحالي</div>
+            <div class="mc-balance">
+              2,450 <span class="currency">ج.م</span>
+            </div>
+
+            <div class="mc-footer">
+              <div class="mc-info">
+                <div class="mc-info-label">رقم المحفظة</div>
+                <div class="mc-info-value">**** **** **** 4829</div>
+              </div>
+              <div class="mc-points">
+                <svg viewBox="0 0 24 24">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+                <span class="mc-points-text">450 نقطة</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions-row">
+          <button class="qa-btn">
+            <div class="qa-icon teal">
+              <svg viewBox="0 0 24 24">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </div>
+            <div class="qa-label">شحن</div>
+          </button>
+
+          <button class="qa-btn">
+            <div class="qa-icon blue">
+              <svg viewBox="0 0 24 24">
+                <line x1="22" y1="2" x2="11" y2="13"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+            </div>
+            <div class="qa-label">تحويل</div>
+          </button>
+
+          <button class="qa-btn">
+            <div class="qa-icon purple">
+              <svg viewBox="0 0 24 24">
+                <line x1="12" y1="19" x2="12" y2="5"/>
+                <polyline points="5 12 12 5 19 12"/>
+              </svg>
+            </div>
+            <div class="qa-label">سحب</div>
+          </button>
+
+          <button class="qa-btn">
+            <div class="qa-icon orange">
+              <svg viewBox="0 0 24 24">
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                <line x1="3" y1="6" x2="21" y2="6"/>
+              </svg>
+            </div>
+            <div class="qa-label">دفع فاتورة</div>
+          </button>
+
+          <button class="qa-btn">
+            <div class="qa-icon pink">
+              <svg viewBox="0 0 24 24">
+                <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+                <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+                <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+                <line x1="14" y1="14" x2="21" y2="21"/>
+                <line x1="21" y1="14" x2="14" y2="21"/>
+              </svg>
+            </div>
+            <div class="qa-label">كود</div>
+          </button>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="quick-stats">
+          <div class="qs-card">
+            <div class="qs-icon green">
+              <svg viewBox="0 0 24 24">
+                <line x1="12" y1="19" x2="12" y2="5"/>
+                <polyline points="5 12 12 5 19 12"/>
+              </svg>
+            </div>
+            <div class="qs-info">
+              <div class="qs-label">وارد الشهر</div>
+              <div class="qs-value">4,500 <span class="currency">ج.م</span></div>
+            </div>
+          </div>
+
+          <div class="qs-card">
+            <div class="qs-icon red">
+              <svg viewBox="0 0 24 24">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <polyline points="19 12 12 19 5 12"/>
+              </svg>
+            </div>
+            <div class="qs-info">
+              <div class="qs-label">صادر الشهر</div>
+              <div class="qs-value">2,050 <span class="currency">ج.م</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Spending Chart -->
+        <div class="section-header">
+          <div class="section-title">الإنفاق الشهري</div>
+          <div class="section-link">
+            التقارير
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <div class="chart-title">آخر 7 أيام</div>
+            <div class="chart-total">
+              2,050 <span class="currency">ج.م</span>
+            </div>
+          </div>
+          <div class="chart-bars">
+            <div class="chart-bar-wrapper">
+              <div class="chart-bar" style="height: 45%;"></div>
+              <div class="chart-label">سبت</div>
+            </div>
+            <div class="chart-bar-wrapper">
+              <div class="chart-bar" style="height: 62%;"></div>
+              <div class="chart-label">أحد</div>
+            </div>
+            <div class="chart-bar-wrapper">
+              <div class="chart-bar" style="height: 38%;"></div>
+              <div class="chart-label">اثنين</div>
+            </div>
+            <div class="chart-bar-wrapper active">
+              <div class="chart-bar active" style="height: 92%;"></div>
+              <div class="chart-label">ثلاثاء</div>
+            </div>
+            <div class="chart-bar-wrapper">
+              <div class="chart-bar" style="height: 55%;"></div>
+              <div class="chart-label">أربعاء</div>
+            </div>
+            <div class="chart-bar-wrapper">
+              <div class="chart-bar" style="height: 78%;"></div>
+              <div class="chart-label">خميس</div>
+            </div>
+            <div class="chart-bar-wrapper">
+              <div class="chart-bar" style="height: 40%;"></div>
+              <div class="chart-label">جمعة</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment Method -->
+        <div class="section-header">
+          <div class="section-title">بطاقتي الأساسية</div>
+          <div class="section-link">
+            إدارة
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </div>
+        </div>
+
+        <div class="payment-method-card">
+          <div class="pm-icon">
+            <svg viewBox="0 0 24 24">
+              <rect x="2" y="6" width="20" height="14" rx="2"/>
+              <line x1="2" y1="10" x2="22" y2="10"/>
+            </svg>
+          </div>
+          <div class="pm-info">
+            <div class="pm-name">
+              بطاقة فيزا
+              <span class="main-badge">افتراضية</span>
+            </div>
+            <div class="pm-desc">•••• •••• •••• 4321</div>
+          </div>
+          <div class="pm-arrow">
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </div>
+        </div>
+
+        <!-- Transactions -->
+        <div class="section-header">
+          <div class="section-title">آخر المعاملات</div>
+          <div class="section-link">
+            الكل
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </div>
+        </div>
+
+        <div class="filter-tabs">
+          <button class="filter-tab active">
+            الكل
+            <span class="count-mini">42</span>
+          </button>
+          <button class="filter-tab">وارد</button>
+          <button class="filter-tab">صادر</button>
+          <button class="filter-tab">شحن</button>
+          <button class="filter-tab">سحب</button>
+        </div>
+
+        <div class="transactions-list">
+
+          <div class="transaction-group-label">اليوم</div>
+
+          <div class="transaction-item">
+            <div class="transaction-icon out">
+              <svg viewBox="0 0 24 24">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <polyline points="19 12 12 19 5 12"/>
+              </svg>
+            </div>
+            <div class="transaction-info">
+              <div class="transaction-title">
+                طلب من متجر ريماس
+                <span class="tag">#8874</span>
+              </div>
+              <div class="transaction-meta">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                3:42 م
+                <span class="sep"></span>
+                <span>• بطاقة فيزا</span>
+              </div>
+            </div>
+            <div class="transaction-amount minus">-1,230 <span class="currency">ج.م</span></div>
+          </div>
+
+          <div class="transaction-item">
+            <div class="transaction-icon in">
+              <svg viewBox="0 0 24 24">
+                <line x1="12" y1="19" x2="12" y2="5"/>
+                <polyline points="5 12 12 5 19 12"/>
+              </svg>
+            </div>
+            <div class="transaction-info">
+              <div class="transaction-title">
+                استرداد كوبون SAVE50
+              </div>
+              <div class="transaction-meta">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                3:42 م
+                <span class="sep"></span>
+                <span>• كوبون</span>
+              </div>
+            </div>
+            <div class="transaction-amount plus">+50 <span class="currency">ج.م</span></div>
+          </div>
+
+          <div class="transaction-item">
+            <div class="transaction-icon reward">
+              <svg viewBox="0 0 24 24">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+            </div>
+            <div class="transaction-info">
+              <div class="transaction-title">
+                نقاط مكافآت الطلب
+              </div>
+              <div class="transaction-meta">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                3:45 م
+                <span class="sep"></span>
+                <span>• مكافآت</span>
+              </div>
+            </div>
+            <div class="transaction-amount plus">+120 <span class="currency">نقطة</span></div>
+          </div>
+
+          <div class="transaction-group-label">أمس</div>
+
+          <div class="transaction-item">
+            <div class="transaction-icon topup">
+              <svg viewBox="0 0 24 24">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </div>
+            <div class="transaction-info">
+              <div class="transaction-title">
+                شحن المحفظة
+              </div>
+              <div class="transaction-meta">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                6:15 م
+                <span class="sep"></span>
+                <span>• بطاقة فيزا</span>
+              </div>
+            </div>
+            <div class="transaction-amount plus">+2,000 <span class="currency">ج.م</span></div>
+          </div>
+
+          <div class="transaction-item">
+            <div class="transaction-icon out">
+              <svg viewBox="0 0 24 24">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <polyline points="19 12 12 19 5 12"/>
+              </svg>
+            </div>
+            <div class="transaction-info">
+              <div class="transaction-title">
+                طلب من مطعم البيت
+                <span class="tag">#8867</span>
+              </div>
+              <div class="transaction-meta">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                2:30 م
+                <span class="sep"></span>
+                <span>• محفظة</span>
+              </div>
+            </div>
+            <div class="transaction-amount minus">-320 <span class="currency">ج.م</span></div>
+          </div>
+
+          <div class="transaction-group-label">منذ 3 أيام</div>
+
+          <div class="transaction-item">
+            <div class="transaction-icon withdraw">
+              <svg viewBox="0 0 24 24">
+                <line x1="12" y1="19" x2="12" y2="5"/>
+                <polyline points="5 12 12 5 19 12"/>
+              </svg>
+            </div>
+            <div class="transaction-info">
+              <div class="transaction-title">
+                سحب إلى بنك مصر
+              </div>
+              <div class="transaction-meta">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                10:20 ص
+                <span class="sep"></span>
+                <span>• حساب بنكي ••••7856</span>
+              </div>
+            </div>
+            <div class="transaction-amount minus">-500 <span class="currency">ج.م</span></div>
+          </div>
+
+        </div>
+
+        <!-- Security + Limits Card -->
+        <div class="security-card">
+          <div class="security-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <polyline points="9 12 11 14 15 10"/>
+            </svg>
+          </div>
+          <div class="security-content">
+            <div class="security-title">
+              حماية متقدمة
+              <span class="new-badge">جديد</span>
+            </div>
+            <div class="security-desc">
+              محفظتك محمية بـ PIN وبصمة الإصبع. بالإضافة لحدود يومية وشهرية للتحكم الكامل
+            </div>
+
+            <div class="security-limits">
+              <div class="limit-row">
+                <div class="limit-header">
+                  <span>الحد اليومي</span>
+                  <span class="limit-value">1,500 / 5,000 ج.م</span>
+                </div>
+                <div class="limit-track">
+                  <div class="limit-fill" style="width: 30%;"></div>
+                </div>
+              </div>
+
+              <div class="limit-row">
+                <div class="limit-header">
+                  <span>الحد الشهري</span>
+                  <span class="limit-value">12,450 / 50,000 ج.م</span>
+                </div>
+                <div class="limit-track">
+                  <div class="limit-fill" style="width: 25%;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Sticky Bottom -->
+      <div class="sticky-bottom">
+        <div class="sticky-inner">
+          <button class="sticky-btn-statement">
+            <svg viewBox="0 0 24 24">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+            <span>كشف حساب</span>
+          </button>
+          <button class="sticky-btn-topup">
+            <svg viewBox="0 0 24 24">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            <span>شحن المحفظة</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+    <div class="screen-badge">المحفظة</div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,1749 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تفاصيل المنتج — معاينة احترافية</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'IBM Plex Sans Arabic', sans-serif; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --primary: #0F766E;
+    --primary-dark: #115E59;
+    --primary-light: #CCFBF1;
+    --primary-soft: #F0FDFA;
+    --accent: #F59E0B;
+    --accent-dark: #D97706;
+    --accent-light: #FEF3C7;
+    --danger: #EF4444;
+    --danger-light: #FEF2F2;
+    --success: #10B981;
+    --success-light: #ECFDF5;
+    --purple: #8B5CF6;
+    --purple-light: #EDE9FE;
+    --blue: #2563EB;
+    --blue-light: #DBEAFE;
+    --dark: #0F172A;
+    --gray-700: #374151;
+    --gray-600: #4B5563;
+    --gray-500: #6B7280;
+    --gray-400: #9CA3AF;
+    --gray-300: #D1D5DB;
+    --gray-200: #E5E7EB;
+    --gray-100: #F3F4F6;
+    --bg: #F8FAFC;
+    --white: #FFFFFF;
+
+    --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.07);
+    --shadow-lg: 0 10px 30px rgba(15, 23, 42, 0.09);
+    --shadow-xl: 0 20px 40px rgba(15, 23, 42, 0.14);
+    --shadow-primary: 0 8px 24px rgba(15, 118, 110, 0.32);
+    --shadow-accent: 0 8px 24px rgba(245, 158, 11, 0.32);
+
+    --r-sm: 10px;
+    --r-md: 14px;
+    --r-lg: 18px;
+    --r-xl: 24px;
+    --r-full: 999px;
+  }
+
+  body {
+    background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+    min-height: 100vh;
+    padding: 50px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+  }
+
+  .page-header { text-align: center; color: #fff; max-width: 900px; }
+  .page-header h1 {
+    font-size: 30px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #fff, #94A3B8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .page-header p { color: #94A3B8; font-size: 14px; }
+
+  .screens-container {
+    display: flex; gap: 40px; flex-wrap: wrap; justify-content: center;
+  }
+  .screen-wrapper {
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+  }
+  .screen-badge {
+    background: rgba(15, 118, 110, 0.15);
+    color: #5EEAD4;
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid rgba(94, 234, 212, 0.25);
+  }
+
+  .phone {
+    width: 375px;
+    height: 812px;
+    background: var(--bg);
+    border-radius: 44px;
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+      0 0 0 10px #0A0F1E,
+      0 0 0 12px #1E293B,
+      0 30px 60px rgba(0, 0, 0, 0.5),
+      0 0 80px rgba(15, 118, 110, 0.15);
+  }
+  .phone::before {
+    content: '';
+    position: absolute;
+    top: 10px; left: 50%;
+    transform: translateX(-50%);
+    width: 110px; height: 28px;
+    background: #0A0F1E;
+    border-radius: 999px;
+    z-index: 999;
+  }
+
+  .status-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 48px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 28px;
+    font-size: 13px;
+    font-weight: 600;
+    z-index: 100;
+    pointer-events: none;
+    color: var(--dark);
+  }
+  .status-bar .time { margin-top: 4px; }
+  .status-bar .status-icons { display: flex; gap: 5px; margin-top: 4px; align-items: center; }
+  .status-bar svg { width: 15px; height: 15px; }
+
+  .screen {
+    width: 100%; height: 100%;
+    overflow-y: auto; overflow-x: hidden;
+    scrollbar-width: none;
+    padding-bottom: 130px;
+  }
+  .screen::-webkit-scrollbar { display: none; }
+
+  /* ══════════ TOP NAV BAR (Floating) ══════════ */
+  .floating-nav {
+    position: absolute;
+    top: 56px;
+    right: 16px;
+    left: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+  }
+  .nav-btn-group { display: flex; gap: 8px; }
+  .nav-btn {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.5);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+    transition: all 0.2s;
+  }
+  .nav-btn:hover { transform: scale(1.08); }
+  .nav-btn svg {
+    width: 18px; height: 18px;
+    stroke: var(--dark);
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .nav-btn.active { background: var(--primary); }
+  .nav-btn.active svg { stroke: #fff; }
+
+  /* ══════════ PRODUCT GALLERY ══════════ */
+  .product-gallery {
+    position: relative;
+    height: 380px;
+    background: linear-gradient(160deg, #F1F5F9 0%, #E2E8F0 100%);
+    overflow: hidden;
+  }
+  .gallery-track {
+    display: flex;
+    height: 100%;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+  .gallery-track::-webkit-scrollbar { display: none; }
+
+  .product-slide {
+    flex-shrink: 0;
+    width: 100%;
+    height: 100%;
+    scroll-snap-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 60px 40px 40px;
+  }
+  .product-slide .product-visual {
+    width: 240px;
+    height: 240px;
+    border-radius: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-shadow:
+      0 20px 50px rgba(15,23,42,0.15),
+      0 0 0 8px rgba(255,255,255,0.5),
+      inset 0 -4px 20px rgba(0,0,0,0.08);
+    overflow: hidden;
+  }
+  .product-slide .product-visual::before {
+    content: '';
+    position: absolute;
+    top: -40%; right: -40%;
+    width: 100%; height: 100%;
+    background: radial-gradient(circle, rgba(255,255,255,0.35), transparent 60%);
+    border-radius: 50%;
+  }
+  .product-slide .product-visual svg {
+    width: 110px; height: 110px;
+    stroke: #fff;
+    stroke-width: 1.4;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 6px 16px rgba(0,0,0,0.25));
+  }
+  .product-visual.v1 { background: linear-gradient(135deg, #0F172A, #334155); }
+  .product-visual.v2 { background: linear-gradient(135deg, #1E293B, #475569); }
+  .product-visual.v3 { background: linear-gradient(135deg, #0F766E, #14B8A6); }
+  .product-visual.v4 { background: linear-gradient(135deg, #F59E0B, #EA580C); }
+
+  /* Photo counter */
+  .photo-counter {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    padding: 6px 14px;
+    background: rgba(15,23,42,0.75);
+    backdrop-filter: blur(10px);
+    border-radius: var(--r-full);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    z-index: 5;
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+  .photo-counter svg {
+    width: 12px; height: 12px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+  }
+
+  /* Discount badge */
+  .discount-badge {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    padding: 8px 14px;
+    background: linear-gradient(135deg, var(--danger), #DC2626);
+    color: #fff;
+    border-radius: var(--r-full);
+    font-size: 13px;
+    font-weight: 800;
+    z-index: 5;
+    box-shadow: 0 6px 18px rgba(239,68,68,0.4);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .discount-badge svg {
+    width: 12px; height: 12px;
+    stroke: #fff; stroke-width: 2.5;
+    fill: none; stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* Thumbnails strip */
+  .thumbs-strip {
+    display: flex;
+    gap: 8px;
+    padding: 14px 20px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    background: var(--white);
+    border-bottom: 1px solid var(--gray-100);
+  }
+  .thumbs-strip::-webkit-scrollbar { display: none; }
+  .thumb {
+    flex-shrink: 0;
+    width: 52px; height: 52px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+    padding: 2px;
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .thumb-inner {
+    width: 100%; height: 100%;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .thumb-inner svg {
+    width: 20px; height: 20px;
+    stroke: #fff; stroke-width: 1.6;
+    fill: none; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .thumb-inner.t1 { background: linear-gradient(135deg, #0F172A, #334155); }
+  .thumb-inner.t2 { background: linear-gradient(135deg, #1E293B, #475569); }
+  .thumb-inner.t3 { background: linear-gradient(135deg, #0F766E, #14B8A6); }
+  .thumb-inner.t4 { background: linear-gradient(135deg, #F59E0B, #EA580C); }
+  .thumb.active { border-color: var(--primary); }
+
+  /* ══════════ MAIN CONTENT ══════════ */
+  .content { padding: 18px 20px 0; }
+
+  /* Category + Stock row */
+  .top-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .category-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: var(--primary-soft);
+    color: var(--primary);
+    border-radius: var(--r-full);
+    font-size: 11px;
+    font-weight: 700;
+    border: 1px solid var(--primary-light);
+  }
+  .category-tag svg {
+    width: 11px; height: 11px;
+    stroke: currentColor; stroke-width: 2.2;
+    fill: none; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .stock-info {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--success);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .stock-info::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--success);
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px rgba(16,185,129,0.2);
+  }
+  .stock-info.low { color: var(--accent-dark); }
+  .stock-info.low::before { background: var(--accent); box-shadow: 0 0 0 3px rgba(245,158,11,0.2); }
+
+  /* Product Title */
+  .product-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--dark);
+    line-height: 1.4;
+    letter-spacing: -0.4px;
+    margin-bottom: 10px;
+  }
+
+  /* Rating row */
+  .rating-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--gray-200);
+  }
+  .rating-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: var(--accent-light);
+    border-radius: var(--r-full);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent-dark);
+  }
+  .rating-chip svg {
+    width: 12px; height: 12px;
+    fill: var(--accent-dark);
+    stroke: none;
+  }
+  .rating-text {
+    font-size: 12px;
+    color: var(--gray-500);
+    font-weight: 500;
+  }
+  .rating-text strong { color: var(--dark); font-weight: 700; }
+  .divider-dot {
+    width: 3px; height: 3px;
+    background: var(--gray-300);
+    border-radius: 50%;
+  }
+  .sold-info {
+    font-size: 12px;
+    color: var(--gray-500);
+    font-weight: 500;
+  }
+  .sold-info strong { color: var(--primary); font-weight: 700; }
+
+  /* Price Block */
+  .price-block {
+    background: linear-gradient(135deg, var(--primary-soft), var(--primary-light));
+    border-radius: var(--r-lg);
+    padding: 16px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--primary-light);
+  }
+  .price-block::before {
+    content: '';
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 100px; height: 100px;
+    background: radial-gradient(circle, rgba(15,118,110,0.15), transparent 60%);
+    border-radius: 50%;
+  }
+  .price-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 6px;
+    position: relative;
+    z-index: 1;
+  }
+  .price-current {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--primary-dark);
+    letter-spacing: -1px;
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+  .price-current .currency {
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .price-old {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--gray-500);
+    text-decoration: line-through;
+    text-decoration-thickness: 2px;
+    text-decoration-color: var(--danger);
+  }
+  .save-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--danger);
+    color: #fff;
+    padding: 3px 9px;
+    border-radius: var(--r-full);
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .save-pill svg {
+    width: 10px; height: 10px;
+    stroke: #fff; stroke-width: 2.5;
+    fill: none; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .installment-note {
+    font-size: 11px;
+    color: var(--primary-dark);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    position: relative;
+    z-index: 1;
+  }
+  .installment-note svg {
+    width: 12px; height: 12px;
+    stroke: currentColor; stroke-width: 2;
+    fill: none; stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* Section label */
+  .section-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    margin-top: 20px;
+  }
+  .section-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: -0.2px;
+  }
+  .section-title-bar {
+    width: 3px;
+    height: 14px;
+    background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+    border-radius: 4px;
+  }
+  .section-link {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .section-link svg {
+    width: 11px; height: 11px;
+    stroke: currentColor; stroke-width: 2.5;
+    fill: none; stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* ══════════ COLOR PICKER ══════════ */
+  .color-picker {
+    display: flex;
+    gap: 10px;
+    padding: 4px 0;
+  }
+  .color-option {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.2s;
+    border: 2px solid var(--white);
+    box-shadow: 0 0 0 1px var(--gray-200);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .color-option:hover { transform: scale(1.05); }
+  .color-option.active {
+    box-shadow: 0 0 0 2px var(--primary);
+  }
+  .color-option.active::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border: 2px solid var(--primary);
+    border-radius: 50%;
+  }
+  .color-option svg {
+    width: 14px; height: 14px;
+    stroke: #fff; stroke-width: 3;
+    fill: none; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .color-option.black { background: linear-gradient(135deg, #0F172A, #334155); }
+  .color-option.silver { background: linear-gradient(135deg, #E2E8F0, #94A3B8); }
+  .color-option.teal { background: linear-gradient(135deg, #0F766E, #14B8A6); }
+  .color-option.gold { background: linear-gradient(135deg, #F59E0B, #D97706); }
+
+  /* ══════════ SIZE / VARIANT PICKER ══════════ */
+  .variant-picker {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 4px 0;
+  }
+  .variant-option {
+    padding: 9px 16px;
+    border-radius: var(--r-sm);
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--gray-700);
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .variant-option:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  .variant-option.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(15,118,110,0.28);
+  }
+  .variant-option.disabled {
+    background: var(--gray-100);
+    color: var(--gray-400);
+    cursor: not-allowed;
+    text-decoration: line-through;
+    border-color: var(--gray-200);
+  }
+  .variant-option.disabled:hover {
+    border-color: var(--gray-200);
+    color: var(--gray-400);
+  }
+
+  /* ══════════ QUANTITY SELECTOR ══════════ */
+  .qty-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 16px;
+    padding: 12px 14px;
+    background: var(--white);
+    border-radius: var(--r-md);
+    border: 1px solid var(--gray-100);
+  }
+  .qty-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--dark);
+  }
+  .qty-label span {
+    font-size: 11px;
+    color: var(--gray-500);
+    font-weight: 500;
+    display: block;
+    margin-top: 2px;
+  }
+  .qty-selector {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    background: var(--gray-100);
+    border-radius: var(--r-full);
+    padding: 3px;
+  }
+  .qty-btn {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--white);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: var(--shadow-xs);
+  }
+  .qty-btn:hover { background: var(--primary); }
+  .qty-btn:hover svg { stroke: #fff; }
+  .qty-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .qty-btn:disabled:hover { background: var(--white); }
+  .qty-btn:disabled:hover svg { stroke: var(--dark); }
+  .qty-btn svg {
+    width: 14px; height: 14px;
+    stroke: var(--dark);
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+  }
+  .qty-value {
+    min-width: 36px;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--dark);
+  }
+
+  /* ══════════ FEATURES (Shipping, Warranty, Returns) ══════════ */
+  .features-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .feature-card {
+    background: var(--white);
+    border-radius: var(--r-md);
+    padding: 12px 8px;
+    text-align: center;
+    border: 1px solid var(--gray-100);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .feature-card:hover {
+    border-color: var(--primary-light);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+  }
+  .feature-icon {
+    width: 32px; height: 32px;
+    border-radius: 10px;
+    margin: 0 auto 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .feature-icon svg {
+    width: 16px; height: 16px;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .feature-icon.teal { background: var(--primary-light); }
+  .feature-icon.teal svg { stroke: var(--primary); }
+  .feature-icon.green { background: var(--success-light); }
+  .feature-icon.green svg { stroke: var(--success); }
+  .feature-icon.orange { background: var(--accent-light); }
+  .feature-icon.orange svg { stroke: var(--accent-dark); }
+
+  .feature-text {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--dark);
+    line-height: 1.4;
+  }
+  .feature-sub {
+    font-size: 9px;
+    color: var(--gray-500);
+    font-weight: 500;
+    margin-top: 2px;
+  }
+
+  /* ══════════ DESCRIPTION ══════════ */
+  .description-box {
+    background: var(--white);
+    border-radius: var(--r-md);
+    padding: 14px;
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-xs);
+  }
+  .description-text {
+    font-size: 12px;
+    color: var(--gray-700);
+    line-height: 1.85;
+    font-weight: 500;
+  }
+  .description-text.collapsed {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .read-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--primary);
+    cursor: pointer;
+    margin-top: 8px;
+  }
+  .read-more svg {
+    width: 11px; height: 11px;
+    stroke: currentColor; stroke-width: 2.5;
+    fill: none; stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* ══════════ SPECS TABLE ══════════ */
+  .specs-table {
+    background: var(--white);
+    border-radius: var(--r-md);
+    overflow: hidden;
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-xs);
+  }
+  .spec-row {
+    padding: 11px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--gray-100);
+    font-size: 12px;
+  }
+  .spec-row:last-child { border-bottom: none; }
+  .spec-key {
+    color: var(--gray-500);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .spec-key svg {
+    width: 13px; height: 13px;
+    stroke: var(--gray-400);
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .spec-value {
+    color: var(--dark);
+    font-weight: 700;
+    text-align: left;
+  }
+
+  /* ══════════ SELLER CARD ══════════ */
+  .seller-card {
+    background: var(--white);
+    border-radius: var(--r-md);
+    padding: 14px;
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-xs);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .seller-avatar {
+    width: 48px; height: 48px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #F59E0B, #EA580C);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 800;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(245,158,11,0.3);
+    position: relative;
+  }
+  .seller-verified {
+    position: absolute;
+    bottom: -3px; left: -3px;
+    width: 18px; height: 18px;
+    background: var(--primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #fff;
+  }
+  .seller-verified svg {
+    width: 9px; height: 9px;
+    stroke: #fff; stroke-width: 3.5;
+    fill: none; stroke-linecap: round; stroke-linejoin: round;
+  }
+  .seller-info { flex: 1; min-width: 0; }
+  .seller-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .seller-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    color: var(--gray-500);
+    font-weight: 600;
+  }
+  .seller-meta span {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .seller-meta svg {
+    width: 10px; height: 10px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+  }
+  .seller-arrow {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--gray-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .seller-card:hover .seller-arrow {
+    background: var(--primary);
+  }
+  .seller-arrow svg {
+    width: 13px; height: 13px;
+    stroke: var(--gray-500);
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+    transition: stroke 0.2s;
+  }
+  .seller-card:hover .seller-arrow svg { stroke: #fff; }
+
+  /* ══════════ REVIEWS SECTION ══════════ */
+  .reviews-summary {
+    background: var(--white);
+    border-radius: var(--r-lg);
+    padding: 16px;
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-xs);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .rev-big {
+    text-align: center;
+    flex-shrink: 0;
+    padding-left: 16px;
+    border-left: 1px solid var(--gray-100);
+  }
+  .rev-big-num {
+    font-size: 34px;
+    font-weight: 800;
+    color: var(--dark);
+    line-height: 1;
+    letter-spacing: -1.5px;
+  }
+  .rev-stars {
+    display: flex;
+    gap: 2px;
+    justify-content: center;
+    margin: 6px 0 4px;
+  }
+  .rev-stars svg {
+    width: 12px; height: 12px;
+    fill: var(--accent);
+    stroke: none;
+  }
+  .rev-big-count {
+    font-size: 10px;
+    color: var(--gray-500);
+    font-weight: 600;
+  }
+  .rev-bars {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .rev-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--gray-500);
+  }
+  .rev-bar-track {
+    flex: 1;
+    height: 5px;
+    background: var(--gray-100);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .rev-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-dark));
+    border-radius: 3px;
+  }
+
+  .review-card {
+    background: var(--white);
+    border-radius: var(--r-md);
+    padding: 14px;
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-xs);
+    margin-bottom: 8px;
+  }
+  .review-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .review-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--blue-light), #BFDBFE);
+    color: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .review-avatar.c2 { background: linear-gradient(135deg, #FCE7F3, #FBCFE8); color: #BE185D; }
+  .review-info { flex: 1; min-width: 0; }
+  .review-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .review-name svg {
+    width: 10px; height: 10px;
+    fill: var(--primary);
+    stroke: none;
+  }
+  .review-stars {
+    display: flex;
+    gap: 2px;
+  }
+  .review-stars svg {
+    width: 10px; height: 10px;
+    fill: var(--accent);
+    stroke: none;
+  }
+  .review-time {
+    font-size: 10px;
+    color: var(--gray-400);
+    font-weight: 500;
+  }
+  .review-text {
+    font-size: 12px;
+    color: var(--gray-700);
+    line-height: 1.7;
+    font-weight: 500;
+  }
+
+  /* ══════════ SIMILAR PRODUCTS ══════════ */
+  .similar-scroll {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 6px;
+    margin: 0 -20px;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  .similar-scroll::-webkit-scrollbar { display: none; }
+  .similar-card {
+    flex-shrink: 0;
+    width: 130px;
+    background: var(--white);
+    border-radius: var(--r-md);
+    overflow: hidden;
+    cursor: pointer;
+    border: 1px solid var(--gray-100);
+    transition: all 0.25s;
+    box-shadow: var(--shadow-xs);
+  }
+  .similar-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: transparent;
+  }
+  .similar-image {
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .similar-image svg {
+    width: 34px; height: 34px;
+    stroke: #fff; stroke-width: 1.4;
+    fill: none; stroke-linecap: round; stroke-linejoin: round;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.2));
+  }
+  .similar-image.s1 { background: linear-gradient(135deg, #0F172A, #334155); }
+  .similar-image.s2 { background: linear-gradient(135deg, #0F766E, #14B8A6); }
+  .similar-image.s3 { background: linear-gradient(135deg, #F59E0B, #EA580C); }
+  .similar-image.s4 { background: linear-gradient(135deg, #8B5CF6, #6D28D9); }
+  .similar-body { padding: 8px 10px 10px; }
+  .similar-name {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .similar-price {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--primary);
+    letter-spacing: -0.3px;
+  }
+  .similar-price .currency {
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--gray-500);
+  }
+
+  /* ══════════ STICKY BOTTOM BAR ══════════ */
+  .sticky-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 12px 16px 20px;
+    background: linear-gradient(180deg, rgba(248,250,252,0) 0%, var(--bg) 25%, var(--bg) 100%);
+    z-index: 50;
+  }
+  .sticky-inner {
+    background: var(--white);
+    border-radius: var(--r-lg);
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 8px 28px rgba(15,23,42,0.14), 0 2px 8px rgba(15,23,42,0.06);
+    border: 1px solid var(--gray-100);
+  }
+  .icon-action-btn {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background: var(--gray-100);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .icon-action-btn:hover { background: var(--primary-soft); }
+  .icon-action-btn.active { background: var(--danger-light); }
+  .icon-action-btn.active svg { stroke: var(--danger); fill: var(--danger); }
+  .icon-action-btn svg {
+    width: 19px; height: 19px;
+    stroke: var(--gray-700);
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .icon-action-btn .dot-badge {
+    position: absolute;
+    top: 6px; right: 6px;
+    width: 8px; height: 8px;
+    background: var(--danger);
+    border-radius: 50%;
+    border: 2px solid #fff;
+  }
+
+  .add-cart-btn {
+    flex: 1;
+    padding: 13px 16px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    box-shadow: var(--shadow-accent);
+    transition: all 0.25s;
+    white-space: nowrap;
+  }
+  .add-cart-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(245,158,11,0.4);
+  }
+  .add-cart-btn:active { transform: translateY(0); }
+  .add-cart-btn svg {
+    width: 16px; height: 16px;
+    stroke: #fff; stroke-width: 2.2;
+    fill: none; stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  .buy-now-btn {
+    flex: 1;
+    padding: 13px 16px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    box-shadow: var(--shadow-primary);
+    transition: all 0.25s;
+    white-space: nowrap;
+  }
+  .buy-now-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(15,118,110,0.4);
+  }
+  .buy-now-btn:active { transform: translateY(0); }
+  .buy-now-btn svg {
+    width: 16px; height: 16px;
+    stroke: #fff; stroke-width: 2.2;
+    fill: none; stroke-linecap: round; stroke-linejoin: round;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>تفاصيل المنتج — ساعة ذكية T800 Ultra</h1>
+  <p>شاشة تسوّق كاملة · جاهزة للتنفيذ</p>
+</div>
+
+<div class="screens-container">
+  <div class="screen-wrapper">
+    <div class="phone">
+      <div class="status-bar">
+        <div class="time">9:41</div>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h3v-9H2v9zm5 0h3V9H7v13zm5 0h3V5h-3v17zm5 0h3V2h-3v20z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21l-12-18h24z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm5 4v8h1c.6 0 1-.4 1-1V9c0-.6-.4-1-1-1h-1z"/></svg>
+        </div>
+      </div>
+
+      <!-- Floating Nav -->
+      <div class="floating-nav">
+        <div class="nav-btn-group">
+          <div class="nav-btn">
+            <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+          <div class="nav-btn">
+            <svg viewBox="0 0 24 24">
+              <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+            </svg>
+          </div>
+        </div>
+        <div class="nav-btn-group">
+          <div class="nav-btn active">
+            <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </div>
+          <div class="nav-btn">
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="1"/>
+              <circle cx="19" cy="12" r="1"/>
+              <circle cx="5" cy="12" r="1"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="screen">
+
+        <!-- Product Gallery -->
+        <div class="product-gallery">
+          <div class="gallery-track">
+            <div class="product-slide">
+              <div class="product-visual v1">
+                <svg viewBox="0 0 24 24">
+                  <rect x="6" y="2" width="12" height="20" rx="3"/>
+                  <rect x="9" y="4.5" width="6" height="15" rx="1.5"/>
+                  <line x1="12" y1="2" x2="12" y2="4"/>
+                  <line x1="12" y1="20" x2="12" y2="22"/>
+                </svg>
+              </div>
+            </div>
+            <div class="product-slide">
+              <div class="product-visual v2">
+                <svg viewBox="0 0 24 24">
+                  <rect x="6" y="2" width="12" height="20" rx="3"/>
+                  <rect x="9" y="4.5" width="6" height="15" rx="1.5"/>
+                  <line x1="12" y1="2" x2="12" y2="4"/>
+                  <line x1="12" y1="20" x2="12" y2="22"/>
+                </svg>
+              </div>
+            </div>
+            <div class="product-slide">
+              <div class="product-visual v3">
+                <svg viewBox="0 0 24 24">
+                  <rect x="6" y="2" width="12" height="20" rx="3"/>
+                  <rect x="9" y="4.5" width="6" height="15" rx="1.5"/>
+                  <line x1="12" y1="2" x2="12" y2="4"/>
+                  <line x1="12" y1="20" x2="12" y2="22"/>
+                </svg>
+              </div>
+            </div>
+            <div class="product-slide">
+              <div class="product-visual v4">
+                <svg viewBox="0 0 24 24">
+                  <rect x="6" y="2" width="12" height="20" rx="3"/>
+                  <rect x="9" y="4.5" width="6" height="15" rx="1.5"/>
+                  <line x1="12" y1="2" x2="12" y2="4"/>
+                  <line x1="12" y1="20" x2="12" y2="22"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="discount-badge">
+            <svg viewBox="0 0 24 24"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+            -42%
+          </div>
+
+          <div class="photo-counter">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            1 / 4
+          </div>
+        </div>
+
+        <!-- Thumbnails -->
+        <div class="thumbs-strip">
+          <div class="thumb active">
+            <div class="thumb-inner t1">
+              <svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/><rect x="9" y="4.5" width="6" height="15" rx="1.5"/></svg>
+            </div>
+          </div>
+          <div class="thumb">
+            <div class="thumb-inner t2">
+              <svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/><rect x="9" y="4.5" width="6" height="15" rx="1.5"/></svg>
+            </div>
+          </div>
+          <div class="thumb">
+            <div class="thumb-inner t3">
+              <svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/><rect x="9" y="4.5" width="6" height="15" rx="1.5"/></svg>
+            </div>
+          </div>
+          <div class="thumb">
+            <div class="thumb-inner t4">
+              <svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/><rect x="9" y="4.5" width="6" height="15" rx="1.5"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content">
+
+          <!-- Top Meta -->
+          <div class="top-meta">
+            <div class="category-tag">
+              <svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/></svg>
+              ساعات ذكية
+            </div>
+            <div class="stock-info">متوفر في المخزون</div>
+          </div>
+
+          <!-- Product Title -->
+          <div class="product-title">ساعة ذكية T800 Ultra — تصميم عصري وشحن لاسلكي</div>
+
+          <!-- Rating Row -->
+          <div class="rating-row">
+            <div class="rating-chip">
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              4.8
+            </div>
+            <span class="rating-text"><strong>127</strong> تقييم</span>
+            <span class="divider-dot"></span>
+            <span class="sold-info"><strong>340</strong> عملية بيع</span>
+          </div>
+
+          <!-- Price Block -->
+          <div class="price-block">
+            <div class="price-row">
+              <div class="price-current">350 <span class="currency">ج.م</span></div>
+              <div class="price-old">600 ج.م</div>
+              <div class="save-pill">
+                <svg viewBox="0 0 24 24"><polyline points="19 12 12 19 5 12"/><line x1="12" y1="19" x2="12" y2="5"/></svg>
+                وفّر 250
+              </div>
+            </div>
+            <div class="installment-note">
+              <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+              أو 87 ج.م × 4 شهور بدون فوائد
+            </div>
+          </div>
+
+          <!-- Color Picker -->
+          <div class="section-label">
+            <div class="section-title">
+              <div class="section-title-bar"></div>
+              اللون
+            </div>
+            <div class="section-link">أسود داكن</div>
+          </div>
+
+          <div class="color-picker">
+            <div class="color-option black active">
+              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="color-option silver"></div>
+            <div class="color-option teal"></div>
+            <div class="color-option gold"></div>
+          </div>
+
+          <!-- Size / Model Picker -->
+          <div class="section-label">
+            <div class="section-title">
+              <div class="section-title-bar"></div>
+              المقاس
+            </div>
+            <div class="section-link">44mm</div>
+          </div>
+
+          <div class="variant-picker">
+            <div class="variant-option">40mm</div>
+            <div class="variant-option active">44mm</div>
+            <div class="variant-option">47mm</div>
+            <div class="variant-option disabled">52mm</div>
+          </div>
+
+          <!-- Quantity -->
+          <div class="qty-row">
+            <div class="qty-label">
+              الكمية
+              <span>الحد الأقصى 5 قطع</span>
+            </div>
+            <div class="qty-selector">
+              <button class="qty-btn" disabled>
+                <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+              <div class="qty-value">1</div>
+              <button class="qty-btn">
+                <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Features -->
+          <div class="features-row">
+            <div class="feature-card">
+              <div class="feature-icon teal">
+                <svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+              </div>
+              <div class="feature-text">شحن سريع</div>
+              <div class="feature-sub">1-3 أيام</div>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon green">
+                <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+              <div class="feature-text">ضمان سنة</div>
+              <div class="feature-sub">ضمان الوكيل</div>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon orange">
+                <svg viewBox="0 0 24 24"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+              </div>
+              <div class="feature-text">إرجاع مجاني</div>
+              <div class="feature-sub">خلال 14 يوم</div>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="section-label" style="margin-top: 24px;">
+            <div class="section-title">
+              <div class="section-title-bar"></div>
+              الوصف
+            </div>
+            <div class="section-link">
+              عرض المزيد
+              <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            </div>
+          </div>
+
+          <div class="description-box">
+            <div class="description-text collapsed">
+              ساعة T800 Ultra الذكية بتصميم عصري وأداء متقدم. تتميز بشاشة AMOLED عالية الدقة، شحن لاسلكي سريع، ومقاومة للماء والغبار. تقيس معدل ضربات القلب، عدد الخطوات، جودة النوم، وتدعم أكثر من 100 وضع رياضي. متوافقة مع Android و iOS.
+            </div>
+            <div class="read-more">
+              اقرأ المزيد
+              <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+
+          <!-- Specs -->
+          <div class="section-label">
+            <div class="section-title">
+              <div class="section-title-bar"></div>
+              المواصفات
+            </div>
+          </div>
+
+          <div class="specs-table">
+            <div class="spec-row">
+              <div class="spec-key">
+                <svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/></svg>
+                العلامة التجارية
+              </div>
+              <div class="spec-value">T800 Ultra</div>
+            </div>
+            <div class="spec-row">
+              <div class="spec-key">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                مدة البطارية
+              </div>
+              <div class="spec-value">حتى 7 أيام</div>
+            </div>
+            <div class="spec-row">
+              <div class="spec-key">
+                <svg viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+                مقاومة الماء
+              </div>
+              <div class="spec-value">IP68</div>
+            </div>
+            <div class="spec-row">
+              <div class="spec-key">
+                <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/></svg>
+                نوع الشاشة
+              </div>
+              <div class="spec-value">AMOLED 2.08"</div>
+            </div>
+            <div class="spec-row">
+              <div class="spec-key">
+                <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                الشحن
+              </div>
+              <div class="spec-value">لاسلكي سريع</div>
+            </div>
+            <div class="spec-row">
+              <div class="spec-key">
+                <svg viewBox="0 0 24 24"><path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg>
+                التوافق
+              </div>
+              <div class="spec-value">Android / iOS</div>
+            </div>
+          </div>
+
+          <!-- Seller -->
+          <div class="section-label">
+            <div class="section-title">
+              <div class="section-title-bar"></div>
+              البائع
+            </div>
+            <div class="section-link">
+              المتجر
+              <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            </div>
+          </div>
+
+          <div class="seller-card">
+            <div class="seller-avatar">
+              ر
+              <div class="seller-verified">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+            </div>
+            <div class="seller-info">
+              <div class="seller-name">متجر ريماس للإلكترونيات</div>
+              <div class="seller-meta">
+                <span>
+                  <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  4.9
+                </span>
+                <span>•</span>
+                <span>بائع موثّق</span>
+                <span>•</span>
+                <span>+2K بيع</span>
+              </div>
+            </div>
+            <div class="seller-arrow">
+              <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            </div>
+          </div>
+
+          <!-- Reviews -->
+          <div class="section-label" style="margin-top: 24px;">
+            <div class="section-title">
+              <div class="section-title-bar"></div>
+              التقييمات
+            </div>
+            <div class="section-link">
+              الكل (127)
+              <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            </div>
+          </div>
+
+          <div class="reviews-summary">
+            <div class="rev-big">
+              <div class="rev-big-num">4.8</div>
+              <div class="rev-stars">
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              </div>
+              <div class="rev-big-count">127 تقييم</div>
+            </div>
+            <div class="rev-bars">
+              <div class="rev-bar-row">
+                <span>5</span>
+                <div class="rev-bar-track"><div class="rev-bar-fill" style="width: 82%;"></div></div>
+                <span>82%</span>
+              </div>
+              <div class="rev-bar-row">
+                <span>4</span>
+                <div class="rev-bar-track"><div class="rev-bar-fill" style="width: 12%;"></div></div>
+                <span>12%</span>
+              </div>
+              <div class="rev-bar-row">
+                <span>3</span>
+                <div class="rev-bar-track"><div class="rev-bar-fill" style="width: 4%;"></div></div>
+                <span>4%</span>
+              </div>
+              <div class="rev-bar-row">
+                <span>2</span>
+                <div class="rev-bar-track"><div class="rev-bar-fill" style="width: 1%;"></div></div>
+                <span>1%</span>
+              </div>
+              <div class="rev-bar-row">
+                <span>1</span>
+                <div class="rev-bar-track"><div class="rev-bar-fill" style="width: 1%;"></div></div>
+                <span>1%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="review-card">
+            <div class="review-header">
+              <div class="review-avatar">م</div>
+              <div class="review-info">
+                <div class="review-name">
+                  محمود السيد
+                  <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+                <div class="review-stars">
+                  <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+              </div>
+              <div class="review-time">منذ يومين</div>
+            </div>
+            <div class="review-text">ساعة ممتازة جداً، جودة التصنيع عالية والبائع سريع في الشحن. الساعة وصلت في 24 ساعة والعملية كانت سهلة. أنصح بالشراء.</div>
+          </div>
+
+          <div class="review-card">
+            <div class="review-header">
+              <div class="review-avatar c2">س</div>
+              <div class="review-info">
+                <div class="review-name">
+                  سارة إبراهيم
+                  <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+                <div class="review-stars">
+                  <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+              </div>
+              <div class="review-time">منذ أسبوع</div>
+            </div>
+            <div class="review-text">التصميم جميل جداً والألوان طبيعية. البطارية بتقعد معايا 5 أيام بالاستخدام العادي. تجربة شراء ممتازة.</div>
+          </div>
+
+          <!-- Similar Products -->
+          <div class="section-label" style="margin-top: 24px;">
+            <div class="section-title">
+              <div class="section-title-bar"></div>
+              منتجات مشابهة
+            </div>
+          </div>
+
+          <div class="similar-scroll">
+            <div class="similar-card">
+              <div class="similar-image s1">
+                <svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/><rect x="9" y="4.5" width="6" height="15" rx="1.5"/></svg>
+              </div>
+              <div class="similar-body">
+                <div class="similar-name">ساعة T900 Pro</div>
+                <div class="similar-price">420 <span class="currency">ج.م</span></div>
+              </div>
+            </div>
+            <div class="similar-card">
+              <div class="similar-image s2">
+                <svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/><rect x="9" y="4.5" width="6" height="15" rx="1.5"/></svg>
+              </div>
+              <div class="similar-body">
+                <div class="similar-name">ساعة Sport Band</div>
+                <div class="similar-price">280 <span class="currency">ج.م</span></div>
+              </div>
+            </div>
+            <div class="similar-card">
+              <div class="similar-image s3">
+                <svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/><rect x="9" y="4.5" width="6" height="15" rx="1.5"/></svg>
+              </div>
+              <div class="similar-body">
+                <div class="similar-name">ساعة Ultra Max</div>
+                <div class="similar-price">550 <span class="currency">ج.م</span></div>
+              </div>
+            </div>
+            <div class="similar-card">
+              <div class="similar-image s4">
+                <svg viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/><rect x="9" y="4.5" width="6" height="15" rx="1.5"/></svg>
+              </div>
+              <div class="similar-body">
+                <div class="similar-name">ساعة Fit 3</div>
+                <div class="similar-price">310 <span class="currency">ج.م</span></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Sticky Bottom Bar -->
+      <div class="sticky-bar">
+        <div class="sticky-inner">
+          <button class="icon-action-btn">
+            <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <div class="dot-badge"></div>
+          </button>
+          <button class="add-cart-btn">
+            <svg viewBox="0 0 24 24">
+              <circle cx="9" cy="21" r="1"/>
+              <circle cx="20" cy="21" r="1"/>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+            </svg>
+            أضف للسلة
+          </button>
+          <button class="buy-now-btn">
+            <svg viewBox="0 0 24 24">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+            </svg>
+            اشتري الآن
+          </button>
+        </div>
+      </div>
+
+    </div>
+    <div class="screen-badge">تفاصيل المنتج</div>
+  </div>
+</div>
+
+</body>
+</html>

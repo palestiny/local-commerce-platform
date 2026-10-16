@@ -1,0 +1,2037 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الرئيسية v2 — معاينة احترافية</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'IBM Plex Sans Arabic', sans-serif; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --primary: #0F766E;
+    --primary-dark: #115E59;
+    --primary-light: #CCFBF1;
+    --primary-soft: #F0FDFA;
+    --accent: #F59E0B;
+    --accent-dark: #D97706;
+    --accent-light: #FEF3C7;
+    --gold: #F59E0B;
+    --danger: #EF4444;
+    --danger-light: #FEF2F2;
+    --success: #10B981;
+    --success-light: #ECFDF5;
+    --purple: #8B5CF6;
+    --purple-light: #EDE9FE;
+    --blue: #2563EB;
+    --blue-light: #DBEAFE;
+    --pink: #EC4899;
+    --pink-light: #FCE7F3;
+    --cyan: #06B6D4;
+    --cyan-light: #CFFAFE;
+    --indigo: #6366F1;
+    --indigo-light: #E0E7FF;
+    --dark: #0F172A;
+    --gray-700: #374151;
+    --gray-600: #4B5563;
+    --gray-500: #6B7280;
+    --gray-400: #9CA3AF;
+    --gray-300: #D1D5DB;
+    --gray-200: #E5E7EB;
+    --gray-100: #F3F4F6;
+    --bg: #F8FAFC;
+    --white: #FFFFFF;
+
+    --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.07);
+    --shadow-lg: 0 10px 30px rgba(15, 23, 42, 0.09);
+    --shadow-xl: 0 20px 40px rgba(15, 23, 42, 0.14);
+    --shadow-primary: 0 8px 24px rgba(15, 118, 110, 0.32);
+
+    --r-sm: 10px;
+    --r-md: 14px;
+    --r-lg: 18px;
+    --r-xl: 24px;
+    --r-full: 999px;
+  }
+
+  body {
+    background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+    min-height: 100vh;
+    padding: 50px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+  }
+
+  .page-header { text-align: center; color: #fff; max-width: 900px; }
+  .page-header h1 {
+    font-size: 30px; font-weight: 700; margin-bottom: 8px;
+    background: linear-gradient(135deg, #fff, #94A3B8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .page-header p { color: #94A3B8; font-size: 14px; }
+
+  .screens-container {
+    display: flex; gap: 40px; flex-wrap: wrap; justify-content: center;
+  }
+  .screen-wrapper {
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+  }
+  .screen-badge {
+    background: rgba(15, 118, 110, 0.15);
+    color: #5EEAD4;
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid rgba(94, 234, 212, 0.25);
+  }
+
+  .phone {
+    width: 375px;
+    height: 812px;
+    background: var(--bg);
+    border-radius: 44px;
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+      0 0 0 10px #0A0F1E,
+      0 0 0 12px #1E293B,
+      0 30px 60px rgba(0, 0, 0, 0.5),
+      0 0 80px rgba(15, 118, 110, 0.15);
+  }
+  .phone::before {
+    content: '';
+    position: absolute;
+    top: 10px; left: 50%;
+    transform: translateX(-50%);
+    width: 110px; height: 28px;
+    background: #0A0F1E;
+    border-radius: 999px;
+    z-index: 999;
+  }
+
+  .status-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 48px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 28px;
+    font-size: 13px; font-weight: 600;
+    z-index: 100;
+    pointer-events: none;
+    color: #fff;
+  }
+  .status-bar .time { margin-top: 4px; }
+  .status-bar .status-icons { display: flex; gap: 5px; margin-top: 4px; align-items: center; }
+  .status-bar svg { width: 15px; height: 15px; }
+
+  .screen {
+    width: 100%; height: 100%;
+    overflow-y: auto; overflow-x: hidden;
+    scrollbar-width: none;
+    padding-bottom: 30px;
+  }
+  .screen::-webkit-scrollbar { display: none; }
+
+  /* ══════════ HERO HEADER ══════════ */
+  .hero-header {
+    padding: 56px 20px 30px;
+    background: linear-gradient(160deg, var(--primary) 0%, var(--primary-dark) 60%, #0F172A 100%);
+    border-radius: 0 0 32px 32px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .hero-header::before {
+    content: '';
+    position: absolute;
+    top: -80px; right: -60px;
+    width: 220px;
+    height: 220px;
+    background: radial-gradient(circle, rgba(255,255,255,0.15), transparent 70%);
+    border-radius: 50%;
+  }
+  .hero-header::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; left: -60px;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(245,158,11,0.2), transparent 70%);
+    border-radius: 50%;
+  }
+
+  /* Top Bar */
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+    position: relative;
+    z-index: 2;
+  }
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+  }
+  .user-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 13px;
+    background: linear-gradient(135deg, #FCD34D, #F59E0B);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 17px;
+    font-weight: 800;
+    flex-shrink: 0;
+    position: relative;
+    border: 2px solid rgba(255,255,255,0.25);
+  }
+  .user-avatar .status-dot {
+    position: absolute;
+    bottom: -2px;
+    left: -2px;
+    width: 13px;
+    height: 13px;
+    background: var(--success);
+    border-radius: 50%;
+    border: 2px solid var(--primary-dark);
+    box-shadow: 0 0 0 2px rgba(16,185,129,0.25);
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.15); opacity: 0.7; }
+  }
+  .greeting-wrap {
+    flex: 1;
+    min-width: 0;
+  }
+  .greeting {
+    font-size: 10.5px;
+    color: rgba(255,255,255,0.75);
+    font-weight: 700;
+    margin-bottom: 2px;
+    letter-spacing: 0.2px;
+  }
+  .location-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+  .location-pill svg {
+    width: 12px;
+    height: 12px;
+    stroke: #FCD34D;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+  }
+  .location-pill .arrow {
+    stroke: rgba(255,255,255,0.6);
+    stroke-width: 2.5;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .header-icon-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .header-icon-btn:hover { background: rgba(255,255,255,0.25); }
+  .header-icon-btn svg {
+    width: 18px;
+    height: 18px;
+    stroke: #fff;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .header-icon-btn .badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    background: var(--danger);
+    color: #fff;
+    border-radius: 9px;
+    font-size: 9.5px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--primary-dark);
+  }
+
+  /* Search Bar */
+  .search-bar {
+    padding: 4px 4px 4px 14px;
+    background: rgba(255,255,255,0.98);
+    backdrop-filter: blur(20px);
+    border-radius: var(--r-md);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 8px 24px rgba(15,23,42,0.15);
+    position: relative;
+    z-index: 2;
+    margin-bottom: 14px;
+  }
+  .search-icon {
+    width: 18px;
+    height: 18px;
+    stroke: var(--gray-500);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+  }
+  .search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--dark);
+    padding: 10px 0;
+    min-width: 0;
+  }
+  .search-input::placeholder {
+    color: var(--gray-500);
+    font-weight: 500;
+  }
+  .search-action-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    border: none;
+    background: transparent;
+  }
+  .search-action-btn:hover { background: var(--gray-100); }
+  .search-action-btn svg {
+    width: 17px;
+    height: 17px;
+    stroke: var(--gray-700);
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .search-filter-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    border: none;
+  }
+  .search-filter-btn svg {
+    width: 16px;
+    height: 16px;
+    stroke: #fff;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Live Status Row */
+  .live-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    position: relative;
+    z-index: 2;
+  }
+  .live-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 12px;
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(10px);
+    border-radius: var(--r-full);
+    border: 1px solid rgba(255,255,255,0.18);
+  }
+  .live-dot {
+    width: 7px;
+    height: 7px;
+    background: var(--success);
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px rgba(16,185,129,0.25);
+    animation: pulse 1.5s infinite;
+  }
+  .live-text {
+    font-size: 10.5px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 0.1px;
+  }
+  .live-text strong {
+    color: #FCD34D;
+    font-weight: 900;
+  }
+
+  .weather-chip {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 11px;
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(10px);
+    border-radius: var(--r-full);
+    border: 1px solid rgba(255,255,255,0.18);
+  }
+  .weather-chip .emoji {
+    font-size: 13px;
+  }
+  .weather-chip .temp {
+    font-size: 10.5px;
+    font-weight: 800;
+    color: #fff;
+  }
+
+  /* ══════════ QUICK ACTIONS ══════════ */
+  .quick-actions-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    padding: 0 20px 16px;
+    margin-top: -22px;
+    position: relative;
+    z-index: 3;
+  }
+  .qa-btn {
+    padding: 12px 6px;
+    background: var(--white);
+    border: 1px solid var(--gray-100);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-md);
+    cursor: pointer;
+    transition: all 0.25s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    font-family: inherit;
+  }
+  .qa-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+    border-color: transparent;
+  }
+  .qa-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.25s;
+  }
+  .qa-btn:hover .qa-icon { transform: scale(1.1) rotate(-4deg); }
+  .qa-icon.teal { background: var(--primary-soft); }
+  .qa-icon.teal svg { stroke: var(--primary); }
+  .qa-icon.orange { background: var(--accent-light); }
+  .qa-icon.orange svg { stroke: var(--accent-dark); }
+  .qa-icon.purple { background: var(--purple-light); }
+  .qa-icon.purple svg { stroke: var(--purple); }
+  .qa-icon.pink { background: var(--pink-light); }
+  .qa-icon.pink svg { stroke: var(--pink); }
+  .qa-icon svg {
+    width: 17px;
+    height: 17px;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .qa-label {
+    font-size: 9.5px;
+    font-weight: 800;
+    color: var(--dark);
+    text-align: center;
+    letter-spacing: -0.1px;
+    line-height: 1.15;
+  }
+
+  /* ══════════ SECTION HEADER ══════════ */
+  .section-header {
+    padding: 4px 20px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .section-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    letter-spacing: -0.2px;
+  }
+  .section-title::before {
+    content: '';
+    width: 3px;
+    height: 14px;
+    background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+    border-radius: 4px;
+  }
+  .section-badge {
+    padding: 2px 7px;
+    background: var(--danger-light);
+    color: var(--danger);
+    border-radius: var(--r-full);
+    font-size: 9.5px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    margin-right: 4px;
+  }
+  .section-badge.green {
+    background: var(--success-light);
+    color: var(--success-dark);
+  }
+  .section-link {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    padding: 5px 8px;
+    border-radius: 8px;
+    transition: background 0.2s;
+  }
+  .section-link:hover { background: var(--primary-soft); }
+  .section-link svg {
+    width: 11px;
+    height: 11px;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ══════════ FEATURED BANNER CAROUSEL ══════════ */
+  .featured-carousel {
+    display: flex;
+    gap: 10px;
+    padding: 0 20px 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    scroll-snap-type: x mandatory;
+  }
+  .featured-carousel::-webkit-scrollbar { display: none; }
+
+  .featured-card {
+    flex-shrink: 0;
+    width: 320px;
+    height: 150px;
+    border-radius: var(--r-lg);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.3s;
+    scroll-snap-align: start;
+    box-shadow: var(--shadow-lg);
+  }
+  .featured-card:hover { transform: translateY(-3px); }
+  .featured-card.bg-1 {
+    background: linear-gradient(135deg, #0F766E 0%, #115E59 60%, #0F172A 100%);
+  }
+  .featured-card.bg-2 {
+    background: linear-gradient(135deg, #BE185D 0%, #EC4899 50%, #F59E0B 100%);
+  }
+  .featured-card.bg-3 {
+    background: linear-gradient(135deg, #4338CA 0%, #6366F1 50%, #8B5CF6 100%);
+  }
+
+  .featured-card::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -40px;
+    width: 180px;
+    height: 180px;
+    background: radial-gradient(circle, rgba(255,255,255,0.2), transparent 70%);
+    border-radius: 50%;
+  }
+  .featured-card::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; left: -30px;
+    width: 140px;
+    height: 140px;
+    background: radial-gradient(circle, rgba(255,255,255,0.12), transparent 70%);
+    border-radius: 50%;
+  }
+
+  .fc-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    padding: 5px 10px;
+    background: rgba(255,255,255,0.25);
+    backdrop-filter: blur(10px);
+    border-radius: var(--r-full);
+    font-size: 9.5px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 0.2px;
+    border: 1px solid rgba(255,255,255,0.3);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    z-index: 2;
+  }
+  .fc-badge svg {
+    width: 10px;
+    height: 10px;
+    fill: #FCD34D;
+    stroke: none;
+  }
+
+  .fc-content {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    left: 16px;
+    z-index: 2;
+    color: #fff;
+  }
+  .fc-title {
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    margin-bottom: 5px;
+    line-height: 1.3;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .fc-subtitle {
+    font-size: 11px;
+    color: rgba(255,255,255,0.85);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .fc-subtitle svg {
+    width: 11px;
+    height: 11px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .fc-action {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    padding: 8px 14px;
+    background: #fff;
+    color: var(--dark);
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    z-index: 2;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    transition: all 0.2s;
+  }
+  .fc-action:hover { transform: translateY(-2px); }
+  .fc-action svg {
+    width: 11px;
+    height: 11px;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Dots */
+  .carousel-dots {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    padding: 0 0 14px;
+  }
+  .carousel-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--gray-300);
+    border-radius: 3px;
+    transition: all 0.3s;
+  }
+  .carousel-dot.active {
+    width: 22px;
+    background: var(--primary);
+  }
+
+  /* ══════════ CATEGORIES GRID ══════════ */
+  .categories-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    padding: 0 20px 16px;
+  }
+  .category-card {
+    padding: 12px 6px;
+    background: var(--white);
+    border: 1px solid var(--gray-100);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-xs);
+    cursor: pointer;
+    transition: all 0.25s;
+    text-align: center;
+    position: relative;
+  }
+  .category-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: transparent;
+  }
+  .category-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 13px;
+    margin: 0 auto 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: transform 0.25s;
+  }
+  .category-card:hover .category-icon { transform: scale(1.1) rotate(-3deg); }
+  .category-icon svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 1.9;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .category-icon.teal { background: linear-gradient(135deg, #CCFBF1, #99F6E4); }
+  .category-icon.teal svg { stroke: #0F766E; }
+  .category-icon.orange { background: linear-gradient(135deg, #FEF3C7, #FDE68A); }
+  .category-icon.orange svg { stroke: #D97706; }
+  .category-icon.blue { background: linear-gradient(135deg, #DBEAFE, #BFDBFE); }
+  .category-icon.blue svg { stroke: #2563EB; }
+  .category-icon.purple { background: linear-gradient(135deg, #EDE9FE, #DDD6FE); }
+  .category-icon.purple svg { stroke: #7C3AED; }
+  .category-icon.pink { background: linear-gradient(135deg, #FCE7F3, #FBCFE8); }
+  .category-icon.pink svg { stroke: #DB2777; }
+  .category-icon.cyan { background: linear-gradient(135deg, #CFFAFE, #A5F3FC); }
+  .category-icon.cyan svg { stroke: #0891B2; }
+  .category-icon.indigo { background: linear-gradient(135deg, #E0E7FF, #C7D2FE); }
+  .category-icon.indigo svg { stroke: #4F46E5; }
+  .category-icon.green { background: linear-gradient(135deg, #D1FAE5, #A7F3D0); }
+  .category-icon.green svg { stroke: #059669; }
+
+  .category-name {
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--dark);
+    letter-spacing: -0.1px;
+    line-height: 1.2;
+    margin-bottom: 2px;
+  }
+  .category-count {
+    font-size: 8.5px;
+    font-weight: 700;
+    color: var(--gray-500);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+  }
+  .category-count::before {
+    content: '';
+    width: 4px;
+    height: 4px;
+    background: var(--success);
+    border-radius: 50%;
+    box-shadow: 0 0 0 1.5px rgba(16,185,129,0.25);
+    animation: pulse 2s infinite;
+  }
+
+  /* ══════════ TRENDING NOW ══════════ */
+  .trending-scroll {
+    display: flex;
+    gap: 8px;
+    padding: 0 20px 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .trending-scroll::-webkit-scrollbar { display: none; }
+
+  .trending-chip {
+    flex-shrink: 0;
+    padding: 8px 12px;
+    background: var(--white);
+    border: 1px solid var(--gray-100);
+    border-radius: var(--r-full);
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--dark);
+    cursor: pointer;
+    transition: all 0.25s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: var(--shadow-xs);
+    white-space: nowrap;
+  }
+  .trending-chip:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: transparent;
+  }
+  .trending-chip .trend-icon {
+    font-size: 13px;
+  }
+  .trending-chip .trend-count {
+    padding: 1px 6px;
+    background: var(--success-light);
+    color: var(--success-dark);
+    border-radius: 5px;
+    font-size: 9.5px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+  .trending-chip .trend-count::before {
+    content: '↑';
+    font-weight: 900;
+    font-size: 9px;
+  }
+
+  /* ══════════ OFFERS COUNTDOWN ══════════ */
+  .offers-card {
+    margin: 0 20px 16px;
+    padding: 14px;
+    background: linear-gradient(135deg, #7C2D12 0%, #BE185D 60%, #EC4899 100%);
+    border-radius: var(--r-lg);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.25s;
+    box-shadow: 0 10px 28px rgba(236,72,153,0.3);
+  }
+  .offers-card:hover { transform: translateY(-3px); }
+  .offers-card::before {
+    content: '';
+    position: absolute;
+    top: -50px; right: -30px;
+    width: 160px;
+    height: 160px;
+    background: radial-gradient(circle, rgba(255,255,255,0.2), transparent 70%);
+    border-radius: 50%;
+  }
+  .offers-card::after {
+    content: '';
+    position: absolute;
+    bottom: -50px; left: -30px;
+    width: 140px;
+    height: 140px;
+    background: radial-gradient(circle, rgba(252,211,77,0.35), transparent 70%);
+    border-radius: 50%;
+  }
+
+  .oc-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 10px;
+    position: relative;
+    z-index: 1;
+  }
+  .oc-badge {
+    padding: 4px 10px;
+    background: rgba(252,211,77,0.95);
+    color: #7C2D12;
+    border-radius: var(--r-full);
+    font-size: 9.5px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .oc-badge svg {
+    width: 10px;
+    height: 10px;
+    fill: currentColor;
+    stroke: none;
+  }
+
+  .oc-main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+    z-index: 1;
+    margin-bottom: 12px;
+  }
+  .oc-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 15px;
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(20px);
+    border: 1.5px solid rgba(255,255,255,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15), inset 0 2px 0 rgba(255,255,255,0.35);
+    animation: giftFloat 3s ease-in-out infinite;
+  }
+  @keyframes giftFloat {
+    0%, 100% { transform: translateY(0) rotate(-3deg); }
+    50% { transform: translateY(-5px) rotate(3deg); }
+  }
+  .oc-icon svg {
+    width: 26px;
+    height: 26px;
+    stroke: #fff;
+    stroke-width: 1.8;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.2));
+  }
+  .oc-info { flex: 1; min-width: 0; }
+  .oc-title {
+    font-size: 14.5px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 4px;
+    letter-spacing: -0.3px;
+    line-height: 1.3;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+  .oc-subtitle {
+    font-size: 10.5px;
+    color: rgba(255,255,255,0.85);
+    font-weight: 600;
+  }
+
+  .oc-countdown {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 12px;
+    background: rgba(0,0,0,0.3);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.15);
+    position: relative;
+    z-index: 1;
+  }
+  .oc-countdown-label {
+    font-size: 10px;
+    font-weight: 800;
+    color: rgba(255,255,255,0.85);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .oc-countdown-label svg {
+    width: 11px;
+    height: 11px;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .oc-timer {
+    display: flex;
+    gap: 4px;
+    margin-right: auto;
+  }
+  .oc-timer-block {
+    min-width: 28px;
+    padding: 3px 4px;
+    background: #fff;
+    border-radius: 6px;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+  .oc-timer-num {
+    font-size: 13px;
+    font-weight: 900;
+    color: #7C2D12;
+    line-height: 1;
+    letter-spacing: -0.5px;
+  }
+  .oc-timer-label {
+    font-size: 6.5px;
+    font-weight: 800;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.2px;
+    margin-top: 1px;
+  }
+  .oc-timer-sep {
+    font-size: 14px;
+    font-weight: 900;
+    color: #fff;
+    margin-top: -3px;
+    opacity: 0.7;
+  }
+
+  /* ══════════ NEARBY PLACES ══════════ */
+  .nearby-list {
+    padding: 0 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .nearby-item {
+    padding: 12px;
+    background: var(--white);
+    border: 1px solid var(--gray-100);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-xs);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+  .nearby-item:hover {
+    transform: translateX(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: transparent;
+  }
+  .nearby-thumb {
+    width: 54px;
+    height: 54px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .nearby-thumb.bg-1 { background: linear-gradient(135deg, #0F766E, #14B8A6); }
+  .nearby-thumb.bg-2 { background: linear-gradient(135deg, #F59E0B, #EA580C); }
+  .nearby-thumb.bg-3 { background: linear-gradient(135deg, #8B5CF6, #6D28D9); }
+  .nearby-thumb svg {
+    width: 24px;
+    height: 24px;
+    stroke: #fff;
+    stroke-width: 1.6;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+  }
+  .nearby-thumb .thumb-badge {
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    background: var(--danger);
+    color: #fff;
+    border-radius: 10px;
+    font-size: 9px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--white);
+    box-shadow: 0 2px 6px rgba(239,68,68,0.3);
+  }
+
+  .nearby-info { flex: 1; min-width: 0; }
+  .nearby-name {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 4px;
+    letter-spacing: -0.2px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .nearby-name .v-mini {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: var(--primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .nearby-name .v-mini svg {
+    width: 7px;
+    height: 7px;
+    stroke: #fff;
+    stroke-width: 3.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .nearby-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: var(--gray-500);
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .nearby-meta .rating {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    color: var(--dark);
+    font-weight: 800;
+  }
+  .nearby-meta .rating svg {
+    width: 10px;
+    height: 10px;
+    fill: var(--accent);
+    stroke: none;
+  }
+  .nearby-meta .sep {
+    width: 3px;
+    height: 3px;
+    background: var(--gray-300);
+    border-radius: 50%;
+  }
+  .nearby-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 7px;
+    background: var(--success-light);
+    color: var(--success-dark);
+    border-radius: var(--r-full);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+  }
+  .nearby-status::before {
+    content: '';
+    width: 4px;
+    height: 4px;
+    background: var(--success);
+    border-radius: 50%;
+    box-shadow: 0 0 0 1.5px rgba(16,185,129,0.3);
+  }
+  .nearby-status.closed {
+    background: var(--gray-100);
+    color: var(--gray-500);
+  }
+  .nearby-status.closed::before {
+    background: var(--gray-400);
+    box-shadow: 0 0 0 1.5px rgba(156,163,175,0.3);
+  }
+
+  .nearby-distance {
+    text-align: left;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+  }
+  .nearby-distance-value {
+    font-size: 11.5px;
+    font-weight: 900;
+    color: var(--primary);
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .nearby-distance-value svg {
+    width: 11px;
+    height: 11px;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .nearby-distance-time {
+    font-size: 9.5px;
+    color: var(--gray-500);
+    font-weight: 700;
+  }
+
+  /* ══════════ AI SUGGESTION ══════════ */
+  .ai-suggestion {
+    margin: 0 20px 16px;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--purple-light), #DDD6FE);
+    border: 1px solid #C4B5FD;
+    border-radius: var(--r-md);
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    position: relative;
+    overflow: hidden;
+  }
+  .ai-suggestion::before {
+    content: '';
+    position: absolute;
+    top: -30px; right: -20px;
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, rgba(255,255,255,0.4), transparent 70%);
+    border-radius: 50%;
+  }
+  .ai-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--purple), #6D28D9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 6px 16px rgba(139,92,246,0.35);
+    animation: aiFloat 3s ease-in-out infinite;
+  }
+  @keyframes aiFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+  .ai-icon svg {
+    width: 20px;
+    height: 20px;
+    stroke: #fff;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .ai-content { flex: 1; min-width: 0; position: relative; z-index: 1; }
+  .ai-title {
+    font-size: 11.5px;
+    font-weight: 800;
+    color: #5B21B6;
+    margin-bottom: 4px;
+    letter-spacing: -0.2px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .ai-title .ai-badge {
+    padding: 1px 6px;
+    background: var(--purple);
+    color: #fff;
+    border-radius: 4px;
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: 0.3px;
+  }
+  .ai-text {
+    font-size: 10.5px;
+    color: #5B21B6;
+    font-weight: 600;
+    line-height: 1.55;
+  }
+  .ai-text strong {
+    color: var(--purple);
+    font-weight: 900;
+  }
+  .ai-cta {
+    margin-top: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 11px;
+    background: var(--purple);
+    color: #fff;
+    border: none;
+    border-radius: 9px;
+    font-family: inherit;
+    font-size: 10.5px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .ai-cta:hover {
+    background: #6D28D9;
+    transform: translateY(-1px);
+  }
+  .ai-cta svg {
+    width: 11px;
+    height: 11px;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ══════════ BOTTOM NAV ══════════ */
+  .bottom-nav {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 78px;
+    background: rgba(255,255,255,0.98);
+    backdrop-filter: blur(20px);
+    border-radius: 28px 28px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 10px 14px;
+    z-index: 50;
+    box-shadow: 0 -6px 30px rgba(15, 23, 42, 0.08);
+  }
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 0;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+  }
+  .nav-item .nav-icon {
+    width: 22px; height: 22px;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.25s;
+    position: relative;
+  }
+  .nav-item .nav-icon svg {
+    width: 21px; height: 21px;
+    stroke: var(--gray-400);
+    stroke-width: 1.8;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+    transition: all 0.25s;
+  }
+  .nav-item .nav-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--gray-400);
+    transition: color 0.25s;
+  }
+  .nav-item.active .nav-icon svg { stroke: var(--primary); }
+  .nav-item.active .nav-label { color: var(--primary); font-weight: 700; }
+  .nav-item.active .nav-icon { transform: translateY(-2px); }
+
+  .nav-fab-wrapper {
+    flex: 0 0 auto;
+    margin-top: -28px;
+  }
+  .nav-fab {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--purple), #6D28D9);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(139,92,246,0.35);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 4px solid var(--white);
+  }
+  .nav-fab:hover {
+    transform: scale(1.08) rotate(8deg);
+  }
+  .nav-fab svg {
+    width: 24px; height: 24px;
+    stroke: #fff;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .nav-fab .fab-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 14px;
+    height: 14px;
+    background: var(--danger);
+    border-radius: 50%;
+    border: 2px solid var(--white);
+    animation: pulse 1.5s infinite;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Home Page v2 — Masterpiece</h1>
+  <p>Glass Header · Live · Carousel · AI · 8 كروت</p>
+</div>
+
+<div class="screens-container">
+  <div class="screen-wrapper">
+    <div class="phone">
+      <div class="status-bar">
+        <div class="time">9:41</div>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h3v-9H2v9zm5 0h3V9H7v13zm5 0h3V5h-3v17zm5 0h3V2h-3v20z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21l-12-18h24z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm5 4v8h1c.6 0 1-.4 1-1V9c0-.6-.4-1-1-1h-1z"/></svg>
+        </div>
+      </div>
+
+      <div class="screen">
+
+        <!-- Hero Header -->
+        <div class="hero-header">
+
+          <!-- Top Bar -->
+          <div class="top-bar">
+            <div class="user-info">
+              <div class="user-avatar">
+                خ
+                <div class="status-dot"></div>
+              </div>
+              <div class="greeting-wrap">
+                <div class="greeting">صباح الخير 👋</div>
+                <div class="location-pill">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                    <circle cx="12" cy="10" r="3"/>
+                  </svg>
+                  دكرنس، الدقهلية
+                  <svg class="arrow" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+              </div>
+            </div>
+            <div class="header-actions">
+              <div class="header-icon-btn">
+                <svg viewBox="0 0 24 24">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                <div class="badge">5</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Search Bar -->
+          <div class="search-bar">
+            <svg class="search-icon" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" class="search-input" placeholder="ابحث عن مطعم، عيادة، خدمة...">
+            <button class="search-action-btn">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" y1="19" x2="12" y2="23"/>
+              </svg>
+            </button>
+            <button class="search-action-btn">
+              <svg viewBox="0 0 24 24">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+            </button>
+            <button class="search-filter-btn">
+              <svg viewBox="0 0 24 24">
+                <line x1="4" y1="6" x2="20" y2="6"/>
+                <line x1="7" y1="12" x2="17" y2="12"/>
+                <line x1="10" y1="18" x2="14" y2="18"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Live Row -->
+          <div class="live-row">
+            <div class="live-chip">
+              <div class="live-dot"></div>
+              <div class="live-text">
+                <strong>12 زائر</strong> الآن
+              </div>
+            </div>
+            <div class="weather-chip">
+              <span class="emoji">☀️</span>
+              <span class="temp">26°C</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions-row">
+          <button class="qa-btn">
+            <div class="qa-icon teal">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+              </svg>
+            </div>
+            <div class="qa-label">طبي</div>
+          </button>
+
+          <button class="qa-btn">
+            <div class="qa-icon orange">
+              <svg viewBox="0 0 24 24">
+                <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/>
+                <path d="M7 2v20"/>
+                <path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Z"/>
+              </svg>
+            </div>
+            <div class="qa-label">مطاعم</div>
+          </button>
+
+          <button class="qa-btn">
+            <div class="qa-icon purple">
+              <svg viewBox="0 0 24 24">
+                <circle cx="9" cy="21" r="1"/>
+                <circle cx="20" cy="21" r="1"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+              </svg>
+            </div>
+            <div class="qa-label">متاجر</div>
+          </button>
+
+          <button class="qa-btn">
+            <div class="qa-icon pink">
+              <svg viewBox="0 0 24 24">
+                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.83z"/>
+                <line x1="7" y1="7" x2="7.01" y2="7"/>
+              </svg>
+            </div>
+            <div class="qa-label">عروض</div>
+          </button>
+        </div>
+
+        <!-- Featured Carousel -->
+        <div class="section-header">
+          <div class="section-title">مميز الآن</div>
+          <div class="section-link">
+            المزيد
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </div>
+        </div>
+
+        <div class="featured-carousel">
+          <div class="featured-card bg-1">
+            <div class="fc-badge">
+              <svg viewBox="0 0 24 24">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+              عرض محدود
+            </div>
+            <div class="fc-content">
+              <div class="fc-title">خصم 50% على العيادات</div>
+              <div class="fc-subtitle">
+                <svg viewBox="0 0 24 24">
+                  <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+                </svg>
+                47 عيادة شريكة
+              </div>
+            </div>
+            <button class="fc-action">
+              احجز الآن
+              <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+
+          <div class="featured-card bg-2">
+            <div class="fc-badge">
+              <svg viewBox="0 0 24 24">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+              </svg>
+              جديد
+            </div>
+            <div class="fc-content">
+              <div class="fc-title">توصيل مجاني للمطاعم</div>
+              <div class="fc-subtitle">
+                <svg viewBox="0 0 24 24">
+                  <rect x="1" y="3" width="15" height="13"/>
+                  <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+                </svg>
+                140 مطعم شريك
+              </div>
+            </div>
+            <button class="fc-action">
+              اطلب الآن
+              <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+
+          <div class="featured-card bg-3">
+            <div class="fc-badge">
+              <svg viewBox="0 0 24 24">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+              الأكثر مشاهدة
+            </div>
+            <div class="fc-content">
+              <div class="fc-title">متجر ريماس للإلكترونيات</div>
+              <div class="fc-subtitle">
+                <svg viewBox="0 0 24 24">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+                4.9 · 1,247 تقييم
+              </div>
+            </div>
+            <button class="fc-action">
+              تسوّق
+              <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="carousel-dots">
+          <div class="carousel-dot active"></div>
+          <div class="carousel-dot"></div>
+          <div class="carousel-dot"></div>
+        </div>
+
+        <!-- Categories -->
+        <div class="section-header">
+          <div class="section-title">تصنيفات سريعة</div>
+          <div class="section-link">
+            الكل
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </div>
+        </div>
+
+        <div class="categories-grid">
+          <div class="category-card">
+            <div class="category-icon teal">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+              </svg>
+            </div>
+            <div class="category-name">طبي</div>
+            <div class="category-count">247</div>
+          </div>
+
+          <div class="category-card">
+            <div class="category-icon orange">
+              <svg viewBox="0 0 24 24">
+                <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/>
+                <path d="M7 2v20"/>
+              </svg>
+            </div>
+            <div class="category-name">مطاعم</div>
+            <div class="category-count">180</div>
+          </div>
+
+          <div class="category-card">
+            <div class="category-icon purple">
+              <svg viewBox="0 0 24 24">
+                <circle cx="9" cy="21" r="1"/>
+                <circle cx="20" cy="21" r="1"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+              </svg>
+            </div>
+            <div class="category-name">تجاري</div>
+            <div class="category-count">400</div>
+          </div>
+
+          <div class="category-card">
+            <div class="category-icon blue">
+              <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              </svg>
+            </div>
+            <div class="category-name">رياضة</div>
+            <div class="category-count">95</div>
+          </div>
+
+          <div class="category-card">
+            <div class="category-icon pink">
+              <svg viewBox="0 0 24 24">
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+              </svg>
+            </div>
+            <div class="category-name">تعليم</div>
+            <div class="category-count">120</div>
+          </div>
+
+          <div class="category-card">
+            <div class="category-icon cyan">
+              <svg viewBox="0 0 24 24">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              </svg>
+            </div>
+            <div class="category-name">خدمات</div>
+            <div class="category-count">200</div>
+          </div>
+
+          <div class="category-card">
+            <div class="category-icon indigo">
+              <svg viewBox="0 0 24 24">
+                <rect x="1" y="3" width="15" height="13"/>
+                <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+              </svg>
+            </div>
+            <div class="category-name">توصيل</div>
+            <div class="category-count">50</div>
+          </div>
+
+          <div class="category-card">
+            <div class="category-icon green">
+              <svg viewBox="0 0 24 24">
+                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.83z"/>
+                <line x1="7" y1="7" x2="7.01" y2="7"/>
+              </svg>
+            </div>
+            <div class="category-name">عروض</div>
+            <div class="category-count">156</div>
+          </div>
+        </div>
+
+        <!-- Trending Now -->
+        <div class="section-header">
+          <div class="section-title">
+            Trending الآن
+            <span class="section-badge">🔥 ترند</span>
+          </div>
+        </div>
+
+        <div class="trending-scroll">
+          <button class="trending-chip">
+            <span class="trend-icon">🦷</span>
+            عيادات أسنان
+            <span class="trend-count">35%</span>
+          </button>
+          <button class="trending-chip">
+            <span class="trend-icon">🍕</span>
+            مطاعم بيتزا
+            <span class="trend-count">28%</span>
+          </button>
+          <button class="trending-chip">
+            <span class="trend-icon">⌚</span>
+            ساعات ذكية
+            <span class="trend-count">42%</span>
+          </button>
+          <button class="trending-chip">
+            <span class="trend-icon">💪</span>
+            جيمات
+            <span class="trend-count">18%</span>
+          </button>
+        </div>
+
+        <!-- Offers Countdown -->
+        <div class="section-header">
+          <div class="section-title">
+            عرض اليوم
+            <span class="section-badge green">LIVE</span>
+          </div>
+          <div class="section-link">
+            الكل
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </div>
+        </div>
+
+        <div class="offers-card">
+          <div class="oc-header">
+            <div class="oc-badge">
+              <svg viewBox="0 0 24 24">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+              </svg>
+              عرض خاطف
+            </div>
+          </div>
+
+          <div class="oc-main">
+            <div class="oc-icon">
+              <svg viewBox="0 0 24 24">
+                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.83z"/>
+                <line x1="7" y1="7" x2="7.01" y2="7"/>
+              </svg>
+            </div>
+            <div class="oc-info">
+              <div class="oc-title">خصم 50% على العيادات</div>
+              <div class="oc-subtitle">كود: CLEAN50 · الحد الأدنى 100 ج.م</div>
+            </div>
+          </div>
+
+          <div class="oc-countdown">
+            <div class="oc-countdown-label">
+              <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+              ينتهي خلال
+            </div>
+            <div class="oc-timer">
+              <div class="oc-timer-block">
+                <div class="oc-timer-num">02</div>
+                <div class="oc-timer-label">يوم</div>
+              </div>
+              <div class="oc-timer-sep">:</div>
+              <div class="oc-timer-block">
+                <div class="oc-timer-num">14</div>
+                <div class="oc-timer-label">ساعة</div>
+              </div>
+              <div class="oc-timer-sep">:</div>
+              <div class="oc-timer-block">
+                <div class="oc-timer-num">36</div>
+                <div class="oc-timer-label">دقيقة</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Nearby Places -->
+        <div class="section-header">
+          <div class="section-title">الأقرب ليك</div>
+          <div class="section-link">
+            الخريطة
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </div>
+        </div>
+
+        <div class="nearby-list">
+
+          <div class="nearby-item">
+            <div class="nearby-thumb bg-1">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+              </svg>
+              <div class="thumb-badge">-30%</div>
+            </div>
+            <div class="nearby-info">
+              <div class="nearby-name">
+                صيدلية العزبي
+                <div class="v-mini"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              </div>
+              <div class="nearby-meta">
+                <span class="rating">
+                  <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  4.8
+                </span>
+                <span class="sep"></span>
+                <span>340 تقييم</span>
+              </div>
+              <span class="nearby-status">مفتوح 24س</span>
+            </div>
+            <div class="nearby-distance">
+              <div class="nearby-distance-value">
+                <svg viewBox="0 0 24 24">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                0.8 كم
+              </div>
+              <div class="nearby-distance-time">2 دقيقة</div>
+            </div>
+          </div>
+
+          <div class="nearby-item">
+            <div class="nearby-thumb bg-2">
+              <svg viewBox="0 0 24 24">
+                <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/>
+                <path d="M7 2v20"/>
+              </svg>
+            </div>
+            <div class="nearby-info">
+              <div class="nearby-name">
+                مطعم البيت الدمشقي
+                <div class="v-mini"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              </div>
+              <div class="nearby-meta">
+                <span class="rating">
+                  <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  4.7
+                </span>
+                <span class="sep"></span>
+                <span>189 تقييم</span>
+              </div>
+              <span class="nearby-status">مفتوح حتى 11م</span>
+            </div>
+            <div class="nearby-distance">
+              <div class="nearby-distance-value">
+                <svg viewBox="0 0 24 24">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                1.5 كم
+              </div>
+              <div class="nearby-distance-time">5 دقائق</div>
+            </div>
+          </div>
+
+          <div class="nearby-item">
+            <div class="nearby-thumb bg-3">
+              <svg viewBox="0 0 24 24">
+                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.83z"/>
+                <line x1="7" y1="7" x2="7.01" y2="7"/>
+              </svg>
+            </div>
+            <div class="nearby-info">
+              <div class="nearby-name">متجر ريماس</div>
+              <div class="nearby-meta">
+                <span class="rating">
+                  <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  4.9
+                </span>
+                <span class="sep"></span>
+                <span>1,247 تقييم</span>
+              </div>
+              <span class="nearby-status closed">مغلق</span>
+            </div>
+            <div class="nearby-distance">
+              <div class="nearby-distance-value">
+                <svg viewBox="0 0 24 24">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                2.1 كم
+              </div>
+              <div class="nearby-distance-time">7 دقائق</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- AI Suggestion -->
+        <div class="ai-suggestion">
+          <div class="ai-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z"/>
+            </svg>
+          </div>
+          <div class="ai-content">
+            <div class="ai-title">
+              مساعد ذكي
+              <span class="ai-badge">AI</span>
+            </div>
+            <div class="ai-text">
+              لاحظنا إنك بتحب <strong>المطاعم</strong>. جرب <strong>مطعم البيت الدمشقي</strong> — تقييمه 4.7 ويبعد عنك 1.5 كم فقط!
+            </div>
+            <button class="ai-cta">
+              عرض الآن
+              <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Bottom Nav -->
+      <div class="bottom-nav">
+        <div class="nav-item active">
+          <div class="nav-icon">
+            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+          <div class="nav-label">الرئيسية</div>
+        </div>
+        <div class="nav-item">
+          <div class="nav-icon">
+            <svg viewBox="0 0 24 24">
+              <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+              <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+              <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+              <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+            </svg>
+          </div>
+          <div class="nav-label">الأقسام</div>
+        </div>
+        <div class="nav-fab-wrapper">
+          <div class="nav-fab" style="position: relative;">
+            <svg viewBox="0 0 24 24">
+              <path d="M3 9h18l-1.5 11a2 2 0 0 1-2 1.7H6.5a2 2 0 0 1-2-1.7L3 9z"/>
+              <path d="M8 9V6a4 4 0 0 1 8 0v3"/>
+            </svg>
+            <div class="fab-badge"></div>
+          </div>
+        </div>
+        <div class="nav-item">
+          <div class="nav-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.83z"/>
+              <line x1="7" y1="7" x2="7.01" y2="7"/>
+            </svg>
+          </div>
+          <div class="nav-label">العروض</div>
+        </div>
+        <div class="nav-item">
+          <div class="nav-icon">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div class="nav-label">حسابي</div>
+        </div>
+      </div>
+
+    </div>
+    <div class="screen-badge">الرئيسية v2</div>
+  </div>
+</div>
+
+</body>
+</html>
