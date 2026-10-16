@@ -35,7 +35,7 @@ export default function CategoriesScreen() {
       <View style={{ gap: spacing.md }}>
         <AppText style={styles.sectionTitle}>{isAr ? "أنشطة مقترحة" : "Suggested listings"}</AppText>
         {visibleListings.map((item) => <Pressable key={item.id} onPress={() => router.push({ pathname: "/listing/[id]", params: { id: item.id } })} style={uiStyles.card}>
-          <View style={styles.listingRow}>
+          <View style={[styles.listingRow, { flexDirection: isAr ? "row-reverse" : "row" }]}>
             <View style={styles.listingIcon}><AppText style={{ fontSize: 25 }}>{item.icon}</AppText></View>
             <View style={{ flex: 1, gap: 5 }}>
               <AppText style={styles.categoryName}>{isAr ? item.nameAr : item.nameEn}</AppText>
