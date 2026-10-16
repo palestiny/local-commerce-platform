@@ -20,6 +20,17 @@ This proposal narrows review to the owner-approved customer Order routes. It doe
 - All timestamps, if included, are UTC ISO 8601.
 - These contracts remain proposals until the owner approves unresolved choices and the API/security gate exit evidence is complete.
 
+## Frontend integration artifact
+
+A frontend-oriented OpenAPI 3.1 draft is maintained at [docs/28-CUSTOMER-ORDER-OPENAPI-DRAFT.yaml](28-CUSTOMER-ORDER-OPENAPI-DRAFT.yaml). It defines the proposed JSON wire shapes, UUID identifiers, success responses, Problem Details errors, idempotency header, and proposed string enum values for the approved three-route customer slice.
+
+This artifact is intentionally marked **DRAFT**. It can be used to build frontend types, mocks, and API-client structure, but must not be mistaken for a deployed or verified HTTP API. Before release, the backend must implement and test the contract, including:
+- Deriving the actor from the verified server principal.
+- Explicitly serializing Order/Delivery statuses to the documented wire strings (the current Domain enums alone do not guarantee this JSON representation).
+- Validating `Idempotency-Key` at the HTTP boundary; the current application handlers only reject blank keys and do not enforce the proposed 1–128 visible-ASCII boundary.
+- Mapping the cancellation route's unauthorized-actor application failure to the chosen public concealment policy; the current handler can emit `authorization.forbidden`, while this draft proposes a concealed `404 resource.not_found` for a non-owned Order.
+- Returning RFC 9457 Problem Details with the stable `code` and `traceId`, and verifying replayed response body/status/Location behavior.
+
 ## Route proposal
 
 | Route | Request proposal | Success proposal | Authorization / key rules |
