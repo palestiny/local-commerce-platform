@@ -27,7 +27,7 @@ export default function ListingDetailsScreen() {
         <AppText style={styles.heroMeta}>{isAr ? item.categoryAr : item.categoryEn} · {isAr ? item.distanceAr : item.distanceEn}</AppText>
       </View>
       <View style={styles.body}>
-        <View style={styles.ratingCard}>
+        <View style={[styles.ratingCard, { flexDirection: isAr ? "row-reverse" : "row" }]}>
           <View style={{ flex: 1, gap: 4 }}>
             <AppText style={styles.rating}>★ {item.rating} <AppText style={styles.muted}>({item.reviews} {isAr ? "تقييم" : "reviews"})</AppText></AppText>
             <AppText style={styles.price}>{isAr ? item.priceAr : item.priceEn}</AppText>
