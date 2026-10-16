@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "بلدنا",
+    "slug": "baladna-customer",
+    "version": "0.1.0",
+    "scheme": "baladna",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.baladna.customer"
+    },
+    "android": {
+      "package": "com.baladna.customer",
+      "adaptiveIcon": {
+        "backgroundColor": "#087F72"
+      }
+    }
+  }
+}
