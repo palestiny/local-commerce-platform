@@ -17,7 +17,7 @@ export default function FavoritesScreen() {
     </View>
     <ScrollView contentContainerStyle={{ gap: spacing.md, paddingBottom: 24 }}>
       {saved.map((item) => <Pressable key={item.id} onPress={() => router.push({ pathname: "/listing/[id]", params: { id: item.id } })} style={uiStyles.card}>
-        <View style={styles.row}>
+        <View style={[styles.row, { flexDirection: isAr ? "row-reverse" : "row" }]}>
           <View style={styles.icon}><AppText style={{ fontSize: 26 }}>{item.icon}</AppText></View>
           <View style={{ flex: 1, gap: 5 }}>
             <AppText style={styles.name}>{isAr ? item.nameAr : item.nameEn}</AppText>
