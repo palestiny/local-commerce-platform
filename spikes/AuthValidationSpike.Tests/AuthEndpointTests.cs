@@ -18,6 +18,14 @@ public sealed class AuthEndpointTests : IClassFixture<AuthSpikeFactory>
     public AuthEndpointTests(AuthSpikeFactory factory) => _client = factory.CreateClient();
 
     [Fact]
+    public async Task Health_endpoint_is_anonymous()
+    {
+        var response = await _client.GetAsync("/health");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Protected_endpoint_rejects_missing_token()
     {
         var response = await _client.GetAsync("/whoami");
@@ -40,9 +48,9 @@ public sealed class AuthEndpointTests : IClassFixture<AuthSpikeFactory>
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", AuthSpikeFactory.CreateToken());
         var response = await _client.SendAsync(request);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
         var body = await response.Content.ReadAsStringAsync();
-        Assert.Contains("\"subject\":\"test-user-123\"", body);
-        Assert.DoesNotContain("secret", body, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("{\"subject\":\"test-user-123\"}", body);
     }
 
     [Theory]
@@ -56,12 +64,27 @@ public sealed class AuthEndpointTests : IClassFixture<AuthSpikeFactory>
         var response = await _client.SendAsync(request);
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
+
+    [Fact]
+    public async Task Protected_endpoint_rejects_token_signed_with_untrusted_key()
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/whoami");
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(
+            "Bearer",
+            AuthSpikeFactory.CreateToken(invalidSignature: true));
+
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
 }
 
 public sealed class AuthSpikeFactory : WebApplicationFactory<Program>
 {
     private const string TestSecret = "local-test-signing-key-at-least-32-bytes-long";
     private static readonly SymmetricSecurityKey SigningKey = new(Encoding.UTF8.GetBytes(TestSecret));
+    private static readonly SymmetricSecurityKey UntrustedSigningKey =
+        new(Encoding.UTF8.GetBytes("different-untrusted-signing-key-32-bytes"));
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -102,16 +125,21 @@ public sealed class AuthSpikeFactory : WebApplicationFactory<Program>
         });
     }
 
-    public static string CreateToken(string issuer = "https://issuer.test", string audience = "local-commerce-test", bool expired = false)
+    public static string CreateToken(
+        string issuer = "https://issuer.test",
+        string audience = "local-commerce-test",
+        bool expired = false,
+        bool invalidSignature = false)
     {
         var now = DateTime.UtcNow;
+        var tokenSigningKey = invalidSignature ? UntrustedSigningKey : SigningKey;
         var token = new JwtSecurityToken(
             issuer: issuer,
             audience: audience,
             claims: new[] { new Claim("sub", "test-user-123") },
             notBefore: expired ? now.AddMinutes(-10) : now.AddSeconds(-5),
             expires: expired ? now.AddMinutes(-5) : now.AddMinutes(5),
-            signingCredentials: new SigningCredentials(SigningKey, SecurityAlgorithms.HmacSha256));
+            signingCredentials: new SigningCredentials(tokenSigningKey, SecurityAlgorithms.HmacSha256));
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }
