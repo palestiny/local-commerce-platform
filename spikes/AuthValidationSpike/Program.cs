@@ -6,22 +6,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 var authority = builder.Configuration["Authentication:Authority"];
 var audience = builder.Configuration["Authentication:Audience"];
-
-if (string.IsNullOrWhiteSpace(authority) || !Uri.TryCreate(authority, UriKind.Absolute, out var authorityUri) || authorityUri.Scheme != Uri.UriSchemeHttps)
-{
-    throw new InvalidOperationException("Authentication:Authority must be an absolute HTTPS URL.");
-}
-
-if (string.IsNullOrWhiteSpace(audience))
-{
-    throw new InvalidOperationException("Authentication:Audience is required.");
-}
+AuthenticationConfiguration.Validate(authority, audience);
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.Authority = authority.TrimEnd('/');
+        options.Authority = authority!.TrimEnd('/');
         options.Audience = audience;
         options.RequireHttpsMetadata = true;
         options.MapInboundClaims = false;
@@ -60,3 +51,21 @@ app.MapGet("/whoami", (ClaimsPrincipal user) =>
 app.Run();
 
 public partial class Program;
+
+public static class AuthenticationConfiguration
+{
+    public static void Validate(string? authority, string? audience)
+    {
+        if (string.IsNullOrWhiteSpace(authority) ||
+            !Uri.TryCreate(authority, UriKind.Absolute, out var authorityUri) ||
+            authorityUri.Scheme != Uri.UriSchemeHttps)
+        {
+            throw new InvalidOperationException("Authentication:Authority must be an absolute HTTPS URL.");
+        }
+
+        if (string.IsNullOrWhiteSpace(audience))
+        {
+            throw new InvalidOperationException("Authentication:Audience is required.");
+        }
+    }
+}
