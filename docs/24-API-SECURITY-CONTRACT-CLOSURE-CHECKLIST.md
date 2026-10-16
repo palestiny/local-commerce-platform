@@ -35,6 +35,28 @@ Approved on 2026-10-16 and recorded in the PR #13 discussion:
 
 This is an approved route boundary, **not** approval of the DTOs, authentication provider, exact HTTP status codes, idempotency header syntax, or production readiness. Merchant, courier, dispatch, and admin routes are explicitly deferred.
 
+## Route contract draft — reviewable baseline, not final approval
+
+The existing API gate proposes the success statuses below. Keep these as the working baseline until the final DTO/status/header review; do not treat this table as permission to implement controllers.
+
+| Route | Proposed request | Proposed success | Contract facts / remaining closure |
+|---|---|---|---|
+| `POST /api/v1/orders` | JSON body containing `cartId`; required `Idempotency-Key` header. No `customerId`, price, totals, or Order status supplied as authoritative client data. | `201 Created`; response includes `orderId` and `orderNumber`; include `Location` for the created Order. | Derive customer identity from the verified principal. Confirm identifier wire format, DTO validation, response schema, and exact Location format. |
+| `GET /api/v1/orders/{orderId}` | `orderId` route parameter; no actor identifier in query/body. | `200 OK`; explicit response DTO for Order ID/number/status and optional Delivery ID/status/assigned timestamp. | Derive customer identity from the verified principal. Missing and non-owned Orders must be indistinguishable as `404`. Confirm public status values, nullability, timestamp names/format, and whether delivery details are included in this first contract. |
+| `POST /api/v1/orders/{orderId}/cancel` | `orderId` route parameter; required `Idempotency-Key` header. No arbitrary status or actor ID in the body. | Existing gate baseline: `200 OK`; response representation and replay status still need finalization. | Derive actor identity from the verified principal. Check Order ownership and lifecycle eligibility. Explicitly decide whether non-owned Orders are concealed as `404` or surfaced as `403`, and test the chosen policy consistently. |
+
+### Cross-route transport proposal
+
+- Use `application/problem+json` with RFC 9457 fields plus stable `code`, `traceId`, and optional field-keyed `errors`.
+- Proposed validation boundary for `Idempotency-Key`: 1–128 visible ASCII characters; reject absent, empty, whitespace-only, or overlong values before application execution. This boundary remains provisional pending contract closure.
+- Keep the key opaque and case-sensitive; do not trim, lowercase, or otherwise normalize it.
+- Same authenticated actor + operation + key + same request fingerprint replays the completed result without a second commercial effect; same key with a different fingerprint returns `409 Conflict`.
+- A persisted `Reserved` record alone does not prove the original operation is still running. Return an in-progress conflict only when the persistence model provides trustworthy in-progress evidence.
+- Use stable application error codes for mapping. Never infer status from exception message text and never return stack traces, SQL/provider details, credentials, or raw idempotency keys.
+- Public timestamps use UTC ISO 8601. Public DTOs must not serialize Domain entities directly.
+
+These are contract proposals based on the current API gate and application-handler review. The remaining open choices—especially auth provider/session lifecycle, cancellation concealment, exact response DTOs/replay representation, numeric abuse limits, and pilot scope—must be resolved before HTTP implementation.
+
 ## Required route-level review template
 
 For every route included in the approved first slice, complete all fields before implementation:
