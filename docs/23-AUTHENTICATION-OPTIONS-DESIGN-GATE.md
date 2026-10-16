@@ -97,6 +97,40 @@ Given the existing ASP.NET Core + PostgreSQL modular-monolith baseline, Option A
 
 Do not choose between A and B solely on the existence of a free tier or on assumed prices. Those are current facts to verify only after a shortlist and the deployment/budget constraints are known.
 
+## Current official-documentation check — 2026-10-16
+
+This is a dated evidence snapshot, not a provider selection. Re-check pricing, limits, terms, and SDK behavior at the time of implementation.
+
+### ASP.NET Core Identity
+
+Microsoft's current guidance distinguishes browser cookie authentication from token-based client authentication. It recommends cookies for browser applications where appropriate; the built-in Identity API token option uses proprietary (non-standard JWT) tokens and is intended for simple scenarios rather than a full-featured identity provider/token server. Therefore, choosing ASP.NET Core Identity does **not** automatically settle the native mobile token architecture, refresh/revocation policy, or multi-device session design.
+
+Official source: https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity-api-authorization?view=aspnetcore-10.0
+
+### Supabase Auth
+
+Official documentation describes Auth as supporting password, magic link, OTP, and social sign-in, issuing JWT access tokens and refresh tokens. The session documentation states that access tokens are short-lived and refresh tokens are single-use; session-lifetime controls have plan-specific availability. The API must validate issuer, signature, audience/claims as applicable, and still perform application-owned resource authorization. If considering Supabase Auth with the existing ASP.NET/PostgreSQL backend, verify current .NET integration support, project/data-region requirements, data-processing terms, and pricing/quotas; do not assume that using Supabase Auth requires moving the platform's business data or adopting Supabase's database APIs.
+
+Official sources:
+- https://supabase.com/docs/guides/auth
+- https://supabase.com/docs/guides/auth/sessions
+- https://supabase.com/docs/guides/auth/jwts
+
+### Auth0
+
+Auth0's official pricing page currently advertises a Free plan with up to 25,000 monthly active users, subject to listed feature/system limitations and plan conditions. This is not a total-cost or production-suitability conclusion: verify the required features, applicable limits, terms, regional/data handling, support, and paid-plan triggers against the actual pilot and production needs before selecting it.
+
+Official source: https://auth0.com/pricing
+
+### Decision implication
+
+The evidence does not establish a universal winner. For this project, the shortlist remains:
+
+- **Option A — ASP.NET Core Identity:** fewer managed-auth vendor dependencies, but the project owns more account/session security work. Do not use the built-in proprietary bearer tokens as if they were standard JWTs.
+- **Option B — managed provider:** potentially faster, with provider-managed account/session capabilities; validate current cost/terms and implement strict issuer/audience/signature validation plus platform-owned resource authorization.
+
+Keep Option C deferred unless federation becomes a real requirement. No provider has been selected by this documentation update.
+
 ## Decision criteria to close before selection
 
 The owner should compare:
