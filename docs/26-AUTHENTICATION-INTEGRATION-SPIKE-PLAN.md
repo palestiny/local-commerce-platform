@@ -99,3 +99,15 @@ This spike does not close the wider API/security gate. DTO/status/header semanti
 ## Current result
 
 **NOT RUN.** This document defines the spike and acceptance criteria only. No provider tenant has been configured, no runtime code has been added, and no tests are claimed to have run.
+
+
+## Official technical references checked — 2026-10-16
+
+- Microsoft Learn, ASP.NET Core 8 JWT bearer configuration: https://learn.microsoft.com/ar-sa/aspnet/core/security/authentication/configure-jwt-bearer-authentication?view=aspnetcore-8.0
+  - The API must validate token signature, expected issuer, expected audience, and expiration; invalid credentials should be rejected with 401. This is the baseline acceptance contract, not a provider-specific implementation recipe.
+- Supabase, JWT guidance: https://supabase.com/docs/guides/auth/jwts
+  - Supabase documents project JWKS for asymmetric signing keys and advises using a reputable verification library rather than implementing JWT verification manually. The spike must account for the project's actual signing-key mode.
+- Auth0, ASP.NET Core API Authentication library: https://auth0.github.io/aspnetcore-api/index.html
+  - The official library documents .NET 8 support and wraps JWT bearer authentication with Auth0-specific configuration. Package choice/version and compatibility must still be pinned and verified in the spike.
+
+These references inform the test plan only. They do not establish that either provider has been integrated, that a tenant is configured, or that any test has passed.
