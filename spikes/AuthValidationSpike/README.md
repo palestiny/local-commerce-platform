@@ -1,37 +1,42 @@
 # Isolated JWT Validation Spike
 
-**Status: experimental; not production code. No provider selected.**
+**Status: experimental; not production code. No authentication provider selected.**
 
 This project is intentionally outside `LocalCommercePlatform.sln` and has no reference to production Domain/Application/Infrastructure projects.
 
 ## Purpose
 
-Exercise ASP.NET Core JWT bearer validation with a small protected diagnostic endpoint. The local automated tests use a test-only signing key and issuer so negative cases can be deterministic. They do **not** prove integration with Supabase Auth or Auth0.
+Exercise ASP.NET Core JWT bearer validation with a small protected diagnostic endpoint. Automated tests use a test-only issuer and signing key to make validation cases deterministic. They do **not** prove integration with Supabase Auth, Auth0, or another real identity provider.
 
 ## Configuration
 
-Set these environment variables locally when testing against a real provider:
+Set these environment variables locally only when testing against a real provider:
 
-- `Authentication__Authority`: provider's HTTPS issuer/authority URL.
-- `Authentication__Audience`: API audience/resource identifier expected in access tokens.
+- `Authentication__Authority`: the provider's confirmed HTTPS issuer/authority URL.
+- `Authentication__Audience`: the API audience/resource identifier expected in access tokens.
 
-Do not put real provider secrets or tokens in this repository. Provider-specific audience and issuer values must be confirmed from the provider's project/application configuration; do not guess them.
+Confirm both values from the provider's project/application configuration; do not guess them. Do not commit provider secrets, access tokens, or real tenant credentials.
 
-The test app uses an in-memory issuer and signing key. Never copy its key or configuration into a deployed environment.
+The automated tests override authentication settings and use an in-memory issuer and test signing key. Never copy the test key or test configuration into a deployed environment.
 
-## Run
+## Run locally
 
-From this directory's parent, with .NET 8 SDK installed:
+From the repository root, with the .NET 8 SDK installed:
 
 ```powershell
 dotnet test .\spikes\AuthValidationSpike.Tests\AuthValidationSpike.Tests.csproj
 ```
 
-The spike is not added to the production solution or workflow. CI execution must be wired deliberately after review.
+## CI verification
 
-## Limitations
+The dedicated workflow is `.github/workflows/auth-validation-spike.yml`. It restores and tests this isolated test project on pushes to `spike/auth-validation` that change spike/workflow files and on matching pull-request changes. It is separate from the production solution and does not make this spike production code.
 
-- No real Supabase/Auth0 tenant or provider-issued token has been tested.
+The deterministic suite covers missing and malformed tokens, a valid test-signed token, wrong issuer, wrong audience, and expired token. A green CI run verifies these local test cases only; it does not establish real-provider compatibility.
+
+## Limitations and next evidence required
+
+- No real provider tenant or provider-issued access token has been tested.
 - No login UI, refresh-token flow, logout/revocation, account recovery, or mobile SDK flow is implemented.
-- The diagnostic endpoint returns only a validated subject claim and is not a resource authorization model.
+- The diagnostic endpoint returns only a validated subject claim; it is not a resource authorization model.
 - No production endpoints, account schema, or role/ownership rules are included.
+- Before choosing a provider, run a separately configured integration test with provider-issued tokens and document issuer/audience, token claims, expiry behavior, refresh/logout/revocation behavior, and mobile compatibility without committing secrets.
