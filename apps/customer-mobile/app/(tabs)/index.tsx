@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import React, { useMemo, useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { AppText, Screen, SearchInput, SectionHeading, uiStyles } from "../../src/components/ui";
 import { categories, demoNotice, listings } from "../../src/data/demo";
 import { useAppState } from "../../src/state/AppProvider";
@@ -21,7 +21,7 @@ export default function HomeScreen() {
   return <Screen style={{ paddingHorizontal: 0, paddingTop: 0 }}>
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <View style={styles.hero}>
-        <View style={styles.topRow}>
+        <View style={[styles.topRow, { flexDirection: isAr ? "row-reverse" : "row" }]}>
           <View style={{ flex: 1, gap: 4 }}>
             <AppText style={styles.locationLabel}>{t.location}</AppText>
             <AppText style={styles.locationValue}>⌖  {t.city}  ▾</AppText>
@@ -54,7 +54,7 @@ export default function HomeScreen() {
         <View style={{ gap: spacing.md }}>
           {filtered.map((item) => (
             <Pressable key={item.id} onPress={() => router.push({ pathname: "/listing/[id]", params: { id: item.id } })} style={uiStyles.card}>
-              <View style={styles.listingRow}>
+              <View style={[styles.listingRow, { flexDirection: isAr ? "row-reverse" : "row" } ]}>
                 <View style={styles.listingIcon}><AppText style={{ fontSize: 28 }}>{item.icon}</AppText></View>
                 <View style={{ flex: 1, gap: 5 }}>
                   <AppText style={styles.listingName}>{isAr ? item.nameAr : item.nameEn}</AppText>
