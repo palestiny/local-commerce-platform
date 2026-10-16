@@ -179,3 +179,32 @@ Do not claim that tests pass or that the pilot is launch-ready until command/CI 
 This document records the owner's chosen direction for planning, but does not silently amend `docs/01-PROJECT-FOUNDATION.md` or `docs/12-ROADMAP.md`, and does not authorize production endpoints, an authentication-provider choice, a deployment, or a public launch.
 
 **Recommended next action:** run a focused repository and design audit, then prepare a **Service Request Design Gate** with a screen-to-domain-to-API-to-test traceability table and explicit trade-offs. Once the owner approves the category, area, operating model, and contract, implement one vertical slice with tests and evidence. Keep the existing commerce roadmap visible until an explicit decision reconciles the two.
+
+
+## 12. Updated location and recommended first service category (2026-10-16)
+
+### Owner-confirmed location
+- **Dekernes, Dakahlia, Egypt** is the pilot location.
+- Exact neighborhoods/service radius and whether nearby villages are included remain open.
+
+### Recommendation — proposed, not yet owner-approved
+Use **home maintenance requests** as the candidate first category, initially limited to a small number of request types such as plumbing, electrical repair, and home-appliance repair. Do not activate all three automatically: confirm that enough suitable providers will participate and agree to the pilot workflow first.
+
+Why this is the leading candidate:
+- It fits a request-and-response workflow without requiring a product catalog, stock, delivery dispatch, or online payment.
+- A provider can respond with availability, a clarification question, a visit/inspection fee, or a quote; the platform can record the response while the operator assists manually.
+- Public business-search results returned examples categorized as appliance repair, electrical, and plumbing around Dekernes. These listings are **leads only**: the platform has not contacted or verified these providers, current availability, service quality, coverage, or willingness to join.
+- Public competitor examples in Egypt use home repair/maintenance as a service-marketplace category, which supports category plausibility but does **not** prove local demand or the viability of this specific pilot.
+
+### Before locking this category
+Conduct a short validation round before implementation scope is frozen:
+1. Speak with at least 8–10 residents in Dekernes about the last time they needed a plumber, electrician, or appliance repair; ask how they found help, what went wrong, and what evidence would make them trust a new platform.
+2. Contact at least 8–10 candidate providers across the shortlisted trades; confirm they serve the pilot area, are willing to respond to platform requests, what information they need, and what response time they can realistically offer.
+3. Ask a small number of providers to walk through a sample request and response; do not publish their information or imply partnership without consent.
+4. Compare the candidate trades using provider readiness, resident-reported frequency/urgency, ability to complete a request safely, and operational burden.
+5. Select one initial trade, or at most a tightly bounded set if provider readiness and request fields are genuinely similar. Record the decision and rationale in the decision log.
+
+### Revised planning status
+- Location: **confirmed by owner**.
+- Service category: **home maintenance is the current recommendation; validation and owner decision pending**.
+- Timing: keep the 8–12 week estimate provisional until the validation, code audit, team availability, and deployment gaps are understood.
