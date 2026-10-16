@@ -117,3 +117,15 @@ The deterministic suite covers anonymous health, missing/malformed bearer creden
   - The official library documents .NET 8 support and wraps JWT bearer authentication with Auth0-specific configuration. Package choice/version and compatibility must still be pinned and verified in the spike.
 
 These references inform the test plan only. They do not establish that either provider has been integrated, that a tenant is configured, or that any real-provider test has passed.
+
+
+## Follow-up verification — 2026-10-16
+
+The fail-closed configuration test addition initially exposed a C# string-literal compilation error in the subject assertion. CI caught it before merge; the assertion was corrected to parse the JSON response and assert the subject property directly.
+
+The corrected commit is `8ca9137180195379c29921010d1ffbc4b2ff603d`:
+- [Authentication spike push workflow](https://github.com/palestiny/local-commerce-platform/actions/runs/38859182218) — **PASS**
+- [Authentication spike PR workflow](https://github.com/palestiny/local-commerce-platform/actions/runs/38859185814) — **PASS**
+- [Main solution PR workflow](https://github.com/palestiny/local-commerce-platform/actions/runs/38859185825) — test step passed; migration/recovery smoke step was still running at the time of this note.
+
+New configuration validation tests cover missing authority, malformed authority, non-HTTPS authority, and missing audience. This remains deterministic local configuration validation; it does not prove provider-issued token validation, remote metadata/JWKS discovery, or production readiness.
