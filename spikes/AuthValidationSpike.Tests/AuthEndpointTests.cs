@@ -6,8 +6,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Xunit;
 
@@ -64,11 +62,19 @@ public sealed class AuthSpikeFactory : WebApplicationFactory<Program>
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        builder.ConfigureAppConfiguration(config => config.AddInMemoryCollection(new Dictionary<string, string?>
+        // Use host settings as well as an in-memory app configuration so the minimal-host
+        // bootstrap sees non-empty values before Program.cs validates them.
+        builder.UseSetting("Authentication:Authority", "https://issuer.test");
+        builder.UseSetting("Authentication:Audience", "local-commerce-test");
+
+        builder.ConfigureAppConfiguration((_, config) =>
         {
-            ["Authentication:Authority"] = "https://issuer.test",
-            ["Authentication:Audience"] = "local-commerce-test"
-        }));
+            config.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Authentication:Authority"] = "https://issuer.test",
+                ["Authentication:Audience"] = "local-commerce-test"
+            });
+        });
 
         builder.ConfigureTestServices(services =>
         {
