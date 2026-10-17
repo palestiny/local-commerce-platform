@@ -30,7 +30,7 @@ export default function CategoryDetailsScreen() {
     <Screen style={{ paddingHorizontal: 0, paddingTop: 0 }}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={[styles.hero, { paddingTop: Math.max(64, insets.top + 24) }]}>
-          <Pressable accessibilityRole="button" accessibilityLabel={isAr ? "رجوع" : "Go back"} onPress={() => router.back()} style={styles.backButton}>
+          <Pressable accessibilityRole="button" accessibilityLabel={isAr ? "رجوع" : "Go back"} onPress={() => router.back()} style={[styles.backButton, { top: insets.top + 12 }]}>
             <AppText style={styles.backText}>‹</AppText>
           </Pressable>
           <View style={styles.categoryIcon}><AppText style={{ fontSize: 38 }}>{category.icon}</AppText></View>
