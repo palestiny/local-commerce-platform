@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText, Screen, uiStyles } from "../../src/components/ui";
 import { categories, listings } from "../../src/data/demo";
 import { useAppState } from "../../src/state/AppProvider";
@@ -9,6 +10,7 @@ import { colors, radii, spacing } from "../../src/theme/tokens";
 export default function CategoryDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { language } = useAppState();
+  const insets = useSafeAreaInsets();
   const isAr = language === "ar";
   const category = categories.find((item) => item.id === id);
   const categoryListings = listings.filter((item) => item.categoryId === id);
@@ -17,7 +19,7 @@ export default function CategoryDetailsScreen() {
     return (
       <Screen>
         <AppText>{isAr ? "القسم غير موجود." : "Category not found."}</AppText>
-        <Pressable accessibilityRole="button" onPress={() => router.back()} style={styles.backButton}>
+        <Pressable accessibilityRole="button" onPress={() => router.back()} style={[styles.backButton, { top: insets.top + 12 }]}>
           <AppText style={styles.backText}>{isAr ? "رجوع" : "Go back"}</AppText>
         </Pressable>
       </Screen>
@@ -27,7 +29,7 @@ export default function CategoryDetailsScreen() {
   return (
     <Screen style={{ paddingHorizontal: 0, paddingTop: 0 }}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.hero}>
+        <View style={[styles.hero, { paddingTop: Math.max(64, insets.top + 24) }]}>
           <Pressable accessibilityRole="button" accessibilityLabel={isAr ? "رجوع" : "Go back"} onPress={() => router.back()} style={styles.backButton}>
             <AppText style={styles.backText}>‹</AppText>
           </Pressable>
