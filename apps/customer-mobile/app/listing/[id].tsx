@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText, PrimaryButton, Screen, uiStyles } from "../../src/components/ui";
 import { listings } from "../../src/data/demo";
 import { useAppState } from "../../src/state/AppProvider";
