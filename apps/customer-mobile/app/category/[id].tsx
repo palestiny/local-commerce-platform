@@ -31,7 +31,7 @@ export default function CategoryDetailsScreen() {
           <Pressable accessibilityRole="button" accessibilityLabel={isAr ? "رجوع" : "Go back"} onPress={() => router.back()} style={styles.backButton}>
             <AppText style={styles.backText}>‹</AppText>
           </Pressable>
-          <View style={styles.categoryIcon}><AppText style={{ fontSize: 38, selectable: false }}>{category.icon}</AppText></View>
+          <View style={styles.categoryIcon}><AppText style={{ fontSize: 38 }}>{category.icon}</AppText></View>
           <AppText selectable={false} style={styles.title}>{isAr ? category.nameAr : category.nameEn}</AppText>
           <AppText selectable={false} style={styles.subtitle}>{isAr ? category.descriptionAr : category.descriptionEn}</AppText>
         </View>
@@ -46,7 +46,7 @@ export default function CategoryDetailsScreen() {
               style={({ pressed }) => [uiStyles.card, styles.listingCard, pressed && styles.pressed]}
             >
               <View style={[styles.listingRow, { flexDirection: isAr ? "row-reverse" : "row" }]}>
-                <View style={styles.listingIcon}><AppText style={{ fontSize: 28, selectable: false }}>{item.icon}</AppText></View>
+                <View style={styles.listingIcon}><AppText style={{ fontSize: 28 }}>{item.icon}</AppText></View>
                 <View style={{ flex: 1, gap: 5 }}>
                   <AppText selectable={false} style={styles.listingName}>{isAr ? item.nameAr : item.nameEn}</AppText>
                   <AppText selectable={false} style={styles.muted}>{isAr ? item.distanceAr : item.distanceEn} · ★ {item.rating}</AppText>
