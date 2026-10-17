@@ -54,7 +54,7 @@ export default function HomeScreen() {
         <SectionHeading title={t.categories} action={t.all} onAction={() => router.push("/(tabs)/categories")} />
         <View style={styles.categoryGrid}>
           {categories.slice(0, 6).map((category) => (
-            <Pressable key={category.id} onPress={() => router.push({ pathname: "/(tabs)/categories", params: { category: category.id } })} style={({ pressed }) => [styles.categoryCard, pressed && { opacity: 0.75 }]}>
+            <Pressable key={category.id} accessibilityRole="button" onPress={() => router.push({ pathname: "/category/[id]", params: { id: category.id } })} style={({ pressed }) => [styles.categoryCard, pressed && { opacity: 0.75 }]}>
               <View style={styles.categoryIcon}><AppText style={{ fontSize: 25 }}>{category.icon}</AppText></View>
               <AppText style={styles.categoryName}>{isAr ? category.nameAr : category.nameEn}</AppText>
             </Pressable>
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
   demoNoticeText: { color: "#79521F", fontSize: 11, lineHeight: 17 },
   section: { paddingHorizontal: spacing.lg, gap: spacing.md },
   categoryGrid: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
-  categoryCard: { width: "31.5%", minHeight: 105, backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: radii.md, alignItems: "center", justifyContent: "center", padding: 8, gap: 8 },
+  categoryCard: { userSelect: "none", width: "31.5%", minHeight: 105, backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: radii.md, alignItems: "center", justifyContent: "center", padding: 8, gap: 8 },
   categoryIcon: { width: 48, height: 48, borderRadius: 16, backgroundColor: colors.primarySoft, alignItems: "center", justifyContent: "center" },
   categoryName: { fontSize: 11, fontWeight: "700", textAlign: "center", lineHeight: 16 },
   listingRow: { flexDirection: "row", alignItems: "center", gap: spacing.md },
