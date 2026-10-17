@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { AppText, PrimaryButton, Screen, uiStyles } from "../../src/components/ui";
 import { useAppState } from "../../src/state/AppProvider";
 import { colors, spacing } from "../../src/theme/tokens";
