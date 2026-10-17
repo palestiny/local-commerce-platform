@@ -49,7 +49,7 @@ export default function HomeScreen() {
       <View style={styles.section}>
         <SectionHeading title={t.categories} action={t.all} onAction={() => router.push("/(tabs)/categories")} />
         <View style={styles.categoryGrid}>
-          {categories.slice(0, 6).map((category) => (
+          {categories.slice(0, 4).map((category) => (
             <Pressable key={category.id} accessibilityRole="button" onPress={() => router.push({ pathname: "/category/[id]", params: { id: category.id } })} style={({ pressed }) => [styles.categoryCard, pressed && { opacity: 0.75 }]}>
               <View style={styles.categoryIcon}><AppText style={{ fontSize: 25 }}>{category.icon}</AppText></View>
               <AppText style={styles.categoryName}>{isAr ? category.nameAr : category.nameEn}</AppText>
@@ -59,7 +59,7 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.section}>
-        <SectionHeading title={t.featured} action={t.all} onAction={() => router.push("/(tabs)/categories")} />
+        <SectionHeading title={t.featured} />
         <View style={{ gap: spacing.md }}>
           {filtered.map((item) => (
             <Pressable key={item.id} onPress={() => router.push({ pathname: "/listing/[id]", params: { id: item.id } })} style={uiStyles.card}>
@@ -78,7 +78,7 @@ export default function HomeScreen() {
             </Pressable>
           ))}
           {filtered.length === 0 ? <View style={uiStyles.card}>
-            <AppText>{isAr ? "مفيش نتائج مطابقة للبحث أو القسم المختار." : "No listings match your search or selected category."}</AppText>
+            <AppText>{isAr ? "مفيش نتائج مطابقة للبحث." : "No listings match your search."}</AppText>
             <Pressable onPress={() => setQuery("")} style={styles.clearFilters}>
               <AppText style={styles.clearFiltersText}>{isAr ? "مسح البحث والفلاتر" : "Clear search and filters"}</AppText>
             </Pressable>
