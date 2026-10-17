@@ -9,14 +9,17 @@ import { colors, radii, spacing } from "../../src/theme/tokens";
 export default function HomeScreen() {
   const { language, setLanguage, favorites, toggleFavorite } = useAppState();
   const [query, setQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const isAr = language === "ar";
   const t = isAr
     ? { location: "موقعك الحالي", city: "دكرنس، الدقهلية", greeting: "كل اللي تحتاجه… أقرب ليك", subtitle: "تسوّق واكتشف خدمات منطقتك من مكان واحد", categories: "اكتشف الأقسام", all: "عرض الكل", featured: "اختيارات مميزة", search: "بتدور على إيه؟ متجر، خدمة، منتج...", demo: "بيانات تجريبية" }
     : { location: "Your location", city: "Dekernes, Dakahlia", greeting: "Everything you need, closer", subtitle: "Discover local shops and services in one place", categories: "Explore categories", all: "View all", featured: "Featured nearby", search: "Search shops, services, products...", demo: "Demo data" };
   const filtered = useMemo(() => listings.filter((item) => {
     const haystack = isAr ? item.nameAr + " " + item.categoryAr : item.nameEn + " " + item.categoryEn;
-    return haystack.toLowerCase().includes(query.trim().toLowerCase());
-  }), [isAr, query]);
+    const matchesQuery = haystack.toLowerCase().includes(query.trim().toLowerCase());
+    const matchesCategory = !selectedCategory || item.categoryId === selectedCategory;
+    return matchesQuery && matchesCategory;
+  }), [isAr, query, selectedCategory]);
 
   return <Screen style={{ paddingHorizontal: 0, paddingTop: 0 }}>
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -33,6 +36,16 @@ export default function HomeScreen() {
         <AppText style={styles.greeting}>{t.greeting}</AppText>
         <AppText style={styles.subtitle}>{t.subtitle}</AppText>
         <SearchInput value={query} onChangeText={setQuery} placeholder={t.search} returnKeyType="search" />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.quickFilters}>
+          <Pressable onPress={() => setSelectedCategory(null)} style={[styles.filterChip, selectedCategory === null && styles.filterChipActive]}>
+            <AppText style={[styles.filterChipText, selectedCategory === null && styles.filterChipTextActive]}>{isAr ? "الكل" : "All"}</AppText>
+          </Pressable>
+          {categories.map((category) => (
+            <Pressable key={category.id} onPress={() => setSelectedCategory(selectedCategory === category.id ? null : category.id)} style={[styles.filterChip, selectedCategory === category.id && styles.filterChipActive]}>
+              <AppText style={[styles.filterChipText, selectedCategory === category.id && styles.filterChipTextActive]}>{category.icon} {isAr ? category.nameAr : category.nameEn}</AppText>
+            </Pressable>
+          ))}
+        </ScrollView>
       </View>
 
       <View style={styles.demoNotice}><AppText style={styles.demoNoticeText}>ⓘ {demoNotice[language]}</AppText></View>
@@ -68,7 +81,12 @@ export default function HomeScreen() {
               </View>
             </Pressable>
           ))}
-          {filtered.length === 0 ? <View style={uiStyles.card}><AppText>{isAr ? "مفيش نتائج مطابقة. جرّب كلمة تانية." : "No matching results. Try another search."}</AppText></View> : null}
+          {filtered.length === 0 ? <View style={uiStyles.card}>
+            <AppText>{isAr ? "مفيش نتائج مطابقة للبحث أو القسم المختار." : "No listings match your search or selected category."}</AppText>
+            <Pressable onPress={() => { setQuery(""); setSelectedCategory(null); }} style={styles.clearFilters}>
+              <AppText style={styles.clearFiltersText}>{isAr ? "مسح البحث والفلاتر" : "Clear search and filters"}</AppText>
+            </Pressable>
+          </View> : null}
         </View>
       </View>
       <AppText style={styles.footer}>{t.demo}</AppText>
@@ -78,6 +96,13 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   content: { paddingBottom: 24, gap: spacing.lg },
+  quickFilters: { gap: spacing.sm, paddingTop: 2 },
+  filterChip: { borderWidth: 1, borderColor: "#83BFB5", borderRadius: radii.pill, paddingVertical: 8, paddingHorizontal: 12, backgroundColor: "#FFFFFF14" },
+  filterChipActive: { backgroundColor: "#FFFFFF", borderColor: "#FFFFFF" },
+  filterChipText: { color: "#FFFFFF", fontSize: 11, fontWeight: "700" },
+  filterChipTextActive: { color: colors.primaryDark },
+  clearFilters: { alignSelf: "flex-start", paddingTop: spacing.md },
+  clearFiltersText: { color: colors.primary, fontWeight: "800", fontSize: 12 },
   hero: { backgroundColor: colors.primary, paddingHorizontal: spacing.lg, paddingTop: 20, paddingBottom: 24, borderBottomLeftRadius: 28, borderBottomRightRadius: 28, gap: spacing.md },
   topRow: { flexDirection: "row", alignItems: "center", gap: spacing.md, marginBottom: 8 },
   locationLabel: { color: "#C8E9E3", fontSize: 11 },
