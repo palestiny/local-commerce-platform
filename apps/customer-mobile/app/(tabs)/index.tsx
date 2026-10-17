@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import React, { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText, Screen, SearchInput, SectionHeading, uiStyles } from "../../src/components/ui";
 import { categories, demoNotice, listings } from "../../src/data/demo";
 import { useAppState } from "../../src/state/AppProvider";
@@ -9,21 +10,26 @@ import { colors, radii, spacing } from "../../src/theme/tokens";
 export default function HomeScreen() {
   const { language, setLanguage, favorites, toggleFavorite } = useAppState();
   const [query, setQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const insets = useSafeAreaInsets();
   const isAr = language === "ar";
   const t = isAr
     ? { location: "موقعك الحالي", city: "دكرنس، الدقهلية", greeting: "كل اللي تحتاجه… أقرب ليك", subtitle: "تسوّق واكتشف خدمات منطقتك من مكان واحد", categories: "اكتشف الأقسام", all: "عرض الكل", featured: "اختيارات مميزة", search: "بتدور على إيه؟ متجر، خدمة، منتج...", demo: "بيانات تجريبية" }
     : { location: "Your location", city: "Dekernes, Dakahlia", greeting: "Everything you need, closer", subtitle: "Discover local shops and services in one place", categories: "Explore categories", all: "View all", featured: "Featured nearby", search: "Search shops, services, products...", demo: "Demo data" };
-  const filtered = useMemo(() => listings.filter((item) => {
-    const haystack = isAr ? item.nameAr + " " + item.categoryAr : item.nameEn + " " + item.categoryEn;
-    const matchesQuery = haystack.toLowerCase().includes(query.trim().toLowerCase());
-    const matchesCategory = !selectedCategory || item.categoryId === selectedCategory;
-    return matchesQuery && matchesCategory;
-  }), [isAr, query, selectedCategory]);
+  const filtered = useMemo(() => {
+    const normalizedQuery = normalizeSearchText(query);
+    return listings.filter((item) => {
+      const category = categories.find((entry) => entry.id === item.categoryId);
+      const searchableText = [
+        item.nameAr, item.nameEn, item.categoryAr, item.categoryEn,
+        category?.nameAr, category?.nameEn,
+      ].filter(Boolean).join(" ");
+      return normalizeSearchText(searchableText).includes(normalizedQuery);
+    });
+  }, [query]);
 
   return <Screen style={{ paddingHorizontal: 0, paddingTop: 0 }}>
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      <View style={styles.hero}>
+      <View style={[styles.hero, { paddingTop: Math.max(20, insets.top + 12) }]}>
         <View style={[styles.topRow, { flexDirection: isAr ? "row-reverse" : "row" }]}>
           <View style={{ flex: 1, gap: 4 }}>
             <AppText style={styles.locationLabel}>{t.location}</AppText>
@@ -36,16 +42,6 @@ export default function HomeScreen() {
         <AppText style={styles.greeting}>{t.greeting}</AppText>
         <AppText style={styles.subtitle}>{t.subtitle}</AppText>
         <SearchInput value={query} onChangeText={setQuery} placeholder={t.search} returnKeyType="search" />
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.quickFilters}>
-          <Pressable onPress={() => setSelectedCategory(null)} style={[styles.filterChip, selectedCategory === null && styles.filterChipActive]}>
-            <AppText style={[styles.filterChipText, selectedCategory === null && styles.filterChipTextActive]}>{isAr ? "الكل" : "All"}</AppText>
-          </Pressable>
-          {categories.map((category) => (
-            <Pressable key={category.id} onPress={() => setSelectedCategory(selectedCategory === category.id ? null : category.id)} style={[styles.filterChip, selectedCategory === category.id && styles.filterChipActive]}>
-              <AppText style={[styles.filterChipText, selectedCategory === category.id && styles.filterChipTextActive]}>{category.icon} {isAr ? category.nameAr : category.nameEn}</AppText>
-            </Pressable>
-          ))}
-        </ScrollView>
       </View>
 
       <View style={styles.demoNotice}><AppText style={styles.demoNoticeText}>ⓘ {demoNotice[language]}</AppText></View>
@@ -83,7 +79,7 @@ export default function HomeScreen() {
           ))}
           {filtered.length === 0 ? <View style={uiStyles.card}>
             <AppText>{isAr ? "مفيش نتائج مطابقة للبحث أو القسم المختار." : "No listings match your search or selected category."}</AppText>
-            <Pressable onPress={() => { setQuery(""); setSelectedCategory(null); }} style={styles.clearFilters}>
+            <Pressable onPress={() => setQuery("")} style={styles.clearFilters}>
               <AppText style={styles.clearFiltersText}>{isAr ? "مسح البحث والفلاتر" : "Clear search and filters"}</AppText>
             </Pressable>
           </View> : null}
@@ -96,11 +92,6 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   content: { paddingBottom: 24, gap: spacing.lg },
-  quickFilters: { gap: spacing.sm, paddingTop: 2 },
-  filterChip: { borderWidth: 1, borderColor: "#83BFB5", borderRadius: radii.pill, paddingVertical: 8, paddingHorizontal: 12, backgroundColor: "#FFFFFF14" },
-  filterChipActive: { backgroundColor: "#FFFFFF", borderColor: "#FFFFFF" },
-  filterChipText: { color: "#FFFFFF", fontSize: 11, fontWeight: "700" },
-  filterChipTextActive: { color: colors.primaryDark },
   clearFilters: { alignSelf: "flex-start", paddingTop: spacing.md },
   clearFiltersText: { color: colors.primary, fontWeight: "800", fontSize: 12 },
   hero: { backgroundColor: colors.primary, paddingHorizontal: spacing.lg, paddingTop: 20, paddingBottom: 24, borderBottomLeftRadius: 28, borderBottomRightRadius: 28, gap: spacing.md },
@@ -126,3 +117,13 @@ const styles = StyleSheet.create({
   favoriteButton: { padding: 4 },
   footer: { color: colors.muted, textAlign: "center", fontSize: 10, paddingHorizontal: spacing.lg },
 });
+function normalizeSearchText(value: string): string {
+  return value
+    .normalize("NFKC")
+    .replace(/[\u064B-\u065F\u0670\u0640]/g, "")
+    .replace(/[أإآٱ]/g, "ا")
+    .replace(/ى/g, "ي")
+    .toLocaleLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
