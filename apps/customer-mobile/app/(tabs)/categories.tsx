@@ -26,7 +26,7 @@ export default function CategoriesScreen() {
     <SearchInput value={query} onChangeText={setQuery} placeholder={isAr ? "ابحث داخل الأقسام والأنشطة" : "Search categories and listings"} />
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: spacing.lg, paddingBottom: 24 }}>
       <View style={styles.grid}>
-        {visibleCategories.map((item) => <Pressable key={item.id} onPress={() => setSelected(selected === item.id ? null : item.id)} style={[styles.category, selected === item.id && styles.selectedCategory]}>
+        {visibleCategories.map((item) => <Pressable key={item.id} accessibilityRole="button" onPress={() => router.push({ pathname: "/category/[id]", params: { id: item.id } })} style={({ pressed }) => [styles.category, pressed && styles.categoryPressed]}>
           <View style={styles.icon}><AppText style={{ fontSize: 25 }}>{item.icon}</AppText></View>
           <AppText style={[styles.categoryName, selected === item.id && { color: colors.primary }]}>{isAr ? item.nameAr : item.nameEn}</AppText>
           <AppText style={styles.description}>{isAr ? item.descriptionAr : item.descriptionEn}</AppText>
@@ -55,8 +55,9 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, fontWeight: "900" },
   subtitle: { color: colors.muted, fontSize: 13 },
   grid: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
-  category: { width: "48%", backgroundColor: colors.surface, borderRadius: radii.md, padding: spacing.md, borderWidth: 1, borderColor: colors.border, gap: 7 },
+  category: { userSelect: "none", width: "48%", backgroundColor: colors.surface, borderRadius: radii.md, padding: spacing.md, borderWidth: 1, borderColor: colors.border, gap: 7 },
   selectedCategory: { borderColor: colors.primary, backgroundColor: colors.primarySoft },
+  categoryPressed: { opacity: 0.75, borderColor: colors.primary },
   icon: { width: 48, height: 48, borderRadius: 15, backgroundColor: colors.primarySoft, alignItems: "center", justifyContent: "center" },
   categoryName: { fontWeight: "800", fontSize: 13 },
   description: { color: colors.muted, fontSize: 11, lineHeight: 16 },

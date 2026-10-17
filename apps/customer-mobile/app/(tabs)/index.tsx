@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import React, { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText, Screen, SearchInput, SectionHeading, uiStyles } from "../../src/components/ui";
 import { categories, demoNotice, listings } from "../../src/data/demo";
 import { useAppState } from "../../src/state/AppProvider";
@@ -9,18 +10,26 @@ import { colors, radii, spacing } from "../../src/theme/tokens";
 export default function HomeScreen() {
   const { language, setLanguage, favorites, toggleFavorite } = useAppState();
   const [query, setQuery] = useState("");
+  const insets = useSafeAreaInsets();
   const isAr = language === "ar";
   const t = isAr
     ? { location: "موقعك الحالي", city: "دكرنس، الدقهلية", greeting: "كل اللي تحتاجه… أقرب ليك", subtitle: "تسوّق واكتشف خدمات منطقتك من مكان واحد", categories: "اكتشف الأقسام", all: "عرض الكل", featured: "اختيارات مميزة", search: "بتدور على إيه؟ متجر، خدمة، منتج...", demo: "بيانات تجريبية" }
     : { location: "Your location", city: "Dekernes, Dakahlia", greeting: "Everything you need, closer", subtitle: "Discover local shops and services in one place", categories: "Explore categories", all: "View all", featured: "Featured nearby", search: "Search shops, services, products...", demo: "Demo data" };
-  const filtered = useMemo(() => listings.filter((item) => {
-    const haystack = isAr ? item.nameAr + " " + item.categoryAr : item.nameEn + " " + item.categoryEn;
-    return haystack.toLowerCase().includes(query.trim().toLowerCase());
-  }), [isAr, query]);
+  const filtered = useMemo(() => {
+    const normalizedQuery = normalizeSearchText(query);
+    return listings.filter((item) => {
+      const category = categories.find((entry) => entry.id === item.categoryId);
+      const searchableText = [
+        item.nameAr, item.nameEn, item.categoryAr, item.categoryEn,
+        category?.nameAr, category?.nameEn,
+      ].filter(Boolean).join(" ");
+      return normalizeSearchText(searchableText).includes(normalizedQuery);
+    });
+  }, [query]);
 
   return <Screen style={{ paddingHorizontal: 0, paddingTop: 0 }}>
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      <View style={styles.hero}>
+      <View style={[styles.hero, { paddingTop: Math.max(20, insets.top + 12) }]}>
         <View style={[styles.topRow, { flexDirection: isAr ? "row-reverse" : "row" }]}>
           <View style={{ flex: 1, gap: 4 }}>
             <AppText style={styles.locationLabel}>{t.location}</AppText>
@@ -40,8 +49,8 @@ export default function HomeScreen() {
       <View style={styles.section}>
         <SectionHeading title={t.categories} action={t.all} onAction={() => router.push("/(tabs)/categories")} />
         <View style={styles.categoryGrid}>
-          {categories.slice(0, 6).map((category) => (
-            <Pressable key={category.id} onPress={() => router.push({ pathname: "/(tabs)/categories", params: { category: category.id } })} style={({ pressed }) => [styles.categoryCard, pressed && { opacity: 0.75 }]}>
+          {categories.slice(0, 4).map((category) => (
+            <Pressable key={category.id} accessibilityRole="button" onPress={() => router.push({ pathname: "/category/[id]", params: { id: category.id } })} style={({ pressed }) => [styles.categoryCard, pressed && { opacity: 0.75 }]}>
               <View style={styles.categoryIcon}><AppText style={{ fontSize: 25 }}>{category.icon}</AppText></View>
               <AppText style={styles.categoryName}>{isAr ? category.nameAr : category.nameEn}</AppText>
             </Pressable>
@@ -50,7 +59,7 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.section}>
-        <SectionHeading title={t.featured} action={t.all} onAction={() => router.push("/(tabs)/categories")} />
+        <SectionHeading title={t.featured} />
         <View style={{ gap: spacing.md }}>
           {filtered.map((item) => (
             <Pressable key={item.id} onPress={() => router.push({ pathname: "/listing/[id]", params: { id: item.id } })} style={uiStyles.card}>
@@ -68,7 +77,12 @@ export default function HomeScreen() {
               </View>
             </Pressable>
           ))}
-          {filtered.length === 0 ? <View style={uiStyles.card}><AppText>{isAr ? "مفيش نتائج مطابقة. جرّب كلمة تانية." : "No matching results. Try another search."}</AppText></View> : null}
+          {filtered.length === 0 ? <View style={uiStyles.card}>
+            <AppText>{isAr ? "مفيش نتائج مطابقة للبحث." : "No listings match your search."}</AppText>
+            <Pressable onPress={() => setQuery("")} style={styles.clearFilters}>
+              <AppText style={styles.clearFiltersText}>{isAr ? "مسح البحث والفلاتر" : "Clear search and filters"}</AppText>
+            </Pressable>
+          </View> : null}
         </View>
       </View>
       <AppText style={styles.footer}>{t.demo}</AppText>
@@ -78,6 +92,8 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   content: { paddingBottom: 24, gap: spacing.lg },
+  clearFilters: { alignSelf: "flex-start", paddingTop: spacing.md },
+  clearFiltersText: { color: colors.primary, fontWeight: "800", fontSize: 12 },
   hero: { backgroundColor: colors.primary, paddingHorizontal: spacing.lg, paddingTop: 20, paddingBottom: 24, borderBottomLeftRadius: 28, borderBottomRightRadius: 28, gap: spacing.md },
   topRow: { flexDirection: "row", alignItems: "center", gap: spacing.md, marginBottom: 8 },
   locationLabel: { color: "#C8E9E3", fontSize: 11 },
@@ -90,7 +106,7 @@ const styles = StyleSheet.create({
   demoNoticeText: { color: "#79521F", fontSize: 11, lineHeight: 17 },
   section: { paddingHorizontal: spacing.lg, gap: spacing.md },
   categoryGrid: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
-  categoryCard: { width: "31.5%", minHeight: 105, backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: radii.md, alignItems: "center", justifyContent: "center", padding: 8, gap: 8 },
+  categoryCard: { userSelect: "none", width: "31.5%", minHeight: 105, backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: radii.md, alignItems: "center", justifyContent: "center", padding: 8, gap: 8 },
   categoryIcon: { width: 48, height: 48, borderRadius: 16, backgroundColor: colors.primarySoft, alignItems: "center", justifyContent: "center" },
   categoryName: { fontSize: 11, fontWeight: "700", textAlign: "center", lineHeight: 16 },
   listingRow: { flexDirection: "row", alignItems: "center", gap: spacing.md },
@@ -101,3 +117,13 @@ const styles = StyleSheet.create({
   favoriteButton: { padding: 4 },
   footer: { color: colors.muted, textAlign: "center", fontSize: 10, paddingHorizontal: spacing.lg },
 });
+function normalizeSearchText(value: string): string {
+  return value
+    .normalize("NFKC")
+    .replace(/[\u064B-\u065F\u0670\u0640]/g, "")
+    .replace(/[أإآٱ]/g, "ا")
+    .replace(/ى/g, "ي")
+    .toLocaleLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}

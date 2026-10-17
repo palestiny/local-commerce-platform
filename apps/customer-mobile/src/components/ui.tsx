@@ -1,5 +1,6 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, TextInput, View, type TextInputProps, type ViewStyle } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, radii, spacing } from "../theme/tokens";
 import { useAppState } from "../state/AppProvider";
 
@@ -9,7 +10,8 @@ export function AppText({ children, style, ...props }: React.ComponentProps<type
 }
 
 export function Screen({ children, style }: React.PropsWithChildren<{ style?: ViewStyle }>) {
-  return <View style={[styles.screen, style]}>{children}</View>;
+  const insets = useSafeAreaInsets();
+  return <View style={[styles.screen, { paddingTop: spacing.lg + insets.top }, style]}>{children}</View>;
 }
 
 export function SectionHeading({ title, action, onAction }: { title: string; action?: string; onAction?: () => void }) {

@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText, PrimaryButton, Screen, uiStyles } from "../../src/components/ui";
 import { listings } from "../../src/data/demo";
 import { useAppState } from "../../src/state/AppProvider";
@@ -9,6 +10,7 @@ import { colors, radii, spacing } from "../../src/theme/tokens";
 export default function ListingDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { language, favorites, toggleFavorite } = useAppState();
+  const insets = useSafeAreaInsets();
   const item = listings.find((listing) => listing.id === id);
   const isAr = language === "ar";
   if (!item) return <Screen><AppText>{isAr ? "النشاط غير موجود ضمن البيانات التجريبية." : "Listing not found in demo data."}</AppText><PrimaryButton title={isAr ? "رجوع" : "Go back"} onPress={() => router.back()} /></Screen>;
@@ -20,8 +22,8 @@ export default function ListingDetailsScreen() {
 
   return <Screen style={{ paddingHorizontal: 0, paddingTop: 0 }}>
     <ScrollView contentContainerStyle={{ paddingBottom: 28, gap: spacing.lg }}>
-      <View style={styles.hero}>
-        <Pressable onPress={() => router.back()} style={styles.back}><AppText style={{ color: "#FFFFFF", fontSize: 24 }}>‹</AppText></Pressable>
+      <View style={[styles.hero, { paddingTop: insets.top + 22 }]}>
+        <Pressable onPress={() => router.back()} style={[styles.back, { top: insets.top + 12 }]}><AppText style={{ color: "#FFFFFF", fontSize: 24 }}>‹</AppText></Pressable>
         <AppText style={{ fontSize: 70 }}>{item.icon}</AppText>
         <AppText style={styles.heroName}>{isAr ? item.nameAr : item.nameEn}</AppText>
         <AppText style={styles.heroMeta}>{isAr ? item.categoryAr : item.categoryEn} · {isAr ? item.distanceAr : item.distanceEn}</AppText>
