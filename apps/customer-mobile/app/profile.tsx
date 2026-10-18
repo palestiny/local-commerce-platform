@@ -17,7 +17,7 @@ export default function ProfileScreen() {
   return (
     <Screen style={{ paddingHorizontal: 0, paddingTop: 0 }}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: Math.max(58, insets.top + 24) }]}>
           <Pressable accessibilityRole="button" onPress={() => router.back()} style={styles.backButton}><AppText style={styles.backText}>‹</AppText></Pressable>
           <AppText style={styles.brand}>{isAr ? "حسابي" : "My account"}</AppText>
           <View style={styles.avatar}><AppText style={styles.avatarText}>♙</AppText></View>
@@ -42,7 +42,7 @@ export default function ProfileScreen() {
 }
 const styles = StyleSheet.create({
   content: { paddingBottom: 28, gap: spacing.lg },
-  header: { backgroundColor: colors.primary, paddingTop: Math.max(58, insets.top + 24), paddingHorizontal: spacing.lg, paddingBottom: spacing.xl, borderBottomLeftRadius: 28, borderBottomRightRadius: 28, alignItems: "center", gap: spacing.md },
+  header: { backgroundColor: colors.primary, paddingTop: 58, paddingHorizontal: spacing.lg, paddingBottom: spacing.xl, borderBottomLeftRadius: 28, borderBottomRightRadius: 28, alignItems: "center", gap: spacing.md },
   backButton: { position: "absolute", top: 12, left: 16, width: 44, height: 44, borderRadius: 22, backgroundColor: "#FFFFFF20", alignItems: "center", justifyContent: "center" },
   backText: { color: "#FFFFFF", fontSize: 28 },
   brand: { color: "#FFFFFF", fontSize: 22, fontWeight: "900" },
