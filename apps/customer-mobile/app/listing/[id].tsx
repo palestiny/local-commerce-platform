@@ -34,8 +34,8 @@ export default function ListingDetailsScreen() {
             <AppText style={styles.rating}>★ {item.rating} <AppText style={styles.muted}>({item.reviews} {isAr ? "تقييم" : "reviews"})</AppText></AppText>
             <AppText style={styles.price}>{isAr ? item.priceAr : item.priceEn}</AppText>
           </View>
-          <Pressable onPress={() => toggleFavorite(item.id)} style={styles.saveButton}>
-            <AppText style={{ color: favorites.includes(item.id) ? colors.danger : colors.primary, fontWeight: "800" }}>{favorites.includes(item.id) ? "♥" : "♡"} {isAr ? "حفظ" : "Save"}</AppText>
+          <Pressable accessibilityRole="button" accessibilityLabel={favorites.includes(item.id) ? (isAr ? "إزالة من المفضلة" : "Remove from favorites") : (isAr ? "إضافة للمفضلة" : "Add to favorites")} onPress={() => toggleFavorite(item.id)} style={styles.saveButton}>
+            <AppText style={{ color: favorites.includes(item.id) ? colors.danger : colors.primary, fontSize: 16, fontWeight: "900" }}>{favorites.includes(item.id) ? "♥" : "♡"}  {isAr ? (favorites.includes(item.id) ? "في المفضلة" : "أضف للمفضلة") : (favorites.includes(item.id) ? "Saved" : "Save")}</AppText>
           </Pressable>
         </View>
         <View style={uiStyles.card}>
@@ -64,6 +64,6 @@ const styles = StyleSheet.create({
   price: { color: colors.primaryDark, fontWeight: "800", fontSize: 13 },
   muted: { color: colors.muted, fontSize: 12, lineHeight: 19 },
   sectionTitle: { fontSize: 15, fontWeight: "800", marginBottom: 8 },
-  saveButton: { padding: 10, borderRadius: 12, backgroundColor: colors.primarySoft },
+  saveButton: { minHeight: 48, minWidth: 48, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14, backgroundColor: colors.primarySoft, alignItems: "center", justifyContent: "center" },
   disclaimer: { color: colors.muted, fontSize: 10, textAlign: "center", lineHeight: 16 },
 });
