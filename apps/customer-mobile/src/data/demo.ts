@@ -33,10 +33,17 @@ export const categories: Category[] = [
   { id: "shopping", nameAr: "ملابس وتسوق", nameEn: "Shopping", icon: "🛍️", descriptionAr: "متاجر ومنتجات متنوعة", descriptionEn: "Shops and everyday products" },
   { id: "transport", nameAr: "نقل ومشاوير", nameEn: "Transport", icon: "🚗", descriptionAr: "تنقلات وخدمات توصيل", descriptionEn: "Rides and delivery services" },
   { id: "beauty", nameAr: "جمال وعناية", nameEn: "Beauty & care", icon: "✨", descriptionAr: "صالونات وخدمات شخصية", descriptionEn: "Salons and personal care" },
+  { id: "bakery", nameAr: "مخابز وحلويات", nameEn: "Bakeries & sweets", icon: "🥐", descriptionAr: "مخبوزات وحلويات طازجة", descriptionEn: "Fresh bakery and sweets" },
+  { id: "produce", nameAr: "خضار وفاكهة", nameEn: "Fruit & vegetables", icon: "🥬", descriptionAr: "خضروات وفاكهة واحتياجات طازجة", descriptionEn: "Fresh produce and essentials" },
+  { id: "electronics", nameAr: "إلكترونيات وموبايلات", nameEn: "Electronics & phones", icon: "📱", descriptionAr: "أجهزة وموبايلات وإكسسوارات", descriptionEn: "Devices, phones, and accessories" },
+  { id: "automotive", nameAr: "سيارات وورش", nameEn: "Auto & workshops", icon: "🚗", descriptionAr: "صيانة وقطع غيار وخدمات سيارات", descriptionEn: "Vehicle repair and parts" },
+  { id: "household", nameAr: "أدوات منزلية", nameEn: "Home & kitchen", icon: "🏠", descriptionAr: "أدوات ومستلزمات المنزل", descriptionEn: "Home and kitchen essentials" },
+  { id: "professional", nameAr: "خدمات مهنية", nameEn: "Professional services", icon: "🧾", descriptionAr: "خدمات مهنية وأعمال متخصصة", descriptionEn: "Professional and specialist services" },
+  { id: "sports", nameAr: "رياضة ولياقة", nameEn: "Sports & fitness", icon: "🏃", descriptionAr: "أنشطة رياضية ولياقة بدنية", descriptionEn: "Sports and fitness activities" },
 ];
 
 export const listings: LocalListing[] = [
-  { id: "l1", nameAr: "مطعم البيت البلدي", nameEn: "El Beit El Balady", categoryId: "food", categoryAr: "مطاعم", categoryEn: "Restaurant", rating: "4.8", reviews: 126, distanceAr: "وسط دكرنس", distanceEn: "Central Dekernes", priceAr: "متوسط السعر ١٢٠ ج.م", priceEn: "Avg. EGP 120", icon: "🍽️", featured: true },
+  { id: "l1", nameAr: "مطعم البيت البلدي", nameEn: "El Beit El Balady", categoryId: "food", categoryAr: "مطاعم", categoryEn: "Restaurant", rating: "4.8", reviews: 126, distanceAr: "وسط دكرنس", distanceEn: "Central Dekernes", priceAr: "تفاصيل الأسعار داخل المتجر", priceEn: "View menu for prices", icon: "🍽️", featured: true },
   { id: "l2", nameAr: "ماركت الأسرة", nameEn: "Family Market", categoryId: "groceries", categoryAr: "بقالة", categoryEn: "Groceries", rating: "4.7", reviews: 84, distanceAr: "قريب منك", distanceEn: "Near you", priceAr: "منتجات يومية", priceEn: "Daily essentials", icon: "🛒", featured: true },
   { id: "l3", nameAr: "خدمات البيت", nameEn: "HomeCare Services", categoryId: "home", categoryAr: "صيانة منزلية", categoryEn: "Home services", rating: "4.9", reviews: 42, distanceAr: "دكرنس", distanceEn: "Dekernes", priceAr: "السعر حسب الخدمة", priceEn: "Price depends on service", icon: "🧰", featured: true },
   { id: "l4", nameAr: "مركز خطوة للتعليم", nameEn: "Khotwa Learning Center", categoryId: "education", categoryAr: "تعليم", categoryEn: "Education", rating: "4.6", reviews: 58, distanceAr: "دكرنس", distanceEn: "Dekernes", priceAr: "حسب البرنامج", priceEn: "Varies by program", icon: "📚" },
