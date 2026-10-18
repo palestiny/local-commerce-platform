@@ -23,7 +23,7 @@ export default function FavoritesScreen() {
             <AppText style={styles.name}>{isAr ? item.nameAr : item.nameEn}</AppText>
             <AppText style={styles.subtitle}>{isAr ? item.categoryAr : item.categoryEn} · ★ {item.rating}</AppText>
           </View>
-          <Pressable hitSlop={8} onPress={(event) => { event.stopPropagation(); toggleFavorite(item.id); }}><AppText style={{ color: colors.danger, fontSize: 21 }}>♥</AppText></Pressable>
+          <Pressable accessibilityRole="button" accessibilityLabel={isAr ? "إزالة من المفضلة" : "Remove from favorites"} hitSlop={8} onPress={(event) => { event.stopPropagation(); toggleFavorite(item.id); }} style={styles.removeButton}><AppText style={{ color: colors.danger, fontSize: 27, lineHeight: 31 }}>♥</AppText></Pressable>
         </View>
       </Pressable>)}
       {saved.length === 0 ? <View style={[uiStyles.card, styles.empty]}>
@@ -42,6 +42,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: spacing.md },
   icon: { width: 56, height: 56, borderRadius: 16, backgroundColor: colors.primarySoft, alignItems: "center", justifyContent: "center" },
   name: { fontSize: 14, fontWeight: "800" },
+  removeButton: { width: 46, height: 46, borderRadius: 23, alignItems: "center", justifyContent: "center", backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border },
   empty: { alignItems: "center", gap: spacing.md, paddingVertical: 32 },
   cta: { backgroundColor: colors.primary, paddingVertical: 12, paddingHorizontal: 18, borderRadius: 12, marginTop: 4 },
 });
