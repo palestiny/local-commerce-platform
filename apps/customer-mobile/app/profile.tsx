@@ -1,12 +1,14 @@
 import { router } from "expo-router";
 import React from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText, PrimaryButton, Screen, uiStyles } from "../src/components/ui";
 import { useAppState } from "../src/state/AppProvider";
-import { colors, radii, spacing } from "../src/theme/tokens";
+import { colors, spacing } from "../src/theme/tokens";
 
 export default function ProfileScreen() {
   const { language, setLanguage } = useAppState();
+  const insets = useSafeAreaInsets();
   const isAr = language === "ar";
   const showDemoNotice = () => Alert.alert(
     isAr ? "تسجيل الدخول قريبًا" : "Sign-in coming soon",
@@ -40,7 +42,7 @@ export default function ProfileScreen() {
 }
 const styles = StyleSheet.create({
   content: { paddingBottom: 28, gap: spacing.lg },
-  header: { backgroundColor: colors.primary, paddingTop: 58, paddingHorizontal: spacing.lg, paddingBottom: spacing.xl, borderBottomLeftRadius: 28, borderBottomRightRadius: 28, alignItems: "center", gap: spacing.md },
+  header: { backgroundColor: colors.primary, paddingTop: Math.max(58, insets.top + 24), paddingHorizontal: spacing.lg, paddingBottom: spacing.xl, borderBottomLeftRadius: 28, borderBottomRightRadius: 28, alignItems: "center", gap: spacing.md },
   backButton: { position: "absolute", top: 12, left: 16, width: 44, height: 44, borderRadius: 22, backgroundColor: "#FFFFFF20", alignItems: "center", justifyContent: "center" },
   backText: { color: "#FFFFFF", fontSize: 28 },
   brand: { color: "#FFFFFF", fontSize: 22, fontWeight: "900" },
