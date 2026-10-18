@@ -16,6 +16,7 @@ export default function RootLayout() {
           }}
         >
           <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="profile" options={{ animation: "slide_from_right" }} />
           <Stack.Screen name="listing/[id]" options={{ animation: "slide_from_right" }} />
           <Stack.Screen name="category/[id]" options={{ animation: "slide_from_right" }} />
         </Stack>
