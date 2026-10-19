@@ -22,6 +22,10 @@ export type LocalListing = {
   priceEn: string;
   icon: string;
   featured?: boolean;
+  /** Demo-only ranking signals. Replace with API fields before production. */
+  membershipTier?: "standard" | "premium";
+  views?: number;
+  createdAt?: string;
 };
 
 export const categories: Category[] = [
@@ -43,12 +47,12 @@ export const categories: Category[] = [
 ];
 
 export const listings: LocalListing[] = [
-  { id: "l1", nameAr: "مطعم البيت البلدي", nameEn: "El Beit El Balady", categoryId: "food", categoryAr: "مطاعم", categoryEn: "Restaurant", rating: "4.8", reviews: 126, distanceAr: "وسط دكرنس", distanceEn: "Central Dekernes", priceAr: "تفاصيل الأسعار داخل المتجر", priceEn: "View menu for prices", icon: "🍽️", featured: true },
-  { id: "l2", nameAr: "ماركت الأسرة", nameEn: "Family Market", categoryId: "groceries", categoryAr: "بقالة", categoryEn: "Groceries", rating: "4.7", reviews: 84, distanceAr: "قريب منك", distanceEn: "Near you", priceAr: "منتجات يومية", priceEn: "Daily essentials", icon: "🛒", featured: true },
-  { id: "l3", nameAr: "خدمات البيت", nameEn: "HomeCare Services", categoryId: "home", categoryAr: "صيانة منزلية", categoryEn: "Home services", rating: "4.9", reviews: 42, distanceAr: "دكرنس", distanceEn: "Dekernes", priceAr: "السعر حسب الخدمة", priceEn: "Price depends on service", icon: "🧰", featured: true },
-  { id: "l4", nameAr: "مركز خطوة للتعليم", nameEn: "Khotwa Learning Center", categoryId: "education", categoryAr: "تعليم", categoryEn: "Education", rating: "4.6", reviews: 58, distanceAr: "دكرنس", distanceEn: "Dekernes", priceAr: "حسب البرنامج", priceEn: "Varies by program", icon: "📚" },
-  { id: "l5", nameAr: "صيدلية العافية", nameEn: "Al Afia Pharmacy", categoryId: "health", categoryAr: "صحة", categoryEn: "Health", rating: "4.8", reviews: 93, distanceAr: "قريب منك", distanceEn: "Near you", priceAr: "تواصل لمعرفة التوافر", priceEn: "Contact for availability", icon: "🩺" },
-  { id: "l6", nameAr: "أناقة للملابس", nameEn: "Anaqa Fashion", categoryId: "shopping", categoryAr: "ملابس", categoryEn: "Fashion", rating: "4.5", reviews: 37, distanceAr: "دكرنس", distanceEn: "Dekernes", priceAr: "تشكيلات متنوعة", priceEn: "Various collections", icon: "🛍️" },
+  { id: "l1", nameAr: "مطعم البيت البلدي", nameEn: "El Beit El Balady", categoryId: "food", categoryAr: "مطاعم", categoryEn: "Restaurant", rating: "4.8", reviews: 126, distanceAr: "وسط دكرنس", distanceEn: "Central Dekernes", priceAr: "تفاصيل الأسعار داخل المتجر", priceEn: "View menu for prices", icon: "🍽️", featured: true, membershipTier: "premium", views: 1850, createdAt: "2026-10-12" },
+  { id: "l2", nameAr: "ماركت الأسرة", nameEn: "Family Market", categoryId: "groceries", categoryAr: "بقالة", categoryEn: "Groceries", rating: "4.7", reviews: 84, distanceAr: "قريب منك", distanceEn: "Near you", priceAr: "منتجات يومية", priceEn: "Daily essentials", icon: "🛒", featured: true, membershipTier: "premium", views: 2310, createdAt: "2026-10-16" },
+  { id: "l3", nameAr: "خدمات البيت", nameEn: "HomeCare Services", categoryId: "home", categoryAr: "صيانة منزلية", categoryEn: "Home services", rating: "4.9", reviews: 42, distanceAr: "دكرنس", distanceEn: "Dekernes", priceAr: "السعر حسب الخدمة", priceEn: "Price depends on service", icon: "🧰", featured: true, views: 980, createdAt: "2026-10-09" },
+  { id: "l4", nameAr: "مركز خطوة للتعليم", nameEn: "Khotwa Learning Center", categoryId: "education", categoryAr: "تعليم", categoryEn: "Education", rating: "4.6", reviews: 58, distanceAr: "دكرنس", distanceEn: "Dekernes", priceAr: "حسب البرنامج", priceEn: "Varies by program", icon: "📚", views: 750, createdAt: "2026-10-15" },
+  { id: "l5", nameAr: "صيدلية العافية", nameEn: "Al Afia Pharmacy", categoryId: "health", categoryAr: "صحة", categoryEn: "Health", rating: "4.8", reviews: 93, distanceAr: "قريب منك", distanceEn: "Near you", priceAr: "تواصل لمعرفة التوافر", priceEn: "Contact for availability", icon: "🩺", views: 1430, createdAt: "2026-10-14" },
+  { id: "l6", nameAr: "أناقة للملابس", nameEn: "Anaqa Fashion", categoryId: "shopping", categoryAr: "ملابس", categoryEn: "Fashion", rating: "4.5", reviews: 37, distanceAr: "دكرنس", distanceEn: "Dekernes", priceAr: "تشكيلات متنوعة", priceEn: "Various collections", icon: "🛍️", views: 1120, createdAt: "2026-10-17" },
 ];
 
 export const demoNotice = {
