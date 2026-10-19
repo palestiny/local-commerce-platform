@@ -60,6 +60,48 @@ public sealed class CreateOrderPersistenceTests
     }
 
     [Fact]
+    public async Task Initializer_adds_customer_ownership_to_an_existing_legacy_schema()
+    {
+        var schema = "migration_test_" + Guid.NewGuid().ToString("N");
+        await using var admin = CreateDb();
+        await admin.Database.ExecuteSqlRawAsync($"CREATE SCHEMA \"{schema}\"");
+
+        try
+        {
+            var options = new DbContextOptionsBuilder<CommerceDbContext>()
+                .UseNpgsql($"{ConnectionString};Search Path={schema}")
+                .Options;
+            await using var legacyDb = new CommerceDbContext(options);
+
+            var assembly = typeof(DatabaseInitializer).Assembly;
+            await using var stream = assembly.GetManifestResourceStream(
+                "LocalCommerce.Infrastructure.Persistence.Migrations.001_initial.sql")
+                ?? throw new InvalidOperationException("Initial SQL migration resource is missing.");
+            using var reader = new StreamReader(stream);
+            var legacySql = await reader.ReadToEndAsync();
+            legacySql = legacySql.Replace("\"CustomerId\" uuid NULL,", "", StringComparison.Ordinal);
+            await legacyDb.Database.ExecuteSqlRawAsync(legacySql);
+
+            await DatabaseInitializer.InitializeAsync(legacyDb);
+
+            var exists = await legacyDb.Database.SqlQueryRaw<bool>("""
+                SELECT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_schema = current_schema()
+                      AND table_name = 'Orders'
+                      AND column_name = 'CustomerId'
+                ) AS "Value"
+                """).SingleAsync();
+
+            Assert.True(exists);
+        }
+        finally
+        {
+            await admin.Database.ExecuteSqlRawAsync($"DROP SCHEMA IF EXISTS \"{schema}\" CASCADE");
+        }
+    }
+
+    [Fact]
     public async Task Same_idempotency_key_converges_to_one_order()
     {
         await using var seedDb=CreateDb(); await DatabaseInitializer.InitializeAsync(seedDb); await ResetAsync(seedDb);
