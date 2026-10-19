@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { AppText, Screen, uiStyles } from "../../src/components/ui";
-import { listings } from "../../src/data/demo";
+import { listings, products } from "../../src/data/demo";
 import { useAppState } from "../../src/state/AppProvider";
 import { colors, spacing } from "../../src/theme/tokens";
 
@@ -10,6 +10,7 @@ export default function FavoritesScreen() {
   const { language, favorites, toggleFavorite } = useAppState();
   const isAr = language === "ar";
   const saved = listings.filter((item) => favorites.includes(item.id));
+  const savedProducts = products.filter((item) => favorites.includes(item.id));
   return <Screen>
     <View style={{ gap: 5 }}>
       <AppText style={styles.title}>{isAr ? "المفضلة" : "Saved places"}</AppText>
@@ -26,7 +27,13 @@ export default function FavoritesScreen() {
           <Pressable accessibilityRole="button" accessibilityLabel={isAr ? "إزالة من المفضلة" : "Remove from favorites"} hitSlop={8} onPress={(event) => { event.stopPropagation(); toggleFavorite(item.id); }} style={styles.removeButton}><AppText style={{ color: colors.danger, fontSize: 27, lineHeight: 31 }}>♥</AppText></Pressable>
         </View>
       </Pressable>)}
-      {saved.length === 0 ? <View style={[uiStyles.card, styles.empty]}>
+      {savedProducts.length ? <View style={{ gap: spacing.md }}>
+        <AppText style={styles.sectionTitle}>{isAr ? "المنتجات المحفوظة" : "Saved products"}</AppText>
+        {savedProducts.map((product) => <Pressable key={product.id} onPress={() => router.push({ pathname: "/store/[id]", params: { id: product.storeId } })} style={uiStyles.card}>
+          <View style={styles.row}><View style={styles.icon}><AppText style={{ fontSize: 26 }}>{product.icon}</AppText></View><View style={{ flex: 1, gap: 5 }}><AppText style={styles.name}>{isAr ? product.nameAr : product.nameEn}</AppText><AppText style={styles.subtitle}>{product.price.toLocaleString(isAr ? "ar-EG" : "en-US")} {isAr ? "ج.م" : "EGP"}</AppText></View><Pressable accessibilityRole="button" accessibilityLabel={isAr ? "إزالة من المفضلة" : "Remove from favorites"} onPress={(event) => { event.stopPropagation(); toggleFavorite(product.id); }} style={styles.removeButton}><AppText style={{ color: colors.danger, fontSize: 27, lineHeight: 31 }}>♥</AppText></Pressable></View>
+        </Pressable>)}
+      </View> : null}
+      {saved.length === 0 && savedProducts.length === 0 ? <View style={[uiStyles.card, styles.empty]}>
         <AppText style={{ fontSize: 42 }}>♡</AppText>
         <AppText style={styles.name}>{isAr ? "لسه مفيش عناصر محفوظة" : "Nothing saved yet"}</AppText>
         <AppText style={[styles.subtitle, { textAlign: "center" }]}>{isAr ? "اضغط على القلب في أي نشاط علشان تضيفه هنا." : "Tap the heart on any listing to save it here."}</AppText>
@@ -38,6 +45,7 @@ export default function FavoritesScreen() {
 
 const styles = StyleSheet.create({
   title: { fontSize: 24, fontWeight: "900" },
+  sectionTitle: { fontSize: 17, fontWeight: "900" },
   subtitle: { color: colors.muted, fontSize: 12, lineHeight: 18 },
   row: { flexDirection: "row", alignItems: "center", gap: spacing.md },
   icon: { width: 56, height: 56, borderRadius: 16, backgroundColor: colors.primarySoft, alignItems: "center", justifyContent: "center" },
