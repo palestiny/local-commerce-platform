@@ -146,7 +146,18 @@ export default function HomeScreen() {
               <SectionHeading title={t.categories} action={t.all} onAction={() => router.push("/(tabs)/categories")} />
               <MovingCategoryBar categories={categories} isAr={isAr} onSelect={(category) => router.push({ pathname: "/category/[id]", params: { id: category.id } })} />
             </View>
-            {renderListingSection(t.popularSectors, popularListings(popularCategories), true)}
+            <View style={styles.section}>
+              <SectionHeading title={t.popularSectors} action={t.all} onAction={() => router.push("/(tabs)/categories")} />
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalRow} decelerationRate="fast" directionalLockEnabled>
+                {popularCategories.map((category) => (
+                  <Pressable key={category.id} onPress={() => router.push({ pathname: "/category/[id]", params: { id: category.id } })} style={({ pressed }) => [styles.sectorCard, pressed && styles.cardPressed]}>
+                    <View style={styles.sectorIcon}><AppText style={{ fontSize: 28 }}>{category.icon}</AppText></View>
+                    <AppText numberOfLines={2} style={styles.sectorName}>{isAr ? category.nameAr : category.nameEn}</AppText>
+                    <AppText style={styles.sectorCaption}>{isAr ? "اكتشف الأنشطة" : "Explore listings"} ›</AppText>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </View>
             {renderListingSection(t.members, premiumListings)}
             {renderListingSection(t.featured, featuredListings)}
             {renderListingSection(t.latest, latestListings)}
@@ -176,11 +187,6 @@ export default function HomeScreen() {
 function compareMembership(a: LocalListing, b: LocalListing) {
   const tier = (item: LocalListing) => item.membershipTier === "premium" ? 1 : 0;
   return tier(b) - tier(a) || (b.views ?? 0) - (a.views ?? 0);
-}
-
-function popularListings(items: Category[]): LocalListing[] {
-  const categoryIds = new Set(items.map((category) => category.id));
-  return listings.filter((item) => categoryIds.has(item.categoryId)).sort(compareMembership);
 }
 
 function MovingCategoryBar({ categories: items, isAr, onSelect }: { categories: Category[]; isAr: boolean; onSelect: (category: Category) => void }) {
@@ -255,6 +261,10 @@ const styles = StyleSheet.create({
   tickerArrow: { color: colors.primary, fontSize: 20, fontWeight: "900" },
   horizontalRow: { gap: spacing.md, paddingEnd: spacing.lg },
   horizontalCard: { width: 174, minHeight: 190, padding: spacing.md, borderWidth: 1, borderColor: colors.border, borderRadius: radii.lg, backgroundColor: colors.surface, gap: 7 },
+  sectorCard: { width: 140, minHeight: 154, padding: spacing.md, borderWidth: 1, borderColor: colors.border, borderRadius: radii.lg, backgroundColor: colors.surface, gap: 9 },
+  sectorIcon: { width: 58, height: 58, borderRadius: 18, backgroundColor: colors.primarySoft, alignItems: "center", justifyContent: "center" },
+  sectorName: { fontSize: 12, fontWeight: "900", color: colors.text, lineHeight: 17 },
+  sectorCaption: { color: colors.primary, fontSize: 10, fontWeight: "800" },
   cardPressed: { opacity: 0.78, transform: [{ scale: 0.985 }] },
   horizontalCardTop: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" },
   horizontalIcon: { width: 58, height: 58, borderRadius: 18, backgroundColor: colors.primarySoft, alignItems: "center", justifyContent: "center" },
