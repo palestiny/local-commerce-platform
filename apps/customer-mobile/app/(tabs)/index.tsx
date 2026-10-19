@@ -8,12 +8,13 @@ import { useAppState } from "../../src/state/AppProvider";
 import { colors, radii, spacing } from "../../src/theme/tokens";
 
 export default function HomeScreen() {
-  const { language, setLanguage, favorites, toggleFavorite } = useAppState();
+  const { language, setLanguage, favorites, toggleFavorite, cart } = useAppState();
   const [query, setQuery] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [adVisible, setAdVisible] = useState(true);
   const insets = useSafeAreaInsets();
   const isAr = language === "ar";
+  const cartCount = Object.values(cart).reduce((sum, quantity) => sum + quantity, 0);
   const t = isAr
     ? {
         brand: "بلدنا", greeting: "أهلاً بيك في بلدنا 👋", subtitle: "اكتشف متاجر وخدمات قريبة منك",
@@ -136,7 +137,7 @@ export default function HomeScreen() {
           <AppText style={styles.greeting}>{t.greeting}</AppText>
           <AppText style={styles.subtitle}>{t.subtitle}</AppText>
           <SearchInput value={query} onChangeText={setQuery} placeholder={t.search} returnKeyType="search" />
-          <Pressable accessibilityRole="button" onPress={() => router.push("/cart")} style={styles.cartShortcut}><AppText style={styles.cartShortcutText}>{isAr ? "🛒 افتح سلة التسوق" : "🛒 Open shopping cart"}</AppText></Pressable>
+          <Pressable accessibilityRole="button" onPress={() => router.push("/cart")} style={styles.cartShortcut}><AppText style={styles.cartShortcutText}>{(isAr ? "🛒 سلة التسوق (" : "🛒 Shopping cart (") + cartCount + ")"}</AppText></Pressable>
         </View>
 
         {query.trim().length > 0 ? (
