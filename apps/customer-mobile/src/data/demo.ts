@@ -59,3 +59,25 @@ export const demoNotice = {
   ar: "بيانات تجريبية للعرض فقط — الأنشطة والأسعار والتقييمات ليست بيانات حقيقية مؤكدة.",
   en: "Demo content only — listings, prices, and ratings are not verified real-world data.",
 };
+
+export type DemoProduct = {
+  id: string;
+  storeId: string;
+  nameAr: string;
+  nameEn: string;
+  descriptionAr: string;
+  descriptionEn: string;
+  price: number;
+  icon: string;
+  available: boolean;
+};
+
+/** Demo catalog for UI development only. Replace with verified store inventory from the API. */
+export const products: DemoProduct[] = [
+  { id: "p1", storeId: "l2", nameAr: "أرز مصري 1 كجم", nameEn: "Egyptian rice 1 kg", descriptionAr: "عبوة أرز للاستخدام اليومي", descriptionEn: "Everyday rice pack", price: 38, icon: "🍚", available: true },
+  { id: "p2", storeId: "l2", nameAr: "زيت طعام 1 لتر", nameEn: "Cooking oil 1 L", descriptionAr: "زيت طعام للاستخدام اليومي", descriptionEn: "Everyday cooking oil", price: 78, icon: "🫒", available: true },
+  { id: "p3", storeId: "l2", nameAr: "سكر 1 كجم", nameEn: "Sugar 1 kg", descriptionAr: "عبوة سكر", descriptionEn: "Sugar pack", price: 35, icon: "🧂", available: true },
+  { id: "p4", storeId: "l1", nameAr: "وجبة البيت البلدي", nameEn: "Balady meal", descriptionAr: "وصف الوجبة يحدده المطعم عند ربط القائمة الفعلية", descriptionEn: "Restaurant menu details will be confirmed when connected", price: 145, icon: "🍲", available: true },
+  { id: "p5", storeId: "l1", nameAr: "وجبة عائلية", nameEn: "Family meal", descriptionAr: "السعر توضيحي لحين ربط قائمة المطعم", descriptionEn: "Illustrative price until the live menu is connected", price: 320, icon: "🍱", available: true },
+  { id: "p6", storeId: "l6", nameAr: "تيشيرت يومي", nameEn: "Everyday T-shirt", descriptionAr: "تتوفر المقاسات والألوان بعد ربط المخزون", descriptionEn: "Sizes and colors will be available after inventory integration", price: 220, icon: "👕", available: true },
+];
