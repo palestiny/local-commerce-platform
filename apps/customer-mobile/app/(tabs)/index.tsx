@@ -1,9 +1,9 @@
 import { router } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
+import { Animated, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText, Screen, SearchInput, SectionHeading, uiStyles } from "../../src/components/ui";
-import { categories, demoNotice, listings, type Category, type LocalListing } from "../../src/data/demo";
+import { categories, demoNotice, listings, products, type Category, type LocalListing } from "../../src/data/demo";
 import { useAppState } from "../../src/state/AppProvider";
 import { colors, radii, spacing } from "../../src/theme/tokens";
 
@@ -11,6 +11,7 @@ export default function HomeScreen() {
   const { language, setLanguage, favorites, toggleFavorite } = useAppState();
   const [query, setQuery] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+  const [adVisible, setAdVisible] = useState(true);
   const insets = useSafeAreaInsets();
   const isAr = language === "ar";
   const t = isAr
@@ -53,7 +54,10 @@ export default function HomeScreen() {
     setTimeout(() => setRefreshing(false), 450);
   }, [refreshing]);
 
-  const openListing = (item: LocalListing) => router.push({ pathname: "/listing/[id]", params: { id: item.id } });
+  const openListing = (item: LocalListing) => {
+    if (products.some((product) => product.storeId === item.id)) router.push({ pathname: "/store/[id]", params: { id: item.id } });
+    else router.push({ pathname: "/listing/[id]", params: { id: item.id } });
+  };
   const renderListing = (item: LocalListing) => (
     <Pressable key={item.id} onPress={() => openListing(item)} style={uiStyles.card}>
       <View style={[styles.listingRow, { flexDirection: isAr ? "row-reverse" : "row" }]}>
@@ -126,12 +130,14 @@ export default function HomeScreen() {
           <View style={[styles.topRow, { flexDirection: isAr ? "row-reverse" : "row" }]}>
             <View style={{ flex: 1, gap: 4 }}><AppText style={styles.brand}>{t.brand}</AppText></View>
             <Pressable accessibilityRole="button" accessibilityLabel={isAr ? "تحديث الصفحة" : "Refresh page"} onPress={refreshHome} style={styles.utilityButton}><AppText style={styles.utilityGlyph}>↻</AppText></Pressable>
+            <Pressable accessibilityRole="button" accessibilityLabel={isAr ? "الإشعارات" : "Notifications"} onPress={() => router.push("/notifications")} style={styles.utilityButton}><AppText style={styles.profileGlyph}>♧</AppText></Pressable>
             <Pressable accessibilityRole="button" accessibilityLabel={isAr ? "حسابي" : "My account"} onPress={() => router.push("/profile")} style={styles.utilityButton}><AppText style={styles.profileGlyph}>♙</AppText></Pressable>
             <Pressable onPress={() => setLanguage(isAr ? "en" : "ar")} accessibilityRole="button" style={styles.languageButton}><AppText style={styles.languageText}>{isAr ? "EN" : "عربي"}</AppText></Pressable>
           </View>
           <AppText style={styles.greeting}>{t.greeting}</AppText>
           <AppText style={styles.subtitle}>{t.subtitle}</AppText>
           <SearchInput value={query} onChangeText={setQuery} placeholder={t.search} returnKeyType="search" />
+          <Pressable accessibilityRole="button" onPress={() => router.push("/cart")} style={styles.cartShortcut}><AppText style={styles.cartShortcutText}>{isAr ? "🛒 افتح سلة التسوق" : "🛒 Open shopping cart"}</AppText></Pressable>
         </View>
 
         {query.trim().length > 0 ? (
@@ -183,6 +189,19 @@ export default function HomeScreen() {
           </>
         )}
       </ScrollView>
+      <Modal transparent visible={adVisible} animationType="fade" statusBarTranslucent onRequestClose={() => setAdVisible(false)}>
+        <View style={styles.adBackdrop}>
+          <View style={styles.adWindow}>
+            <Pressable accessibilityRole="button" accessibilityLabel={isAr ? "إغلاق الإعلان" : "Close advertisement"} onPress={() => setAdVisible(false)} style={styles.adClose}><AppText style={styles.adCloseText}>×</AppText></Pressable>
+            <View style={styles.adLabel}><AppText style={styles.adLabelText}>{isAr ? "إعلان تجريبي" : "DEMO ADVERTISEMENT"}</AppText></View>
+            <View style={styles.adArtwork}><AppText style={{ fontSize: 54 }}>🛍️</AppText><AppText style={styles.adArtworkTitle}>{isAr ? "اكتشف عروض بلدنا" : "Discover Baladna offers"}</AppText></View>
+            <AppText style={styles.adTitle}>{isAr ? "كل اللي تحتاجه من متاجر قريبة منك" : "Everything you need from local stores"}</AppText>
+            <AppText style={styles.adDescription}>{isAr ? "الإعلانات الفعلية هتظهر هنا بعد ربط نظام الحملات والإعلانات. المحتوى الحالي للتجربة فقط." : "Live campaigns will appear here after the ad system is connected. This content is for preview only."}</AppText>
+            <Pressable accessibilityRole="button" onPress={() => { setAdVisible(false); router.push("/(tabs)/categories"); }} style={styles.adAction}><AppText style={styles.adActionText}>{isAr ? "اكتشف المتاجر" : "Explore stores"}</AppText></Pressable>
+            <Pressable accessibilityRole="button" onPress={() => setAdVisible(false)} style={styles.adDismiss}><AppText style={styles.adDismissText}>{isAr ? "تخطي والدخول للتطبيق" : "Skip and enter app"}</AppText></Pressable>
+          </View>
+        </View>
+      </Modal>
     </Screen>
   );
 }
@@ -251,6 +270,8 @@ const styles = StyleSheet.create({
   languageButton: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: radii.pill, borderColor: "#83BFB5", borderWidth: 1 },
   languageText: { color: "#FFFFFF", fontWeight: "800", fontSize: 12 },
   greeting: { color: "#FFFFFF", fontSize: 24, lineHeight: 33, fontWeight: "900" },
+  cartShortcut: { alignSelf: "flex-start", backgroundColor: "#FFFFFF18", borderColor: "#83BFB5", borderWidth: 1, borderRadius: radii.pill, paddingHorizontal: 13, paddingVertical: 9 },
+  cartShortcutText: { color: "#FFFFFF", fontSize: 12, fontWeight: "800" },
   subtitle: { color: "#D9F0EB", fontSize: 13, lineHeight: 20 },
   demoNotice: { marginHorizontal: spacing.lg, padding: spacing.md, backgroundColor: "#FFF4E4", borderRadius: radii.sm },
   demoNoticeText: { color: "#79521F", fontSize: 11, lineHeight: 17 },
@@ -298,4 +319,18 @@ const styles = StyleSheet.create({
   editorialTitle: { fontSize: 14, fontWeight: "800" },
   editorialBody: { color: colors.muted, fontSize: 12, lineHeight: 18 },
   footer: { color: colors.muted, textAlign: "center", fontSize: 10, paddingHorizontal: spacing.lg },
+  adBackdrop: { flex: 1, backgroundColor: "#10201DB8", justifyContent: "center", alignItems: "center", padding: 22 },
+  adWindow: { width: "100%", maxWidth: 390, backgroundColor: colors.surface, borderRadius: 28, padding: spacing.lg, gap: spacing.md, elevation: 16, shadowColor: "#000000", shadowOpacity: 0.22, shadowRadius: 24, shadowOffset: { width: 0, height: 12 } },
+  adClose: { alignSelf: "flex-end", width: 38, height: 38, borderRadius: 19, backgroundColor: colors.background, alignItems: "center", justifyContent: "center" },
+  adCloseText: { fontSize: 28, lineHeight: 30, color: colors.text },
+  adLabel: { alignSelf: "flex-start", borderRadius: radii.pill, backgroundColor: "#FFF0CF", paddingHorizontal: 10, paddingVertical: 5 },
+  adLabelText: { color: "#805400", fontSize: 10, fontWeight: "900" },
+  adArtwork: { minHeight: 150, borderRadius: 22, backgroundColor: colors.primarySoft, alignItems: "center", justifyContent: "center", gap: spacing.sm },
+  adArtworkTitle: { color: colors.primaryDark, fontSize: 17, fontWeight: "900" },
+  adTitle: { fontSize: 19, fontWeight: "900", lineHeight: 27, textAlign: "center" },
+  adDescription: { color: colors.muted, fontSize: 12, lineHeight: 19, textAlign: "center" },
+  adAction: { backgroundColor: colors.primary, borderRadius: radii.md, padding: spacing.md, alignItems: "center" },
+  adActionText: { color: "#FFFFFF", fontWeight: "900" },
+  adDismiss: { paddingVertical: 8, alignItems: "center" },
+  adDismissText: { color: colors.muted, fontSize: 12, fontWeight: "800" },
 });
