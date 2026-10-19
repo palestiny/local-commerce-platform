@@ -1,0 +1,1823 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>شاشة الإهداء — معاينة احترافية</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'IBM Plex Sans Arabic', sans-serif; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --primary: #0F766E;
+    --primary-dark: #115E59;
+    --primary-light: #CCFBF1;
+    --primary-soft: #F0FDFA;
+    --accent: #F59E0B;
+    --accent-dark: #D97706;
+    --accent-light: #FEF3C7;
+    --danger: #EF4444;
+    --danger-light: #FEF2F2;
+    --success: #10B981;
+    --success-dark: #059669;
+    --success-light: #ECFDF5;
+    --purple: #8B5CF6;
+    --purple-light: #EDE9FE;
+    --blue: #2563EB;
+    --blue-light: #DBEAFE;
+    --pink: #EC4899;
+    --pink-light: #FCE7F3;
+    --rose: #F43F5E;
+    --rose-light: #FFE4E6;
+    --dark: #0F172A;
+    --gray-700: #374151;
+    --gray-600: #4B5563;
+    --gray-500: #6B7280;
+    --gray-400: #9CA3AF;
+    --gray-300: #D1D5DB;
+    --gray-200: #E5E7EB;
+    --gray-100: #F3F4F6;
+    --bg: #F8FAFC;
+    --white: #FFFFFF;
+
+    --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.07);
+    --shadow-lg: 0 10px 30px rgba(15, 23, 42, 0.09);
+    --shadow-xl: 0 20px 40px rgba(15, 23, 42, 0.14);
+    --shadow-primary: 0 8px 24px rgba(15, 118, 110, 0.32);
+
+    --r-sm: 10px;
+    --r-md: 14px;
+    --r-lg: 18px;
+    --r-xl: 24px;
+    --r-full: 999px;
+  }
+
+  body {
+    background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+    min-height: 100vh;
+    padding: 50px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+  }
+
+  .page-header { text-align: center; color: #fff; max-width: 900px; }
+  .page-header h1 {
+    font-size: 30px; font-weight: 700; margin-bottom: 8px;
+    background: linear-gradient(135deg, #fff, #94A3B8);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .page-header p { color: #94A3B8; font-size: 14px; }
+
+  .screens-container {
+    display: flex; gap: 40px; flex-wrap: wrap; justify-content: center;
+  }
+  .screen-wrapper {
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+  }
+  .screen-badge {
+    background: rgba(236, 72, 153, 0.15);
+    color: #F9A8D4;
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid rgba(249, 168, 212, 0.25);
+  }
+
+  .phone {
+    width: 375px;
+    height: 812px;
+    background: var(--bg);
+    border-radius: 44px;
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+      0 0 0 10px #0A0F1E,
+      0 0 0 12px #1E293B,
+      0 30px 60px rgba(0, 0, 0, 0.5),
+      0 0 80px rgba(236, 72, 153, 0.15);
+  }
+  .phone::before {
+    content: '';
+    position: absolute;
+    top: 10px; left: 50%;
+    transform: translateX(-50%);
+    width: 110px; height: 28px;
+    background: #0A0F1E;
+    border-radius: 999px;
+    z-index: 999;
+  }
+
+  .status-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 48px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 28px;
+    font-size: 13px; font-weight: 600;
+    z-index: 100;
+    pointer-events: none;
+    color: var(--dark);
+  }
+  .status-bar.light { color: #fff; }
+  .status-bar .time { margin-top: 4px; }
+  .status-bar .status-icons { display: flex; gap: 5px; margin-top: 4px; align-items: center; }
+  .status-bar svg { width: 15px; height: 15px; }
+
+  .screen {
+    width: 100%; height: 100%;
+    overflow-y: auto; overflow-x: hidden;
+    scrollbar-width: none;
+    padding-top: 48px;
+    padding-bottom: 100px;
+  }
+  .screen::-webkit-scrollbar { display: none; }
+
+  /* ══════════ APP BAR ══════════ */
+  .app-bar {
+    padding: 8px 20px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .back-btn {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .back-btn:hover { background: var(--gray-100); }
+  .back-btn svg {
+    width: 18px; height: 18px;
+    stroke: var(--gray-700);
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .app-title-wrap {
+    flex: 1;
+    text-align: center;
+  }
+  .app-title {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--dark);
+    letter-spacing: -0.3px;
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .app-title svg {
+    width: 15px;
+    height: 15px;
+    stroke: var(--pink);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .app-subtitle {
+    font-size: 11px;
+    color: var(--gray-500);
+    font-weight: 600;
+  }
+  .header-icon-btn {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .header-icon-btn:hover { background: var(--gray-100); }
+  .header-icon-btn svg {
+    width: 18px; height: 18px;
+    stroke: var(--gray-700);
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* ══════════ GIFT HERO ══════════ */
+  .gift-hero {
+    margin: 0 20px 16px;
+    padding: 20px;
+    background: linear-gradient(135deg, #BE185D 0%, #EC4899 50%, #F59E0B 100%);
+    border-radius: var(--r-xl);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 12px 32px rgba(236,72,153,0.35);
+  }
+  .gift-hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -40px;
+    width: 180px;
+    height: 180px;
+    background: radial-gradient(circle, rgba(255,255,255,0.25), transparent 70%);
+    border-radius: 50%;
+  }
+  .gift-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -70px; left: -40px;
+    width: 160px;
+    height: 160px;
+    background: radial-gradient(circle, rgba(255,255,255,0.15), transparent 70%);
+    border-radius: 50%;
+  }
+
+  /* Confetti */
+  .gift-confetti {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    animation: confettiFloat 4s infinite;
+    z-index: 1;
+  }
+  @keyframes confettiFloat {
+    0% { transform: translateY(0) rotate(0); opacity: 0; }
+    20% { opacity: 1; }
+    100% { transform: translateY(200px) rotate(720deg); opacity: 0; }
+  }
+
+  .gift-hero-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .gift-icon {
+    width: 68px;
+    height: 68px;
+    border-radius: 22px;
+    background: rgba(255,255,255,0.25);
+    backdrop-filter: blur(20px);
+    border: 2px solid rgba(255,255,255,0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15), inset 0 2px 0 rgba(255,255,255,0.4);
+    animation: giftFloat 3s ease-in-out infinite;
+  }
+  @keyframes giftFloat {
+    0%, 100% { transform: translateY(0) rotate(-5deg); }
+    50% { transform: translateY(-6px) rotate(5deg); }
+  }
+  .gift-icon svg {
+    width: 34px;
+    height: 34px;
+    stroke: #fff;
+    stroke-width: 1.8;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.2));
+  }
+
+  .gift-hero-text {
+    flex: 1;
+    min-width: 0;
+    color: #fff;
+  }
+  .gift-hero-title {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.4px;
+    margin-bottom: 4px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .gift-hero-subtitle {
+    font-size: 12px;
+    font-weight: 600;
+    opacity: 0.95;
+    line-height: 1.5;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  }
+
+  /* ══════════ SECTION HEADER ══════════ */
+  .section-header {
+    padding: 4px 20px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .section-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    letter-spacing: -0.2px;
+  }
+  .section-title::before {
+    content: '';
+    width: 3px;
+    height: 14px;
+    background: linear-gradient(180deg, var(--pink), #BE185D);
+    border-radius: 4px;
+  }
+  .section-required {
+    font-size: 10px;
+    color: var(--danger);
+    background: var(--danger-light);
+    padding: 2px 7px;
+    border-radius: 5px;
+    font-weight: 700;
+  }
+  .section-optional {
+    font-size: 10px;
+    color: var(--gray-500);
+    font-weight: 700;
+    background: var(--gray-100);
+    padding: 2px 7px;
+    border-radius: 5px;
+  }
+
+  /* ══════════ RECIPIENT OPTIONS ══════════ */
+  .recipient-options {
+    padding: 0 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .recipient-option {
+    padding: 14px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-md);
+    cursor: pointer;
+    transition: all 0.25s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .recipient-option:hover {
+    border-color: var(--pink-light);
+    background: var(--pink-light);
+  }
+  .recipient-option.active {
+    border-color: var(--pink);
+    background: linear-gradient(135deg, var(--pink-light), #FDF2F8);
+    box-shadow: 0 0 0 3px rgba(236,72,153,0.08);
+  }
+  .recipient-radio {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--gray-300);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+    background: var(--white);
+  }
+  .recipient-option.active .recipient-radio {
+    border-color: var(--pink);
+    background: var(--pink);
+  }
+  .recipient-option.active .recipient-radio::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: #fff;
+    border-radius: 50%;
+  }
+  .recipient-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: var(--gray-100);
+  }
+  .recipient-option.active .recipient-icon { background: var(--pink); }
+  .recipient-option.active .recipient-icon svg { stroke: #fff; }
+  .recipient-icon svg {
+    width: 20px;
+    height: 20px;
+    stroke: var(--gray-600);
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+    transition: stroke 0.2s;
+  }
+  .recipient-info { flex: 1; min-width: 0; }
+  .recipient-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 3px;
+    letter-spacing: -0.2px;
+  }
+  .recipient-desc {
+    font-size: 11px;
+    color: var(--gray-500);
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  .recipient-option.active .recipient-desc { color: var(--pink); }
+
+  /* ══════════ RECIPIENT INPUT ══════════ */
+  .recipient-input-wrap {
+    padding: 0 20px 16px;
+  }
+  .recipient-input {
+    padding: 12px 14px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-md);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.2s;
+  }
+  .recipient-input:focus-within {
+    border-color: var(--pink);
+    box-shadow: 0 0 0 3px rgba(236,72,153,0.08);
+  }
+  .recipient-input-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: var(--pink-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .recipient-input-icon svg {
+    width: 15px;
+    height: 15px;
+    stroke: var(--pink);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .recipient-input input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--dark);
+    padding: 6px 0;
+    min-width: 0;
+  }
+  .recipient-input input::placeholder {
+    color: var(--gray-400);
+    font-weight: 500;
+  }
+
+  /* ══════════ GIFT CARD PREVIEW ══════════ */
+  .gift-card-preview {
+    margin: 0 20px 16px;
+    padding: 20px 18px;
+    background: linear-gradient(135deg, #7C2D12 0%, #BE185D 50%, #EC4899 100%);
+    border-radius: 20px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 14px 36px rgba(236,72,153,0.35);
+    color: #fff;
+  }
+  /* Decorative pattern */
+  .gift-card-preview::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -40px;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(255,255,255,0.2), transparent 70%);
+    border-radius: 50%;
+  }
+  .gift-card-preview::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 80%, rgba(255,255,255,0.1) 1px, transparent 1px),
+      radial-gradient(circle at 80% 20%, rgba(255,255,255,0.1) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.6;
+  }
+
+  .gcp-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 1;
+  }
+  .gcp-logo {
+    font-size: 18px;
+    letter-spacing: 2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 800;
+  }
+  .gcp-logo svg {
+    width: 18px;
+    height: 18px;
+    stroke: #fff;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .gcp-badge {
+    padding: 4px 10px;
+    background: rgba(255,255,255,0.25);
+    backdrop-filter: blur(10px);
+    border-radius: var(--r-full);
+    font-size: 9.5px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    border: 1px solid rgba(255,255,255,0.3);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .gcp-badge svg {
+    width: 10px;
+    height: 10px;
+    fill: #fff;
+    stroke: none;
+  }
+
+  .gcp-main {
+    position: relative;
+    z-index: 1;
+    margin-bottom: 16px;
+  }
+  .gcp-label {
+    font-size: 9.5px;
+    opacity: 0.75;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .gcp-amount {
+    font-size: 38px;
+    font-weight: 900;
+    letter-spacing: -1.5px;
+    line-height: 1;
+    text-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  .gcp-amount .currency {
+    font-size: 14px;
+    font-weight: 700;
+    opacity: 0.9;
+  }
+
+  .gcp-footer {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    position: relative;
+    z-index: 1;
+    padding-top: 14px;
+    border-top: 1px dashed rgba(255,255,255,0.3);
+  }
+  .gcp-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .gcp-info-label {
+    font-size: 8.5px;
+    opacity: 0.7;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+  .gcp-info-value {
+    font-size: 12.5px;
+    font-weight: 800;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .gcp-info-value.placeholder {
+    opacity: 0.6;
+    font-style: italic;
+    font-weight: 600;
+  }
+  .gcp-code {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+  .gcp-code-label {
+    font-size: 8.5px;
+    opacity: 0.7;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+  .gcp-code-value {
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    background: rgba(255,255,255,0.2);
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.25);
+  }
+
+  /* ══════════ GIFT WRAP ══════════ */
+  .wrap-options {
+    display: flex;
+    gap: 10px;
+    padding: 0 20px 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .wrap-options::-webkit-scrollbar { display: none; }
+  .wrap-option {
+    flex-shrink: 0;
+    width: 80px;
+    padding: 10px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-md);
+    cursor: pointer;
+    transition: all 0.25s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-align: center;
+  }
+  .wrap-option:hover {
+    border-color: var(--pink-light);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+  }
+  .wrap-option.active {
+    border-color: var(--pink);
+    background: var(--pink-light);
+    box-shadow: 0 0 0 3px rgba(236,72,153,0.08);
+  }
+  .wrap-preview {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .wrap-preview.classic { background: linear-gradient(135deg, #EC4899, #BE185D); }
+  .wrap-preview.gold { background: linear-gradient(135deg, #FCD34D, #D97706); }
+  .wrap-preview.elegant { background: linear-gradient(135deg, #1E293B, #0F172A); }
+  .wrap-preview.festive { background: linear-gradient(135deg, #F59E0B, #EC4899); }
+  .wrap-preview svg {
+    width: 24px;
+    height: 24px;
+    stroke: #fff;
+    stroke-width: 1.8;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+  }
+  .wrap-name {
+    font-size: 9.5px;
+    font-weight: 800;
+    color: var(--dark);
+    letter-spacing: -0.1px;
+  }
+  .wrap-option.active .wrap-name { color: var(--pink); }
+
+  /* ══════════ MESSAGE SECTION ══════════ */
+  .message-textarea {
+    margin: 0 20px 10px;
+    padding: 12px 14px;
+    min-height: 90px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-md);
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--dark);
+    line-height: 1.7;
+    resize: none;
+    outline: none;
+    transition: all 0.2s;
+    width: calc(100% - 40px);
+  }
+  .message-textarea:focus {
+    border-color: var(--pink);
+    box-shadow: 0 0 0 3px rgba(236,72,153,0.08);
+  }
+  .message-textarea::placeholder { color: var(--gray-400); }
+
+  .message-counter {
+    text-align: left;
+    padding: 0 20px 12px;
+    font-size: 10px;
+    color: var(--gray-400);
+    font-weight: 700;
+  }
+
+  .quick-messages {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 0 20px 16px;
+  }
+  .quick-message {
+    padding: 7px 12px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-full);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--gray-700);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .quick-message:hover {
+    border-color: var(--pink);
+    color: var(--pink);
+    background: var(--pink-light);
+  }
+
+  /* ══════════ DELIVERY TIMING ══════════ */
+  .delivery-options {
+    display: flex;
+    gap: 8px;
+    padding: 0 20px 16px;
+  }
+  .delivery-option {
+    flex: 1;
+    padding: 12px 6px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-md);
+    cursor: pointer;
+    transition: all 0.25s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-align: center;
+  }
+  .delivery-option:hover {
+    border-color: var(--pink-light);
+  }
+  .delivery-option.active {
+    border-color: var(--pink);
+    background: var(--pink-light);
+    box-shadow: 0 0 0 3px rgba(236,72,153,0.08);
+  }
+  .delivery-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--gray-100);
+  }
+  .delivery-option.active .delivery-icon { background: var(--pink); }
+  .delivery-option.active .delivery-icon svg { stroke: #fff; }
+  .delivery-icon svg {
+    width: 16px;
+    height: 16px;
+    stroke: var(--gray-600);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+    transition: stroke 0.2s;
+  }
+  .delivery-name {
+    font-size: 10.5px;
+    font-weight: 800;
+    color: var(--dark);
+    line-height: 1.3;
+  }
+  .delivery-option.active .delivery-name { color: var(--pink); }
+  .delivery-desc {
+    font-size: 9px;
+    color: var(--gray-500);
+    font-weight: 600;
+  }
+
+  /* ══════════ AMOUNT GRID ══════════ */
+  .amount-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 0 20px 12px;
+  }
+  .amount-option {
+    padding: 14px 6px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-md);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--dark);
+    cursor: pointer;
+    transition: all 0.25s;
+    text-align: center;
+    position: relative;
+  }
+  .amount-option:hover {
+    border-color: var(--pink);
+    color: var(--pink);
+  }
+  .amount-option.active {
+    background: linear-gradient(135deg, var(--pink), #BE185D);
+    border-color: var(--pink);
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(236,72,153,0.3);
+    transform: scale(1.02);
+  }
+  .amount-option .currency {
+    font-size: 10px;
+    font-weight: 700;
+    opacity: 0.85;
+  }
+  .amount-option .amount-badge {
+    position: absolute;
+    top: -6px;
+    right: 8px;
+    padding: 2px 6px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 4px;
+    font-size: 7.5px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+  }
+
+  /* Custom amount */
+  .custom-amount-row {
+    padding: 0 20px 16px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .custom-amount-input {
+    flex: 1;
+    padding: 12px 14px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-md);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+  }
+  .custom-amount-input:focus-within {
+    border-color: var(--pink);
+    box-shadow: 0 0 0 3px rgba(236,72,153,0.08);
+  }
+  .custom-amount-input span {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--gray-500);
+  }
+  .custom-amount-input input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--dark);
+    background: transparent;
+    min-width: 0;
+  }
+  .custom-amount-input input::placeholder {
+    color: var(--gray-400);
+    font-weight: 500;
+  }
+
+  /* ══════════ SUMMARY CARD ══════════ */
+  .summary-card {
+    margin: 0 20px 16px;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--pink-light), #FDF2F8);
+    border-radius: var(--r-md);
+    border: 1px solid #FBCFE8;
+    position: relative;
+    overflow: hidden;
+  }
+  .summary-card::before {
+    content: '';
+    position: absolute;
+    top: -30px; right: -20px;
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, rgba(236,72,153,0.15), transparent 70%);
+    border-radius: 50%;
+  }
+  .summary-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 0;
+    font-size: 12px;
+    position: relative;
+    z-index: 1;
+  }
+  .summary-row:not(:last-child) {
+    border-bottom: 1px dashed rgba(236,72,153,0.2);
+  }
+  .summary-label {
+    color: #831843;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .summary-label svg {
+    width: 12px;
+    height: 12px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .summary-value {
+    color: #831843;
+    font-weight: 800;
+    text-align: left;
+    max-width: 60%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .summary-value.price {
+    font-size: 15px;
+    color: var(--pink);
+  }
+
+  /* ══════════ SECURITY INFO ══════════ */
+  .security-info {
+    margin: 0 20px 16px;
+    padding: 12px 14px;
+    background: var(--blue-light);
+    border-radius: var(--r-md);
+    border: 1px solid #BFDBFE;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .security-info svg {
+    width: 16px;
+    height: 16px;
+    stroke: var(--blue);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .security-info-text {
+    font-size: 10.5px;
+    color: #1E40AF;
+    font-weight: 600;
+    line-height: 1.55;
+  }
+  .security-info-text strong {
+    display: block;
+    font-weight: 800;
+    font-size: 11px;
+    margin-bottom: 2px;
+  }
+
+  /* ══════════ STICKY CHECKOUT ══════════ */
+  .sticky-checkout {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 12px 20px 20px;
+    background: linear-gradient(180deg, rgba(248,250,252,0) 0%, var(--bg) 30%, var(--bg) 100%);
+    z-index: 50;
+  }
+  .checkout-btn {
+    width: 100%;
+    padding: 15px 20px;
+    background: linear-gradient(135deg, var(--pink), #BE185D);
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 8px 24px rgba(236,72,153,0.4);
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+  }
+  .checkout-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    bottom: 0;
+    width: 60px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shine 3s infinite;
+  }
+  @keyframes shine {
+    0% { transform: translateX(-100%); }
+    60% { transform: translateX(500%); }
+    100% { transform: translateX(500%); }
+  }
+  .checkout-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(236,72,153,0.5);
+  }
+  .checkout-btn-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    z-index: 1;
+  }
+  .checkout-btn-content svg {
+    width: 18px;
+    height: 18px;
+    stroke: #fff;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .checkout-btn-price {
+    display: flex;
+    align-items: baseline;
+    gap: 3px;
+    font-weight: 900;
+    position: relative;
+    z-index: 1;
+    font-size: 15px;
+    letter-spacing: -0.3px;
+  }
+  .checkout-btn-price .currency {
+    font-size: 10px;
+    opacity: 0.9;
+  }
+
+  /* ══════════ SUCCESS SCREEN ══════════ */
+  .success-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 30px 40px;
+    text-align: center;
+    min-height: 100%;
+  }
+
+  .success-icon {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--pink), #BE185D);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+    position: relative;
+    box-shadow: 0 20px 40px rgba(236,72,153,0.4);
+    animation: successPop 0.7s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+  @keyframes successPop {
+    0% { transform: scale(0) rotate(-180deg); }
+    70% { transform: scale(1.15) rotate(15deg); }
+    100% { transform: scale(1) rotate(0); }
+  }
+  .success-icon::before,
+  .success-icon::after {
+    content: '';
+    position: absolute;
+    inset: -12px;
+    border-radius: 50%;
+    border: 3px solid var(--pink);
+    opacity: 0;
+    animation: ringPulse 2.5s infinite;
+  }
+  .success-icon::after {
+    inset: -26px;
+    animation-delay: 0.5s;
+  }
+  @keyframes ringPulse {
+    0% { transform: scale(0.85); opacity: 0.7; }
+    100% { transform: scale(1.35); opacity: 0; }
+  }
+  .success-icon svg {
+    width: 60px;
+    height: 60px;
+    stroke: #fff;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.2));
+  }
+
+  .success-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+  }
+  .success-text {
+    font-size: 13px;
+    color: var(--gray-500);
+    line-height: 1.7;
+    font-weight: 500;
+    margin-bottom: 22px;
+    max-width: 300px;
+  }
+
+  /* Gift card sent preview */
+  .sent-gift-card {
+    padding: 16px;
+    background: linear-gradient(135deg, #7C2D12 0%, #BE185D 50%, #EC4899 100%);
+    border-radius: 18px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 14px 32px rgba(236,72,153,0.35);
+    margin-bottom: 20px;
+    color: #fff;
+  }
+  .sent-gift-card::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -30px;
+    width: 120px;
+    height: 120px;
+    background: radial-gradient(circle, rgba(255,255,255,0.2), transparent 70%);
+    border-radius: 50%;
+  }
+  .sgc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    position: relative;
+    z-index: 1;
+  }
+  .sgc-label {
+    font-size: 9px;
+    opacity: 0.8;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .sgc-badge {
+    padding: 3px 8px;
+    background: rgba(255,255,255,0.25);
+    backdrop-filter: blur(10px);
+    border-radius: var(--r-full);
+    font-size: 8.5px;
+    font-weight: 800;
+    border: 1px solid rgba(255,255,255,0.3);
+  }
+  .sgc-amount {
+    font-size: 30px;
+    font-weight: 900;
+    letter-spacing: -1.2px;
+    line-height: 1;
+    margin-bottom: 14px;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+  }
+  .sgc-amount .currency {
+    font-size: 12px;
+    font-weight: 700;
+    opacity: 0.9;
+  }
+  .sgc-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    position: relative;
+    z-index: 1;
+    padding-top: 12px;
+    border-top: 1px dashed rgba(255,255,255,0.3);
+  }
+  .sgc-to {
+    text-align: right;
+  }
+  .sgc-to-label {
+    font-size: 8.5px;
+    opacity: 0.75;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .sgc-to-value {
+    font-size: 13px;
+    font-weight: 800;
+  }
+  .sgc-code {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    background: rgba(255,255,255,0.2);
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.25);
+  }
+
+  /* Success Actions */
+  .success-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+  .success-btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 14px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    transition: all 0.25s;
+    border: none;
+  }
+  .success-btn.primary {
+    background: linear-gradient(135deg, var(--pink), #BE185D);
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(236,72,153,0.35);
+  }
+  .success-btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(236,72,153,0.45);
+  }
+  .success-btn.secondary {
+    background: var(--white);
+    color: var(--gray-700);
+    border: 1.5px solid var(--gray-200);
+  }
+  .success-btn.secondary:hover {
+    border-color: var(--pink);
+    color: var(--pink);
+  }
+  .success-btn svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* Confetti */
+  .confetti {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    animation: confettiFall 3s infinite;
+    z-index: 0;
+  }
+  .confetti.circle { border-radius: 50%; }
+  .confetti.long { width: 4px; height: 12px; }
+  @keyframes confettiFall {
+    0% { transform: translateY(-20px) rotate(0); opacity: 0; }
+    20% { opacity: 1; }
+    100% { transform: translateY(400px) rotate(720deg); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>شاشة الإهداء — Gift Screen</h1>
+  <p>كارت إهداء · اختيار المستلم · تغليف · رسالة</p>
+</div>
+
+<div class="screens-container">
+
+  <!-- ═══════════ SCREEN 1: GIFT FORM ═══════════ -->
+  <div class="screen-wrapper">
+    <div class="phone">
+      <div class="status-bar">
+        <div class="time">9:41</div>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h3v-9H2v9zm5 0h3V9H7v13zm5 0h3V5h-3v17zm5 0h3V2h-3v20z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21l-12-18h24z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm5 4v8h1c.6 0 1-.4 1-1V9c0-.6-.4-1-1-1h-1z"/></svg>
+        </div>
+      </div>
+
+      <div class="screen">
+
+        <!-- App Bar -->
+        <div class="app-bar">
+          <div class="back-btn">
+            <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+          <div class="app-title-wrap">
+            <div class="app-title">
+              <svg viewBox="0 0 24 24">
+                <polyline points="20 12 20 22 4 22 4 12"/>
+                <rect x="2" y="7" width="20" height="5"/>
+                <line x1="12" y1="22" x2="12" y2="7"/>
+                <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
+                <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
+              </svg>
+              إهداء
+            </div>
+            <div class="app-subtitle">اهدي اللي بتحبه</div>
+          </div>
+          <button class="header-icon-btn">
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Gift Hero -->
+        <div class="gift-hero">
+          <div class="gift-confetti" style="background: #FCD34D; top: 20%; left: 10%; animation-delay: 0s;"></div>
+          <div class="gift-confetti" style="background: #fff; top: 30%; right: 15%; animation-delay: 0.5s;"></div>
+          <div class="gift-confetti" style="background: #FCD34D; top: 10%; right: 30%; animation-delay: 1s;"></div>
+          <div class="gift-confetti" style="background: rgba(255,255,255,0.7); top: 50%; left: 25%; animation-delay: 1.5s;"></div>
+          <div class="gift-confetti" style="background: #FCD34D; top: 40%; right: 40%; animation-delay: 2s;"></div>
+
+          <div class="gift-hero-content">
+            <div class="gift-icon">
+              <svg viewBox="0 0 24 24">
+                <polyline points="20 12 20 22 4 22 4 12"/>
+                <rect x="2" y="7" width="20" height="5"/>
+                <line x1="12" y1="22" x2="12" y2="7"/>
+                <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
+                <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
+              </svg>
+            </div>
+            <div class="gift-hero-text">
+              <div class="gift-hero-title">اهدي لحظة فرح 🎁</div>
+              <div class="gift-hero-subtitle">ارسل هدية لأي حد بتحبه بضغطة واحدة</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recipient Type -->
+        <div class="section-header">
+          <div class="section-title">المستلم</div>
+          <div class="section-required">مطلوب</div>
+        </div>
+
+        <div class="recipient-options">
+          <div class="recipient-option active">
+            <div class="recipient-radio"></div>
+            <div class="recipient-icon">
+              <svg viewBox="0 0 24 24">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </div>
+            <div class="recipient-info">
+              <div class="recipient-title">من جهات الاتصال</div>
+              <div class="recipient-desc">اختر صديق من دفتر هاتفك</div>
+            </div>
+          </div>
+
+          <div class="recipient-option">
+            <div class="recipient-radio"></div>
+            <div class="recipient-icon">
+              <svg viewBox="0 0 24 24">
+                <rect x="5" y="2" width="14" height="20" rx="2"/>
+                <line x1="12" y1="18" x2="12.01" y2="18"/>
+              </svg>
+            </div>
+            <div class="recipient-info">
+              <div class="recipient-title">رقم موبايل</div>
+              <div class="recipient-desc">أدخل رقم هاتف المستلم</div>
+            </div>
+          </div>
+
+          <div class="recipient-option">
+            <div class="recipient-radio"></div>
+            <div class="recipient-icon">
+              <svg viewBox="0 0 24 24">
+                <circle cx="18" cy="5" r="3"/>
+                <circle cx="6" cy="12" r="3"/>
+                <circle cx="18" cy="19" r="3"/>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+              </svg>
+            </div>
+            <div class="recipient-info">
+              <div class="recipient-title">مشاركة رابط</div>
+              <div class="recipient-desc">شارك كود الهدية بأي طريقة</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recipient Input -->
+        <div class="recipient-input-wrap">
+          <div class="recipient-input">
+            <div class="recipient-input-icon">
+              <svg viewBox="0 0 24 24">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </div>
+            <input type="text" value="أحمد محمود" placeholder="اسم المستلم">
+          </div>
+        </div>
+
+        <!-- Gift Card Preview -->
+        <div class="gift-card-preview">
+          <div class="gcp-header">
+            <div class="gcp-logo">
+              <svg viewBox="0 0 24 24">
+                <polyline points="20 12 20 22 4 22 4 12"/>
+                <rect x="2" y="7" width="20" height="5"/>
+                <line x1="12" y1="22" x2="12" y2="7"/>
+                <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
+              </svg>
+              GIFT
+            </div>
+            <div class="gcp-badge">
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              هدية مميزة
+            </div>
+          </div>
+
+          <div class="gcp-main">
+            <div class="gcp-label">قيمة الهدية</div>
+            <div class="gcp-amount">500 <span class="currency">ج.م</span></div>
+          </div>
+
+          <div class="gcp-footer">
+            <div class="gcp-info">
+              <div class="gcp-info-label">إلى</div>
+              <div class="gcp-info-value">أحمد محمود</div>
+            </div>
+            <div class="gcp-code">
+              <div class="gcp-code-label">الكود</div>
+              <div class="gcp-code-value">GH-4829</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gift Wrap -->
+        <div class="section-header">
+          <div class="section-title">التغليف</div>
+          <div class="section-optional">اختياري</div>
+        </div>
+
+        <div class="wrap-options">
+          <div class="wrap-option active">
+            <div class="wrap-preview classic">
+              <svg viewBox="0 0 24 24">
+                <polyline points="20 12 20 22 4 22 4 12"/>
+                <rect x="2" y="7" width="20" height="5"/>
+                <line x1="12" y1="22" x2="12" y2="7"/>
+              </svg>
+            </div>
+            <div class="wrap-name">كلاسيك</div>
+          </div>
+
+          <div class="wrap-option">
+            <div class="wrap-preview gold">
+              <svg viewBox="0 0 24 24">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+            </div>
+            <div class="wrap-name">ذهبي</div>
+          </div>
+
+          <div class="wrap-option">
+            <div class="wrap-preview elegant">
+              <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M2 12h20"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              </svg>
+            </div>
+            <div class="wrap-name">أنيق</div>
+          </div>
+
+          <div class="wrap-option">
+            <div class="wrap-preview festive">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 2v20M2 12h20"/>
+                <circle cx="12" cy="12" r="10"/>
+              </svg>
+            </div>
+            <div class="wrap-name">احتفالي</div>
+          </div>
+
+          <div class="wrap-option">
+            <div class="wrap-preview classic" style="background: linear-gradient(135deg, #0F766E, #115E59);">
+              <svg viewBox="0 0 24 24">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+            </div>
+            <div class="wrap-name">رومانسي</div>
+          </div>
+        </div>
+
+        <!-- Message -->
+        <div class="section-header">
+          <div class="section-title">رسالتك</div>
+          <div class="section-optional">اختياري</div>
+        </div>
+
+        <textarea class="message-textarea" placeholder="اكتب رسالة من القلب...">كل سنة وانت طيب يا أحمد! 🎉
+هدية بسيطة مني ليك، اتمنى تعجبك</textarea>
+
+        <div class="message-counter">حرف: 62 / 200</div>
+
+        <div class="quick-messages">
+          <button class="quick-message">🎂 كل سنة وانت طيب</button>
+          <button class="quick-message">🎉 مبروك النجاح</button>
+          <button class="quick-message">💝 هدية بسيطة ليك</button>
+          <button class="quick-message">🤍 من كل قلبي</button>
+          <button class="quick-message">✨ اتمنى تعجبك</button>
+        </div>
+
+        <!-- Delivery Timing -->
+        <div class="section-header">
+          <div class="section-title">موعد الإرسال</div>
+        </div>
+
+        <div class="delivery-options">
+          <div class="delivery-option active">
+            <div class="delivery-icon">
+              <svg viewBox="0 0 24 24">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+              </svg>
+            </div>
+            <div class="delivery-name">فوري</div>
+            <div class="delivery-desc">الآن</div>
+          </div>
+
+          <div class="delivery-option">
+            <div class="delivery-icon">
+              <svg viewBox="0 0 24 24">
+                <rect x="3" y="4" width="18" height="18" rx="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+            </div>
+            <div class="delivery-name">مجدول</div>
+            <div class="delivery-desc">اختر تاريخ</div>
+          </div>
+
+          <div class="delivery-option">
+            <div class="delivery-icon">
+              <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                <path d="M2 12h20"/>
+              </svg>
+            </div>
+            <div class="delivery-name">مناسبة</div>
+            <div class="delivery-desc">عيد ميلاد</div>
+          </div>
+        </div>
+
+        <!-- Amount Grid -->
+        <div class="section-header">
+          <div class="section-title">قيمة الهدية</div>
+          <div class="section-required">مطلوب</div>
+        </div>
+
+        <div class="amount-grid">
+          <div class="amount-option">100 <span class="currency">ج.م</span></div>
+          <div class="amount-option">200 <span class="currency">ج.م</span></div>
+          <div class="amount-option active">500 <span class="currency">ج.م</span></div>
+          <div class="amount-option">
+            1,000 <span class="currency">ج.م</span>
+            <span class="amount-badge">Popular</span>
+          </div>
+          <div class="amount-option">1,500 <span class="currency">ج.م</span></div>
+          <div class="amount-option">2,000 <span class="currency">ج.م</span></div>
+        </div>
+
+        <div class="custom-amount-row">
+          <div class="custom-amount-input">
+            <span>أو</span>
+            <input type="text" placeholder="مبلغ مخصص">
+            <span>ج.م</span>
+          </div>
+        </div>
+
+        <!-- Summary Card -->
+        <div class="summary-card">
+          <div class="summary-row">
+            <div class="summary-label">
+              <svg viewBox="0 0 24 24"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/></svg>
+              قيمة الهدية
+            </div>
+            <div class="summary-value price">500 ج.م</div>
+          </div>
+          <div class="summary-row">
+            <div class="summary-label">
+              <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              المستلم
+            </div>
+            <div class="summary-value">أحمد محمود</div>
+          </div>
+          <div class="summary-row">
+            <div class="summary-label">
+              <svg viewBox="0 0 24 24"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/></svg>
+              التغليف
+            </div>
+            <div class="summary-value">كلاسيك</div>
+          </div>
+          <div class="summary-row">
+            <div class="summary-label">
+              <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              الإرسال
+            </div>
+            <div class="summary-value">فوري</div>
+          </div>
+        </div>
+
+        <!-- Security Info -->
+        <div class="security-info">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <polyline points="9 12 11 14 15 10"/>
+          </svg>
+          <div class="security-info-text">
+            <strong>🔒 إرسال آمن</strong>
+            الهدية ستُرسل بشكل مشفّر، ولن يتمكن المستلم من معرفة هويتك إلا لو أضفت اسمك
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Sticky Checkout -->
+      <div class="sticky-checkout">
+        <button class="checkout-btn">
+          <div class="checkout-btn-content">
+            <svg viewBox="0 0 24 24">
+              <line x1="22" y1="2" x2="11" y2="13"/>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+            <span>إرسال الهدية</span>
+          </div>
+          <div class="checkout-btn-price">
+            500 <span class="currency">ج.م</span>
+          </div>
+        </button>
+      </div>
+
+    </div>
+    <div class="screen-badge">1 · نموذج الإهداء</div>
+  </div>
+
+  <!-- ═══════════ SCREEN 2: SUCCESS ═══════════ -->
+  <div class="screen-wrapper">
+    <div class="phone">
+      <div class="status-bar">
+        <div class="time">9:41</div>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h3v-9H2v9zm5 0h3V9H7v13zm5 0h3V5h-3v17zm5 0h3V2h-3v20z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21l-12-18h24z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm5 4v8h1c.6 0 1-.4 1-1V9c0-.6-.4-1-1-1h-1z"/></svg>
+        </div>
+      </div>
+
+      <div class="screen" style="overflow: hidden; position: relative;">
+
+        <!-- Confetti -->
+        <div class="confetti" style="background: var(--pink); top: 5%; left: 15%;"></div>
+        <div class="confetti circle" style="background: var(--accent); top: 8%; right: 20%; animation-delay: 0.3s;"></div>
+        <div class="confetti long" style="background: var(--purple); top: 3%; left: 40%; animation-delay: 0.6s;"></div>
+        <div class="confetti circle" style="background: var(--success); top: 10%; right: 45%; animation-delay: 0.9s;"></div>
+        <div class="confetti" style="background: var(--blue); top: 12%; left: 25%; animation-delay: 1.2s;"></div>
+
+        <div class="success-screen">
+
+          <!-- Success Icon -->
+          <div class="success-icon">
+            <svg viewBox="0 0 24 24">
+              <polyline points="20 12 20 22 4 22 4 12"/>
+              <rect x="2" y="7" width="20" height="5"/>
+              <line x1="12" y1="22" x2="12" y2="7"/>
+              <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
+              <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
+            </svg>
+          </div>
+
+          <div class="success-title">تم إرسال الهدية! 🎉</div>
+          <div class="success-text">
+            وصلت الهدية لأحمد محمود، وفي انتظار ما يفتحها ويستقبل المفاجأة
+          </div>
+
+          <!-- Sent Gift Card -->
+          <div class="sent-gift-card">
+            <div class="sgc-header">
+              <div class="sgc-label">Gift Card</div>
+              <div class="sgc-badge">تم الإرسال ✓</div>
+            </div>
+            <div class="sgc-amount">500 <span class="currency">ج.م</span></div>
+            <div class="sgc-footer">
+              <div class="sgc-to">
+                <div class="sgc-to-label">إلى</div>
+                <div class="sgc-to-value">أحمد محمود</div>
+              </div>
+              <div class="sgc-code">GH-4829</div>
+            </div>
+          </div>
+
+          <div class="success-actions">
+            <button class="success-btn primary">
+              <svg viewBox="0 0 24 24">
+                <circle cx="18" cy="5" r="3"/>
+                <circle cx="6" cy="12" r="3"/>
+                <circle cx="18" cy="19" r="3"/>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+              </svg>
+              شارك التفاصيل
+            </button>
+
+            <button class="success-btn secondary">
+              <svg viewBox="0 0 24 24">
+                <polyline points="20 12 20 22 4 22 4 12"/>
+                <rect x="2" y="7" width="20" height="5"/>
+                <line x1="12" y1="22" x2="12" y2="7"/>
+              </svg>
+              اهدي حد تاني
+            </button>
+
+            <button class="success-btn secondary" style="background: transparent; border: none; color: var(--pink);">
+              العودة للصفحة الرئيسية
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+    <div class="screen-badge">2 · تم الإرسال</div>
+  </div>
+
+</div>
+
+</body>
+</html>

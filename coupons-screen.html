@@ -1,0 +1,1691 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الكوبونات — معاينة احترافية</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'IBM Plex Sans Arabic', sans-serif; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --primary: #0F766E;
+    --primary-dark: #115E59;
+    --primary-light: #CCFBF1;
+    --primary-soft: #F0FDFA;
+    --accent: #F59E0B;
+    --accent-dark: #D97706;
+    --accent-light: #FEF3C7;
+    --danger: #EF4444;
+    --danger-light: #FEF2F2;
+    --success: #10B981;
+    --success-dark: #059669;
+    --success-light: #ECFDF5;
+    --purple: #8B5CF6;
+    --purple-light: #EDE9FE;
+    --blue: #2563EB;
+    --blue-light: #DBEAFE;
+    --pink: #EC4899;
+    --pink-light: #FCE7F3;
+    --cyan: #06B6D4;
+    --cyan-light: #CFFAFE;
+    --dark: #0F172A;
+    --gray-700: #374151;
+    --gray-600: #4B5563;
+    --gray-500: #6B7280;
+    --gray-400: #9CA3AF;
+    --gray-300: #D1D5DB;
+    --gray-200: #E5E7EB;
+    --gray-100: #F3F4F6;
+    --bg: #F8FAFC;
+    --white: #FFFFFF;
+
+    --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.07);
+    --shadow-lg: 0 10px 30px rgba(15, 23, 42, 0.09);
+    --shadow-xl: 0 20px 40px rgba(15, 23, 42, 0.14);
+    --shadow-primary: 0 8px 24px rgba(15, 118, 110, 0.32);
+
+    --r-sm: 10px;
+    --r-md: 14px;
+    --r-lg: 18px;
+    --r-xl: 24px;
+    --r-full: 999px;
+  }
+
+  body {
+    background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+    min-height: 100vh;
+    padding: 50px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+  }
+
+  .page-header { text-align: center; color: #fff; max-width: 900px; }
+  .page-header h1 {
+    font-size: 30px; font-weight: 700; margin-bottom: 8px;
+    background: linear-gradient(135deg, #fff, #94A3B8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .page-header p { color: #94A3B8; font-size: 14px; }
+
+  .screens-container {
+    display: flex; gap: 40px; flex-wrap: wrap; justify-content: center;
+  }
+  .screen-wrapper {
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+  }
+  .screen-badge {
+    background: rgba(245, 158, 11, 0.15);
+    color: #FCD34D;
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid rgba(252, 211, 77, 0.25);
+  }
+
+  .phone {
+    width: 375px;
+    height: 812px;
+    background: var(--bg);
+    border-radius: 44px;
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+      0 0 0 10px #0A0F1E,
+      0 0 0 12px #1E293B,
+      0 30px 60px rgba(0, 0, 0, 0.5),
+      0 0 80px rgba(245, 158, 11, 0.15);
+  }
+  .phone::before {
+    content: '';
+    position: absolute;
+    top: 10px; left: 50%;
+    transform: translateX(-50%);
+    width: 110px; height: 28px;
+    background: #0A0F1E;
+    border-radius: 999px;
+    z-index: 999;
+  }
+
+  .status-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 48px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 28px;
+    font-size: 13px; font-weight: 600;
+    z-index: 100;
+    pointer-events: none;
+    color: #fff;
+  }
+  .status-bar.dark { color: var(--dark); }
+  .status-bar .time { margin-top: 4px; }
+  .status-bar .status-icons { display: flex; gap: 5px; margin-top: 4px; align-items: center; }
+  .status-bar svg { width: 15px; height: 15px; }
+
+  .screen {
+    width: 100%; height: 100%;
+    overflow-y: auto; overflow-x: hidden;
+    scrollbar-width: none;
+    padding-top: 48px;
+    padding-bottom: 30px;
+  }
+  .screen::-webkit-scrollbar { display: none; }
+
+  /* ══════════ HERO HEADER ══════════ */
+  .hero-header {
+    padding: 8px 20px 24px;
+    background: linear-gradient(160deg, #BE185D 0%, #EC4899 40%, #F59E0B 100%);
+    border-radius: 0 0 32px 32px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .hero-header::before {
+    content: '';
+    position: absolute;
+    top: -80px; right: -60px;
+    width: 220px;
+    height: 220px;
+    background: radial-gradient(circle, rgba(255,255,255,0.2), transparent 70%);
+    border-radius: 50%;
+  }
+  .hero-header::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; left: -40px;
+    width: 180px;
+    height: 180px;
+    background: radial-gradient(circle, rgba(255,255,255,0.15), transparent 70%);
+    border-radius: 50%;
+  }
+
+  /* Ticket holes pattern */
+  .hero-pattern {
+    position: absolute;
+    inset: 0;
+    opacity: 0.15;
+    background-image:
+      radial-gradient(circle at 10% 50%, #fff 1px, transparent 1px),
+      radial-gradient(circle at 90% 50%, #fff 1px, transparent 1px);
+    background-size: 30px 30px;
+  }
+
+  .app-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+    position: relative;
+    z-index: 2;
+  }
+  .back-btn {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.18);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.25);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .back-btn:hover { background: rgba(255,255,255,0.28); }
+  .back-btn svg {
+    width: 18px; height: 18px;
+    stroke: #fff;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .app-title-wrap {
+    flex: 1;
+    text-align: center;
+  }
+  .app-title {
+    font-size: 17px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.3px;
+    margin-bottom: 2px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .app-title svg {
+    width: 17px;
+    height: 17px;
+    stroke: #fff;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .app-subtitle {
+    font-size: 10.5px;
+    color: rgba(255,255,255,0.85);
+    font-weight: 600;
+  }
+  .header-icon-btn {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.18);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.25);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .header-icon-btn:hover { background: rgba(255,255,255,0.28); }
+  .header-icon-btn svg {
+    width: 18px; height: 18px;
+    stroke: #fff;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .header-icon-btn .badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    background: var(--dark);
+    color: #fff;
+    border-radius: 9px;
+    font-size: 9.5px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #BE185D;
+  }
+
+  /* Hero Stats */
+  .hero-stats {
+    display: flex;
+    gap: 6px;
+    position: relative;
+    z-index: 2;
+  }
+  .hero-stat {
+    flex: 1;
+    padding: 12px 8px;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.2);
+    text-align: center;
+  }
+  .hero-stat-value {
+    font-size: 17px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -0.4px;
+    margin-bottom: 3px;
+    line-height: 1;
+  }
+  .hero-stat-label {
+    font-size: 9px;
+    color: rgba(255,255,255,0.9);
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+
+  /* ══════════ SEARCH BAR ══════════ */
+  .search-bar {
+    padding: 4px 4px 4px 14px;
+    background: var(--white);
+    border-radius: var(--r-md);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid var(--gray-200);
+    box-shadow: var(--shadow-xs);
+    margin: 0 20px 16px;
+    cursor: text;
+  }
+  .search-bar svg {
+    width: 16px;
+    height: 16px;
+    stroke: var(--gray-400);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+  }
+  .search-bar input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--dark);
+    padding: 10px 0;
+    background: transparent;
+    min-width: 0;
+  }
+  .search-bar input::placeholder {
+    color: var(--gray-400);
+    font-weight: 500;
+  }
+  .search-filter-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .search-filter-btn svg {
+    width: 16px;
+    height: 16px;
+    stroke: #fff;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ══════════ SECTION HEADER ══════════ */
+  .section-header {
+    padding: 0 20px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .section-title {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    letter-spacing: -0.2px;
+  }
+  .section-title::before {
+    content: '';
+    width: 3px;
+    height: 14px;
+    background: linear-gradient(180deg, var(--pink), #BE185D);
+    border-radius: 4px;
+  }
+  .section-title .count {
+    padding: 2px 7px;
+    background: var(--pink-light);
+    color: var(--pink);
+    border-radius: var(--r-full);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0;
+  }
+  .section-link {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--pink);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    padding: 5px 8px;
+    border-radius: 8px;
+    transition: background 0.2s;
+  }
+  .section-link:hover { background: var(--pink-light); }
+  .section-link svg {
+    width: 11px;
+    height: 11px;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ══════════ FILTER TABS ══════════ */
+  .filter-tabs {
+    display: flex;
+    gap: 6px;
+    padding: 0 20px 12px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .filter-tabs::-webkit-scrollbar { display: none; }
+  .filter-tab {
+    flex-shrink: 0;
+    padding: 8px 14px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-full);
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--gray-600);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+  .filter-tab:hover {
+    border-color: var(--pink-light);
+    color: var(--pink);
+  }
+  .filter-tab.active {
+    background: var(--dark);
+    color: #fff;
+    border-color: var(--dark);
+    box-shadow: 0 4px 12px rgba(15,23,42,0.25);
+  }
+  .filter-tab .count-mini {
+    padding: 1px 6px;
+    background: var(--gray-100);
+    border-radius: 5px;
+    font-size: 9.5px;
+    font-weight: 800;
+    color: var(--gray-600);
+  }
+  .filter-tab.active .count-mini {
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+  }
+
+  /* ══════════ FEATURED COUPON ══════════ */
+  .featured-coupon {
+    margin: 0 20px 16px;
+    padding: 16px;
+    background: linear-gradient(135deg, #7C2D12 0%, #BE185D 50%, #EC4899 100%);
+    border-radius: var(--r-lg);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 12px 32px rgba(236,72,153,0.35);
+  }
+  .featured-coupon::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -40px;
+    width: 180px;
+    height: 180px;
+    background: radial-gradient(circle, rgba(255,255,255,0.2), transparent 70%);
+    border-radius: 50%;
+  }
+  .featured-coupon::after {
+    content: '';
+    position: absolute;
+    bottom: -70px; left: -40px;
+    width: 160px;
+    height: 160px;
+    background: radial-gradient(circle, rgba(252,211,77,0.4), transparent 70%);
+    border-radius: 50%;
+  }
+
+  /* Ticket cut edges */
+  .ticket-cut-top {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    height: 12px;
+    background-image: radial-gradient(circle at 12px 12px, var(--bg) 6px, transparent 6px);
+    background-size: 24px 24px;
+    background-position: 0 -6px;
+    z-index: 2;
+  }
+  .ticket-cut-bottom {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    height: 12px;
+    background-image: radial-gradient(circle at 12px 0px, var(--bg) 6px, transparent 6px);
+    background-size: 24px 24px;
+    background-position: 0 6px;
+    z-index: 2;
+  }
+
+  .fc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    position: relative;
+    z-index: 3;
+  }
+  .fc-badge {
+    padding: 5px 11px;
+    background: rgba(255,255,255,0.25);
+    backdrop-filter: blur(10px);
+    border-radius: var(--r-full);
+    font-size: 9.5px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 0.3px;
+    border: 1px solid rgba(255,255,255,0.3);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .fc-badge svg {
+    width: 10px;
+    height: 10px;
+    fill: currentColor;
+    stroke: none;
+  }
+  .fc-timer {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 800;
+    color: #FCD34D;
+    letter-spacing: 0.3px;
+  }
+  .fc-timer svg {
+    width: 11px;
+    height: 11px;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .fc-main {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: relative;
+    z-index: 3;
+    margin-bottom: 14px;
+  }
+
+  .fc-icon-wrap {
+    width: 68px;
+    height: 68px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(20px);
+    border: 1.5px solid rgba(255,255,255,0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15), inset 0 2px 0 rgba(255,255,255,0.4);
+    animation: giftFloat 3s ease-in-out infinite;
+  }
+  @keyframes giftFloat {
+    0%, 100% { transform: translateY(0) rotate(-3deg); }
+    50% { transform: translateY(-6px) rotate(3deg); }
+  }
+  .fc-icon-wrap svg {
+    width: 36px;
+    height: 36px;
+    stroke: #fff;
+    stroke-width: 1.8;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.2));
+  }
+
+  .fc-info { flex: 1; min-width: 0; }
+  .fc-discount {
+    font-size: 30px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -1.5px;
+    line-height: 1;
+    margin-bottom: 6px;
+    text-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+  .fc-discount .percent {
+    font-size: 16px;
+    font-weight: 800;
+    opacity: 0.9;
+  }
+  .fc-discount .currency {
+    font-size: 13px;
+    font-weight: 700;
+    opacity: 0.85;
+  }
+  .fc-title {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 3px;
+    letter-spacing: -0.2px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  }
+  .fc-store {
+    font-size: 10.5px;
+    color: rgba(255,255,255,0.85);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .fc-store svg {
+    width: 10px;
+    height: 10px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Coupon code box */
+  .fc-code-row {
+    padding: 10px 12px;
+    background: rgba(0,0,0,0.25);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    border: 1.5px dashed rgba(255,255,255,0.4);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    position: relative;
+    z-index: 3;
+  }
+  .fc-code-label {
+    font-size: 9px;
+    color: rgba(255,255,255,0.75);
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .fc-code {
+    flex: 1;
+    font-family: 'Courier New', monospace;
+    font-size: 17px;
+    font-weight: 900;
+    color: #FCD34D;
+    letter-spacing: 3px;
+    text-align: center;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  .fc-copy-btn {
+    padding: 8px 14px;
+    background: #FCD34D;
+    color: var(--accent-dark);
+    border: none;
+    border-radius: 9px;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(252,211,77,0.4);
+  }
+  .fc-copy-btn:hover {
+    background: #FBBF24;
+    transform: translateY(-2px);
+  }
+  .fc-copy-btn:active {
+    transform: translateY(0) scale(0.98);
+  }
+  .fc-copy-btn svg {
+    width: 12px;
+    height: 12px;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Footer */
+  .fc-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 12px;
+    border-top: 1px dashed rgba(255,255,255,0.25);
+    position: relative;
+    z-index: 3;
+  }
+  .fc-footer-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .fc-footer-label {
+    font-size: 9px;
+    color: rgba(255,255,255,0.65);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .fc-footer-value {
+    font-size: 11.5px;
+    font-weight: 800;
+    color: #fff;
+  }
+  .fc-footer-min {
+    text-align: left;
+  }
+
+  /* ══════════ COUPON CARD LIST ══════════ */
+  .coupons-list {
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .coupon-card {
+    display: flex;
+    background: var(--white);
+    border-radius: var(--r-md);
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-xs);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+  }
+  .coupon-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: transparent;
+  }
+
+  /* Left: Discount side */
+  .coupon-left {
+    width: 110px;
+    padding: 14px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .coupon-left::after {
+    content: '';
+    position: absolute;
+    top: 10px;
+    bottom: 10px;
+    right: -1px;
+    width: 2px;
+    background-image: linear-gradient(180deg, transparent 50%, var(--gray-200) 50%);
+    background-size: 2px 12px;
+  }
+  .coupon-left.pink { background: linear-gradient(135deg, var(--pink-light), #FCE7F3); }
+  .coupon-left.teal { background: linear-gradient(135deg, var(--primary-soft), var(--primary-light)); }
+  .coupon-left.orange { background: linear-gradient(135deg, var(--accent-light), #FDE68A); }
+  .coupon-left.purple { background: linear-gradient(135deg, var(--purple-light), #DDD6FE); }
+  .coupon-left.blue { background: linear-gradient(135deg, var(--blue-light), #BFDBFE); }
+  .coupon-left.cyan { background: linear-gradient(135deg, var(--cyan-light), #A5F3FC); }
+
+  .cl-percent {
+    font-size: 26px;
+    font-weight: 900;
+    letter-spacing: -1px;
+    line-height: 1;
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+  }
+  .cl-percent .sym {
+    font-size: 15px;
+    font-weight: 800;
+  }
+  .coupon-left.pink .cl-percent { color: var(--pink); }
+  .coupon-left.teal .cl-percent { color: var(--primary); }
+  .coupon-left.orange .cl-percent { color: var(--accent-dark); }
+  .coupon-left.purple .cl-percent { color: var(--purple); }
+  .coupon-left.blue .cl-percent { color: var(--blue); }
+  .coupon-left.cyan .cl-percent { color: var(--cyan); }
+
+  .cl-label {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+  .coupon-left.pink .cl-label { color: var(--pink); }
+  .coupon-left.teal .cl-label { color: var(--primary); }
+  .coupon-left.orange .cl-label { color: var(--accent-dark); }
+  .coupon-left.purple .cl-label { color: var(--purple); }
+  .coupon-left.blue .cl-label { color: var(--blue); }
+  .coupon-left.cyan .cl-label { color: var(--cyan); }
+
+  /* Right: Content */
+  .coupon-right {
+    flex: 1;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+  }
+  .coupon-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .coupon-title {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: var(--dark);
+    letter-spacing: -0.2px;
+    line-height: 1.3;
+    flex: 1;
+    min-width: 0;
+  }
+  .coupon-status-badge {
+    padding: 3px 8px;
+    border-radius: var(--r-full);
+    font-size: 8.5px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .coupon-status-badge.hot {
+    background: var(--danger);
+    color: #fff;
+    box-shadow: 0 3px 8px rgba(239,68,68,0.3);
+  }
+  .coupon-status-badge.hot::before {
+    content: '🔥';
+    font-size: 9px;
+  }
+  .coupon-status-badge.new {
+    background: var(--success);
+    color: #fff;
+  }
+  .coupon-status-badge.new::before {
+    content: '✨';
+    font-size: 9px;
+  }
+  .coupon-status-badge.used {
+    background: var(--gray-100);
+    color: var(--gray-500);
+  }
+  .coupon-status-badge.used::before {
+    content: '✓';
+    font-weight: 900;
+    font-size: 10px;
+  }
+
+  .coupon-store {
+    font-size: 10.5px;
+    color: var(--gray-500);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .coupon-store svg {
+    width: 10px;
+    height: 10px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+  }
+
+  /* Footer row */
+  .coupon-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--gray-200);
+    margin-top: auto;
+  }
+
+  .coupon-code-mini {
+    padding: 5px 10px;
+    background: var(--gray-100);
+    border: 1px dashed var(--gray-300);
+    border-radius: 7px;
+    font-family: 'Courier New', monospace;
+    font-size: 11.5px;
+    font-weight: 800;
+    color: var(--dark);
+    letter-spacing: 1.5px;
+    flex: 1;
+    text-align: center;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .coupon-copy-mini {
+    padding: 6px 10px;
+    background: var(--pink);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 10.5px;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .coupon-copy-mini:hover {
+    background: #BE185D;
+    transform: scale(1.05);
+  }
+  .coupon-copy-mini:active {
+    transform: scale(0.98);
+  }
+  .coupon-copy-mini svg {
+    width: 11px;
+    height: 11px;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Coupon meta row */
+  .coupon-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 9.5px;
+    color: var(--gray-500);
+    font-weight: 700;
+    flex-wrap: wrap;
+  }
+  .coupon-meta .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .coupon-meta .meta-item svg {
+    width: 9px;
+    height: 9px;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .coupon-meta .sep {
+    width: 3px;
+    height: 3px;
+    background: var(--gray-300);
+    border-radius: 50%;
+  }
+  .coupon-meta .expiring {
+    color: var(--danger);
+    font-weight: 800;
+  }
+
+  /* Coupon progress */
+  .coupon-progress {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 2px;
+  }
+  .coupon-progress-track {
+    flex: 1;
+    height: 4px;
+    background: var(--gray-100);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .coupon-progress-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--danger), #DC2626);
+    transition: width 0.5s;
+  }
+  .coupon-progress-fill.orange {
+    background: linear-gradient(90deg, var(--accent), var(--accent-dark));
+  }
+  .coupon-progress-text {
+    font-size: 9px;
+    color: var(--gray-500);
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+
+  /* ══════════ TIPS BANNER ══════════ */
+  .tips-banner {
+    margin: 16px 20px;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--accent-light), #FDE68A);
+    border: 1px solid #FCD34D;
+    border-radius: var(--r-md);
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .tips-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+    background: rgba(255,255,255,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .tips-icon svg {
+    width: 18px;
+    height: 18px;
+    stroke: var(--accent-dark);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .tips-content { flex: 1; min-width: 0; }
+  .tips-title {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--accent-dark);
+    margin-bottom: 4px;
+    letter-spacing: -0.2px;
+  }
+  .tips-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .tips-list-item {
+    font-size: 10.5px;
+    color: #92400E;
+    font-weight: 600;
+    line-height: 1.5;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .tips-list-item::before {
+    content: '•';
+    color: var(--accent-dark);
+    font-weight: 900;
+    font-size: 14px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  /* ══════════ BOTTOM NAV ══════════ */
+  .bottom-nav {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 78px;
+    background: rgba(255,255,255,0.98);
+    backdrop-filter: blur(20px);
+    border-radius: 28px 28px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 10px 14px;
+    z-index: 50;
+    box-shadow: 0 -6px 30px rgba(15, 23, 42, 0.08);
+  }
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 0;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+  }
+  .nav-item .nav-icon {
+    width: 22px; height: 22px;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.25s;
+    position: relative;
+  }
+  .nav-item .nav-icon svg {
+    width: 21px; height: 21px;
+    stroke: var(--gray-400);
+    stroke-width: 1.8;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+    transition: all 0.25s;
+  }
+  .nav-item .nav-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--gray-400);
+    transition: color 0.25s;
+  }
+  .nav-item.active .nav-icon svg { stroke: var(--pink); }
+  .nav-item.active .nav-label { color: var(--pink); font-weight: 700; }
+  .nav-item.active .nav-icon { transform: translateY(-2px); }
+
+  .nav-fab-wrapper {
+    flex: 0 0 auto;
+    margin-top: -28px;
+  }
+  .nav-fab {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--purple), #6D28D9);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(139,92,246,0.35);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 4px solid var(--white);
+  }
+  .nav-fab:hover {
+    transform: scale(1.08) rotate(8deg);
+  }
+  .nav-fab svg {
+    width: 24px; height: 24px;
+    stroke: #fff;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* Copy Toast */
+  .copy-toast {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    padding: 12px 20px;
+    background: var(--dark);
+    color: #fff;
+    border-radius: var(--r-lg);
+    font-size: 12.5px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s;
+    white-space: nowrap;
+  }
+  .copy-toast.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  .copy-toast svg {
+    width: 16px;
+    height: 16px;
+    stroke: var(--success);
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>الكوبونات — Coupons</h1>
+  <p>Hero · كوبون مميز · 6 تابات · Copy Code · Timer</p>
+</div>
+
+<div class="screens-container">
+  <div class="screen-wrapper">
+    <div class="phone">
+      <div class="status-bar">
+        <div class="time">9:41</div>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h3v-9H2v9zm5 0h3V9H7v13zm5 0h3V5h-3v17zm5 0h3V2h-3v20z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21l-12-18h24z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm5 4v8h1c.6 0 1-.4 1-1V9c0-.6-.4-1-1-1h-1z"/></svg>
+        </div>
+      </div>
+
+      <div class="screen">
+
+        <!-- Hero Header -->
+        <div class="hero-header">
+          <div class="hero-pattern"></div>
+
+          <div class="app-bar">
+            <div class="back-btn">
+              <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            <div class="app-title-wrap">
+              <div class="app-title">
+                <svg viewBox="0 0 24 24">
+                  <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.83z"/>
+                  <line x1="7" y1="7" x2="7.01" y2="7"/>
+                </svg>
+                الكوبونات
+              </div>
+              <div class="app-subtitle">وفّر أكثر مع كل طلب</div>
+            </div>
+            <button class="header-icon-btn">
+              <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="1"/>
+                <circle cx="19" cy="12" r="1"/>
+                <circle cx="5" cy="12" r="1"/>
+              </svg>
+              <div class="badge">3</div>
+            </button>
+          </div>
+
+          <!-- Hero Stats -->
+          <div class="hero-stats">
+            <div class="hero-stat">
+              <div class="hero-stat-value">24</div>
+              <div class="hero-stat-label">كوبون متاح</div>
+            </div>
+            <div class="hero-stat">
+              <div class="hero-stat-value">8</div>
+              <div class="hero-stat-label">ينتهي قريباً</div>
+            </div>
+            <div class="hero-stat">
+              <div class="hero-stat-value">1,850</div>
+              <div class="hero-stat-label">وفّرت ج.م</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-bar">
+          <svg viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" placeholder="ابحث عن كوبون أو متجر...">
+          <button class="search-filter-btn">
+            <svg viewBox="0 0 24 24">
+              <line x1="4" y1="6" x2="20" y2="6"/>
+              <line x1="7" y1="12" x2="17" y2="12"/>
+              <line x1="10" y1="18" x2="14" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="filter-tabs">
+          <button class="filter-tab active">
+            الكل
+            <span class="count-mini">24</span>
+          </button>
+          <button class="filter-tab">طعام</button>
+          <button class="filter-tab">خدمات</button>
+          <button class="filter-tab">منتجات</button>
+          <button class="filter-tab">توصيل</button>
+          <button class="filter-tab">بنكي</button>
+        </div>
+
+        <!-- Featured Coupon -->
+        <div class="section-header">
+          <div class="section-title">الكوبون المميز</div>
+          <div class="section-link">
+            المزيد
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </div>
+        </div>
+
+        <div class="featured-coupon">
+          <div class="ticket-cut-top"></div>
+          <div class="ticket-cut-bottom"></div>
+
+          <div class="fc-header">
+            <div class="fc-badge">
+              <svg viewBox="0 0 24 24">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+              مميز اليوم
+            </div>
+            <div class="fc-timer">
+              <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+              ينتهي خلال 4 ساعات
+            </div>
+          </div>
+
+          <div class="fc-main">
+            <div class="fc-icon-wrap">
+              <svg viewBox="0 0 24 24">
+                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.83z"/>
+                <line x1="7" y1="7" x2="7.01" y2="7"/>
+              </svg>
+            </div>
+            <div class="fc-info">
+              <div class="fc-discount">
+                50<span class="percent">%</span>
+              </div>
+              <div class="fc-title">خصم على كل العيادات الشريكة</div>
+              <div class="fc-store">
+                <svg viewBox="0 0 24 24">
+                  <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+                </svg>
+                على 47 عيادة في دكرنس
+              </div>
+            </div>
+          </div>
+
+          <div class="fc-code-row">
+            <div class="fc-code-label">الكود</div>
+            <div class="fc-code">CLEAN50</div>
+            <button class="fc-copy-btn" onclick="showToast()">
+              <svg viewBox="0 0 24 24">
+                <rect x="9" y="9" width="13" height="13" rx="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+              نسخ
+            </button>
+          </div>
+
+          <div class="fc-footer">
+            <div class="fc-footer-info">
+              <div class="fc-footer-label">الحد الأدنى</div>
+              <div class="fc-footer-value">100 ج.م</div>
+            </div>
+            <div class="fc-footer-info fc-footer-min">
+              <div class="fc-footer-label">الحد الأقصى للخصم</div>
+              <div class="fc-footer-value">200 ج.م</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Coupons List -->
+        <div class="section-header">
+          <div class="section-title">
+            كل الكوبونات
+            <span class="count">24</span>
+          </div>
+          <div class="section-link">
+            فلترة
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </div>
+        </div>
+
+        <div class="coupons-list">
+
+          <!-- Coupon 1 -->
+          <div class="coupon-card">
+            <div class="coupon-left orange">
+              <div class="cl-percent">30<span class="sym">%</span></div>
+              <div class="cl-label">خصم</div>
+            </div>
+            <div class="coupon-right">
+              <div class="coupon-header">
+                <div class="coupon-title">خصم 30% على كل المطاعم</div>
+                <div class="coupon-status-badge hot">رائج</div>
+              </div>
+              <div class="coupon-store">
+                <svg viewBox="0 0 24 24">
+                  <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/>
+                  <path d="M7 2v20"/>
+                </svg>
+                140 مطعم شريك
+              </div>
+              <div class="coupon-meta">
+                <span class="meta-item">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  ينتهي 30 نوفمبر
+                </span>
+                <span class="sep"></span>
+                <span class="expiring">⚡ آخر 50 استخدام</span>
+              </div>
+              <div class="coupon-progress">
+                <div class="coupon-progress-track">
+                  <div class="coupon-progress-fill" style="width: 85%;"></div>
+                </div>
+                <div class="coupon-progress-text">85% مستخدم</div>
+              </div>
+              <div class="coupon-footer">
+                <div class="coupon-code-mini">EAT30</div>
+                <button class="coupon-copy-mini" onclick="showToast()">
+                  <svg viewBox="0 0 24 24">
+                    <rect x="9" y="9" width="13" height="13" rx="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  </svg>
+                  نسخ
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Coupon 2 -->
+          <div class="coupon-card">
+            <div class="coupon-left teal">
+              <div class="cl-percent">20<span class="sym">%</span></div>
+              <div class="cl-label">خصم</div>
+            </div>
+            <div class="coupon-right">
+              <div class="coupon-header">
+                <div class="coupon-title">خصم 20% على أول طلب</div>
+                <div class="coupon-status-badge new">جديد</div>
+              </div>
+              <div class="coupon-store">
+                <svg viewBox="0 0 24 24">
+                  <path d="M3 21h18M5 21V7l8-4v18"/>
+                </svg>
+                لكل المتاجر الجديدة
+              </div>
+              <div class="coupon-meta">
+                <span class="meta-item">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  ينتهي 31 ديسمبر
+                </span>
+              </div>
+              <div class="coupon-footer">
+                <div class="coupon-code-mini">NEW20</div>
+                <button class="coupon-copy-mini" onclick="showToast()">
+                  <svg viewBox="0 0 24 24">
+                    <rect x="9" y="9" width="13" height="13" rx="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  </svg>
+                  نسخ
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Coupon 3 -->
+          <div class="coupon-card">
+            <div class="coupon-left blue">
+              <div class="cl-percent">50 <span class="sym" style="font-size: 13px;">ج.م</span></div>
+              <div class="cl-label">وفّر</div>
+            </div>
+            <div class="coupon-right">
+              <div class="coupon-header">
+                <div class="coupon-title">خصم 50 ج.م على الشحن</div>
+                <div class="coupon-status-badge hot">رائج</div>
+              </div>
+              <div class="coupon-store">
+                <svg viewBox="0 0 24 24">
+                  <rect x="1" y="3" width="15" height="13"/>
+                  <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+                </svg>
+                شحن سريع
+              </div>
+              <div class="coupon-meta">
+                <span class="meta-item">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  ينتهي 15 نوفمبر
+                </span>
+                <span class="sep"></span>
+                <span>الحد الأدنى 200 ج.م</span>
+              </div>
+              <div class="coupon-footer">
+                <div class="coupon-code-mini">SHIP50</div>
+                <button class="coupon-copy-mini" onclick="showToast()">
+                  <svg viewBox="0 0 24 24">
+                    <rect x="9" y="9" width="13" height="13" rx="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  </svg>
+                  نسخ
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Coupon 4 - Used -->
+          <div class="coupon-card" style="opacity: 0.7;">
+            <div class="coupon-left pink">
+              <div class="cl-percent">15<span class="sym">%</span></div>
+              <div class="cl-label">خصم</div>
+            </div>
+            <div class="coupon-right">
+              <div class="coupon-header">
+                <div class="coupon-title">خصم 15% على المنتجات</div>
+                <div class="coupon-status-badge used">مستخدم</div>
+              </div>
+              <div class="coupon-store">
+                <svg viewBox="0 0 24 24">
+                  <circle cx="9" cy="21" r="1"/>
+                  <circle cx="20" cy="21" r="1"/>
+                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                </svg>
+                متجر ريماس
+              </div>
+              <div class="coupon-meta">
+                <span class="meta-item">
+                  <svg viewBox="0 0 24 24">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  تم استخدامه 3 أكتوبر
+                </span>
+              </div>
+              <div class="coupon-footer">
+                <div class="coupon-code-mini" style="opacity: 0.7;">REM15</div>
+                <button class="coupon-copy-mini" disabled style="background: var(--gray-400); cursor: not-allowed;">
+                  <svg viewBox="0 0 24 24">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  مستخدم
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Coupon 5 -->
+          <div class="coupon-card">
+            <div class="coupon-left purple">
+              <div class="cl-percent">25<span class="sym">%</span></div>
+              <div class="cl-label">خصم</div>
+            </div>
+            <div class="coupon-right">
+              <div class="coupon-header">
+                <div class="coupon-title">خصم 25% على جيمات ولياقة</div>
+                <div class="coupon-status-badge new">جديد</div>
+              </div>
+              <div class="coupon-store">
+                <svg viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                </svg>
+                35 جيم في دكرنس والمنصورة
+              </div>
+              <div class="coupon-meta">
+                <span class="meta-item">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  ينتهي 20 نوفمبر
+                </span>
+              </div>
+              <div class="coupon-footer">
+                <div class="coupon-code-mini">FIT25</div>
+                <button class="coupon-copy-mini" onclick="showToast()">
+                  <svg viewBox="0 0 24 24">
+                    <rect x="9" y="9" width="13" height="13" rx="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  </svg>
+                  نسخ
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Tips Banner -->
+        <div class="tips-banner">
+          <div class="tips-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z"/>
+            </svg>
+          </div>
+          <div class="tips-content">
+            <div class="tips-title">💡 نصائح لاستخدام أفضل</div>
+            <div class="tips-list">
+              <div class="tips-list-item">انسخ الكود واستخدمه قبل الشراء مباشرة</div>
+              <div class="tips-list-item">كل كوبون له تاريخ انتهاء وحد أدنى للطلب</div>
+              <div class="tips-list-item">لا يمكن الجمع بين كوبونات على نفس الطلب</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Bottom Nav -->
+      <div class="bottom-nav">
+        <div class="nav-item">
+          <div class="nav-icon">
+            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+          <div class="nav-label">الرئيسية</div>
+        </div>
+        <div class="nav-item">
+          <div class="nav-icon">
+            <svg viewBox="0 0 24 24">
+              <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+              <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+              <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+              <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+            </svg>
+          </div>
+          <div class="nav-label">الأقسام</div>
+        </div>
+        <div class="nav-fab-wrapper">
+          <div class="nav-fab">
+            <svg viewBox="0 0 24 24">
+              <path d="M3 9h18l-1.5 11a2 2 0 0 1-2 1.7H6.5a2 2 0 0 1-2-1.7L3 9z"/>
+              <path d="M8 9V6a4 4 0 0 1 8 0v3"/>
+            </svg>
+          </div>
+        </div>
+        <div class="nav-item active">
+          <div class="nav-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.83z"/>
+              <line x1="7" y1="7" x2="7.01" y2="7"/>
+            </svg>
+          </div>
+          <div class="nav-label">الكوبونات</div>
+        </div>
+        <div class="nav-item">
+          <div class="nav-icon">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div class="nav-label">حسابي</div>
+        </div>
+      </div>
+
+    </div>
+    <div class="screen-badge">الكوبونات</div>
+  </div>
+</div>
+
+<!-- Copy Toast -->
+<div class="copy-toast" id="copyToast">
+  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+  تم نسخ الكود بنجاح!
+</div>
+
+<script>
+  function showToast() {
+    const toast = document.getElementById('copyToast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
+  }
+</script>
+
+</body>
+</html>

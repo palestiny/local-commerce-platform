@@ -1,0 +1,1707 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إضافة نشاط — معاينة احترافية</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'IBM Plex Sans Arabic', sans-serif; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --primary: #0F766E;
+    --primary-dark: #115E59;
+    --primary-light: #CCFBF1;
+    --primary-soft: #F0FDFA;
+    --accent: #F59E0B;
+    --accent-dark: #D97706;
+    --accent-light: #FEF3C7;
+    --danger: #EF4444;
+    --danger-light: #FEF2F2;
+    --success: #10B981;
+    --success-light: #ECFDF5;
+    --purple: #8B5CF6;
+    --purple-light: #EDE9FE;
+    --blue: #2563EB;
+    --blue-light: #DBEAFE;
+    --pink: #EC4899;
+    --pink-light: #FCE7F3;
+    --dark: #0F172A;
+    --gray-700: #374151;
+    --gray-600: #4B5563;
+    --gray-500: #6B7280;
+    --gray-400: #9CA3AF;
+    --gray-300: #D1D5DB;
+    --gray-200: #E5E7EB;
+    --gray-100: #F3F4F6;
+    --bg: #F8FAFC;
+    --white: #FFFFFF;
+
+    --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.07);
+    --shadow-lg: 0 10px 30px rgba(15, 23, 42, 0.09);
+    --shadow-primary: 0 8px 24px rgba(15, 118, 110, 0.32);
+
+    --r-sm: 10px;
+    --r-md: 14px;
+    --r-lg: 18px;
+    --r-xl: 24px;
+    --r-full: 999px;
+  }
+
+  body {
+    background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+    min-height: 100vh;
+    padding: 50px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+  }
+
+  .page-header { text-align: center; color: #fff; max-width: 900px; }
+  .page-header h1 {
+    font-size: 30px; font-weight: 700; margin-bottom: 8px;
+    background: linear-gradient(135deg, #fff, #94A3B8);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .page-header p { color: #94A3B8; font-size: 14px; }
+
+  .screens-container {
+    display: flex; gap: 40px; flex-wrap: wrap; justify-content: center;
+  }
+  .screen-wrapper {
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+  }
+  .screen-badge {
+    background: rgba(15, 118, 110, 0.15);
+    color: #5EEAD4;
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid rgba(94, 234, 212, 0.25);
+  }
+
+  .phone {
+    width: 375px;
+    height: 812px;
+    background: var(--bg);
+    border-radius: 44px;
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+      0 0 0 10px #0A0F1E,
+      0 0 0 12px #1E293B,
+      0 30px 60px rgba(0, 0, 0, 0.5),
+      0 0 80px rgba(15, 118, 110, 0.15);
+  }
+  .phone::before {
+    content: '';
+    position: absolute;
+    top: 10px; left: 50%;
+    transform: translateX(-50%);
+    width: 110px; height: 28px;
+    background: #0A0F1E;
+    border-radius: 999px;
+    z-index: 999;
+  }
+
+  .status-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 48px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 28px;
+    font-size: 13px; font-weight: 600;
+    z-index: 100;
+    pointer-events: none;
+    color: var(--dark);
+  }
+  .status-bar .time { margin-top: 4px; }
+  .status-bar .status-icons { display: flex; gap: 5px; margin-top: 4px; align-items: center; }
+  .status-bar svg { width: 15px; height: 15px; }
+
+  .screen {
+    width: 100%; height: 100%;
+    overflow-y: auto; overflow-x: hidden;
+    scrollbar-width: none;
+    padding-top: 48px;
+    padding-bottom: 120px;
+  }
+  .screen::-webkit-scrollbar { display: none; }
+
+  /* ══════════ APP BAR ══════════ */
+  .app-bar {
+    padding: 8px 20px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .back-btn {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .back-btn:hover { background: var(--gray-100); }
+  .back-btn svg {
+    width: 18px; height: 18px;
+    stroke: var(--gray-700);
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .app-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--dark);
+    letter-spacing: -0.3px;
+    flex: 1;
+    text-align: center;
+  }
+  .save-draft-btn {
+    padding: 8px 12px;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--gray-700);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .save-draft-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  .save-draft-btn svg {
+    width: 12px; height: 12px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* ══════════ PROGRESS STEPS ══════════ */
+  .progress-wrap {
+    padding: 0 20px 16px;
+  }
+  .progress-bar-track {
+    height: 6px;
+    background: var(--gray-200);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    width: 40%;
+    background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+    border-radius: 3px;
+    position: relative;
+    transition: width 0.5s;
+  }
+  .progress-bar-fill::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0; bottom: 0;
+    width: 30px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5));
+    border-radius: 3px;
+  }
+
+  .steps-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+  }
+  .step-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+  }
+  .step-circle {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--gray-200);
+    color: var(--gray-500);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    font-weight: 800;
+    transition: all 0.3s;
+    border: 2px solid transparent;
+  }
+  .step-circle svg {
+    width: 13px; height: 13px;
+    stroke: currentColor;
+    stroke-width: 3;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .step-item.completed .step-circle {
+    background: var(--primary);
+    color: #fff;
+  }
+  .step-item.active .step-circle {
+    background: var(--white);
+    color: var(--primary);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(15,118,110,0.15);
+  }
+  .step-item-label {
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--gray-500);
+    text-align: center;
+    letter-spacing: -0.1px;
+  }
+  .step-item.active .step-item-label { color: var(--primary); font-weight: 700; }
+  .step-item.completed .step-item-label { color: var(--dark); }
+
+  /* ══════════ STEP TITLE ══════════ */
+  .step-header {
+    padding: 0 20px 16px;
+  }
+  .step-title {
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 4px;
+    letter-spacing: -0.4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .step-title .step-num-badge {
+    padding: 3px 10px;
+    background: var(--primary-soft);
+    color: var(--primary);
+    border-radius: var(--r-full);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0;
+  }
+  .step-subtitle {
+    font-size: 12px;
+    color: var(--gray-500);
+    font-weight: 500;
+    line-height: 1.5;
+  }
+
+  /* ══════════ FORM SECTION ══════════ */
+  .form-section {
+    padding: 0 20px;
+    margin-bottom: 16px;
+  }
+  .form-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 8px;
+    letter-spacing: -0.1px;
+  }
+  .form-label .required {
+    color: var(--danger);
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .form-label .optional {
+    color: var(--gray-400);
+    font-size: 10px;
+    font-weight: 600;
+  }
+  .form-label .field-counter {
+    font-size: 10px;
+    color: var(--gray-400);
+    font-weight: 600;
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 13px 14px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-md);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--dark);
+    outline: none;
+    transition: all 0.2s;
+    box-shadow: var(--shadow-xs);
+  }
+  .form-input::placeholder {
+    color: var(--gray-400);
+    font-weight: 500;
+  }
+  .form-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(15,118,110,0.08);
+  }
+  .form-input.valid {
+    border-color: var(--success);
+    background: linear-gradient(135deg, var(--success-light), transparent);
+  }
+  .form-input.error {
+    border-color: var(--danger);
+    background: linear-gradient(135deg, var(--danger-light), transparent);
+  }
+  .form-input.with-icon {
+    padding-left: 42px;
+    position: relative;
+  }
+  .input-wrap {
+    position: relative;
+  }
+  .input-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px; height: 18px;
+    stroke: var(--gray-400);
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+    pointer-events: none;
+    transition: stroke 0.2s;
+  }
+  .form-input:focus + .input-icon {
+    stroke: var(--primary);
+  }
+
+  textarea.form-input {
+    resize: none;
+    min-height: 90px;
+    line-height: 1.6;
+    padding: 12px 14px;
+  }
+
+  .field-hint {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 6px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--gray-500);
+    line-height: 1.4;
+  }
+  .field-hint svg {
+    width: 11px; height: 11px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+    flex-shrink: 0;
+  }
+  .field-hint.success { color: var(--success); }
+  .field-hint.error { color: var(--danger); }
+
+  /* ══════════ CATEGORY GRID ══════════ */
+  .category-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .category-card {
+    padding: 14px 6px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-md);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+    box-shadow: var(--shadow-xs);
+  }
+  .category-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-light);
+  }
+  .category-card.active {
+    border-color: var(--primary);
+    background: var(--primary-soft);
+    box-shadow: 0 0 0 3px rgba(15,118,110,0.1);
+  }
+  .category-card.active::after {
+    content: '';
+    position: absolute;
+    top: 6px; right: 6px;
+    width: 16px; height: 16px;
+    background: var(--primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .category-card.active::before {
+    content: '';
+    position: absolute;
+    top: 10px; right: 10px;
+    width: 8px; height: 8px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E") no-repeat center;
+    background-size: contain;
+    z-index: 2;
+  }
+
+  .category-icon {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.25s;
+  }
+  .category-card:hover .category-icon { transform: scale(1.1); }
+  .category-icon svg {
+    width: 20px; height: 20px;
+    stroke-width: 1.8;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .category-icon.teal { background: linear-gradient(135deg, #CCFBF1, #99F6E4); }
+  .category-icon.teal svg { stroke: #0F766E; }
+  .category-icon.orange { background: linear-gradient(135deg, #FEF3C7, #FDE68A); }
+  .category-icon.orange svg { stroke: #D97706; }
+  .category-icon.blue { background: linear-gradient(135deg, #DBEAFE, #BFDBFE); }
+  .category-icon.blue svg { stroke: #2563EB; }
+  .category-icon.purple { background: linear-gradient(135deg, #EDE9FE, #DDD6FE); }
+  .category-icon.purple svg { stroke: #7C3AED; }
+  .category-icon.pink { background: linear-gradient(135deg, #FCE7F3, #FBCFE8); }
+  .category-icon.pink svg { stroke: #DB2777; }
+  .category-icon.green { background: linear-gradient(135deg, #D1FAE5, #A7F3D0); }
+  .category-icon.green svg { stroke: #059669; }
+
+  .category-name {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--dark);
+    letter-spacing: -0.1px;
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  /* ══════════ SPECIALTY CHIPS ══════════ */
+  .specialty-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+  .specialty-chip {
+    padding: 8px 14px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-full);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-700);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .specialty-chip:hover {
+    border-color: var(--primary-light);
+    background: var(--primary-soft);
+  }
+  .specialty-chip.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(15,118,110,0.25);
+  }
+  .specialty-chip.active::before {
+    content: '✓';
+    font-weight: 900;
+    margin-left: 3px;
+  }
+
+  /* ══════════ MAP PLACEHOLDER ══════════ */
+  .map-picker {
+    position: relative;
+    height: 160px;
+    border-radius: var(--r-md);
+    overflow: hidden;
+    background: linear-gradient(135deg, #DBEAFE, #BFDBFE);
+    border: 1.5px solid var(--gray-200);
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 10px;
+  }
+  .map-picker:hover {
+    border-color: var(--primary);
+  }
+  .map-picker::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+  .map-pin {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -100%);
+    font-size: 36px;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+    animation: bounce 2s infinite;
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translate(-50%, -100%); }
+    50% { transform: translate(-50%, -110%); }
+  }
+  .map-overlay-btn {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    padding: 8px 14px;
+    background: var(--white);
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    box-shadow: var(--shadow-md);
+  }
+  .map-overlay-btn svg {
+    width: 12px; height: 12px;
+    stroke: var(--primary);
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* ══════════ PHOTO UPLOAD ══════════ */
+  .photo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .photo-upload-btn {
+    aspect-ratio: 1;
+    background: var(--white);
+    border: 2px dashed var(--gray-300);
+    border-radius: var(--r-md);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    padding: 8px;
+  }
+  .photo-upload-btn:hover {
+    border-color: var(--primary);
+    background: var(--primary-soft);
+  }
+  .photo-upload-btn:hover svg { stroke: var(--primary); }
+  .photo-upload-btn:hover .photo-upload-text { color: var(--primary); }
+  .photo-upload-btn svg {
+    width: 24px; height: 24px;
+    stroke: var(--gray-400);
+    stroke-width: 1.8;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+    transition: stroke 0.2s;
+  }
+  .photo-upload-text {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--gray-500);
+    transition: color 0.2s;
+  }
+
+  .photo-preview {
+    aspect-ratio: 1;
+    border-radius: var(--r-md);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .photo-preview.bg-1 { background: linear-gradient(135deg, #0F172A, #334155); }
+  .photo-preview.bg-2 { background: linear-gradient(135deg, #0F766E, #14B8A6); }
+  .photo-preview svg {
+    width: 32px; height: 32px;
+    stroke: rgba(255,255,255,0.85);
+    stroke-width: 1.5;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .photo-remove {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: rgba(239,68,68,0.95);
+    border: 1.5px solid var(--white);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+    z-index: 2;
+  }
+  .photo-remove:hover { transform: scale(1.15); }
+  .photo-remove svg {
+    width: 11px; height: 11px;
+    stroke: #fff;
+    stroke-width: 3;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .photo-cover-badge {
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
+    padding: 3px 8px;
+    background: rgba(15,118,110,0.95);
+    color: #fff;
+    border-radius: var(--r-full);
+    font-size: 9px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .photo-cover-badge svg {
+    width: 8px; height: 8px;
+    fill: #fff;
+    stroke: none;
+  }
+
+  /* ══════════ HOURS TABLE ══════════ */
+  .hours-table {
+    background: var(--white);
+    border-radius: var(--r-md);
+    overflow: hidden;
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-xs);
+  }
+  .hours-row {
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--gray-100);
+    gap: 10px;
+  }
+  .hours-row:last-child { border-bottom: none; }
+  .hours-day {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--dark);
+    min-width: 55px;
+  }
+  .hours-time-inputs {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+  }
+  .time-input {
+    flex: 1;
+    padding: 7px 10px;
+    background: var(--gray-100);
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--dark);
+    text-align: center;
+    outline: none;
+    transition: all 0.2s;
+  }
+  .time-input:focus {
+    background: var(--white);
+    border-color: var(--primary);
+  }
+  .time-sep {
+    color: var(--gray-400);
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .hours-toggle {
+    width: 34px;
+    height: 20px;
+    background: var(--gray-300);
+    border-radius: 10px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.25s;
+    flex-shrink: 0;
+  }
+  .hours-toggle::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    transition: transform 0.25s;
+  }
+  .hours-toggle.on {
+    background: var(--primary);
+  }
+  .hours-toggle.on::after {
+    transform: translateX(-14px);
+  }
+
+  /* ══════════ SUMMARY CARD ══════════ */
+  .summary-card {
+    background: linear-gradient(135deg, var(--primary-soft), var(--primary-light));
+    border-radius: var(--r-lg);
+    padding: 16px;
+    margin: 0 20px 16px;
+    border: 1px solid var(--primary-light);
+    position: relative;
+    overflow: hidden;
+  }
+  .summary-card::before {
+    content: '';
+    position: absolute;
+    top: -30px; left: -30px;
+    width: 100px; height: 100px;
+    background: radial-gradient(circle, rgba(15,118,110,0.15), transparent 70%);
+    border-radius: 50%;
+  }
+  .summary-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    position: relative;
+    z-index: 1;
+  }
+  .summary-header-icon {
+    width: 30px; height: 30px;
+    background: var(--primary);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .summary-header-icon svg {
+    width: 15px; height: 15px;
+    stroke: #fff;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .summary-header-text {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--primary-dark);
+  }
+  .summary-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+    z-index: 1;
+  }
+  .summary-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+  }
+  .summary-item-label {
+    color: var(--primary-dark);
+    font-weight: 600;
+    opacity: 0.85;
+  }
+  .summary-item-value {
+    color: var(--primary-dark);
+    font-weight: 700;
+  }
+  .summary-item-value.check {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--success);
+  }
+  .summary-item-value.check svg {
+    width: 12px; height: 12px;
+    stroke: currentColor;
+    stroke-width: 3;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* ══════════ BOTTOM ACTIONS ══════════ */
+  .bottom-actions {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 12px 20px 20px;
+    background: linear-gradient(180deg, rgba(248,250,252,0) 0%, var(--bg) 30%, var(--bg) 100%);
+    z-index: 50;
+    display: flex;
+    gap: 10px;
+  }
+  .btn-secondary-action {
+    padding: 14px 18px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: 14px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--gray-700);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .btn-secondary-action:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  .btn-secondary-action svg {
+    width: 14px; height: 14px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  .btn-primary-action {
+    flex: 1;
+    padding: 15px 20px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: var(--shadow-primary);
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(15,118,110,0.4);
+  }
+  .btn-primary-action:active { transform: translateY(0); }
+  .btn-primary-action svg {
+    width: 17px; height: 17px;
+    stroke: #fff;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* ══════════ SUCCESS SCREEN ══════════ */
+  .success-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 30px 40px;
+    text-align: center;
+    min-height: calc(100% - 48px);
+  }
+  .success-icon {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--success), #059669);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+    position: relative;
+    box-shadow: 0 20px 40px rgba(16,185,129,0.35);
+    animation: successPop 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+  @keyframes successPop {
+    0% { transform: scale(0); }
+    70% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+  }
+  .success-icon::before,
+  .success-icon::after {
+    content: '';
+    position: absolute;
+    inset: -12px;
+    border-radius: 50%;
+    border: 2px solid var(--success);
+    opacity: 0;
+    animation: ringPulse 2s infinite;
+  }
+  .success-icon::after {
+    inset: -24px;
+    animation-delay: 0.4s;
+  }
+  @keyframes ringPulse {
+    0% { transform: scale(0.8); opacity: 0.6; }
+    100% { transform: scale(1.3); opacity: 0; }
+  }
+  .success-icon svg {
+    width: 52px;
+    height: 52px;
+    stroke: #fff;
+    stroke-width: 3;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .success-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 10px;
+    letter-spacing: -0.5px;
+  }
+  .success-text {
+    font-size: 13px;
+    color: var(--gray-500);
+    line-height: 1.75;
+    font-weight: 500;
+    margin-bottom: 24px;
+    max-width: 300px;
+  }
+  .success-info-card {
+    background: var(--white);
+    border-radius: var(--r-lg);
+    padding: 16px;
+    width: 100%;
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 20px;
+  }
+  .success-info-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 12px;
+  }
+  .success-info-row:not(:last-child) {
+    border-bottom: 1px dashed var(--gray-100);
+  }
+  .success-info-label {
+    color: var(--gray-500);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .success-info-label svg {
+    width: 13px; height: 13px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .success-info-value {
+    color: var(--dark);
+    font-weight: 700;
+  }
+  .success-info-value.pending {
+    color: var(--accent-dark);
+    background: var(--accent-light);
+    padding: 3px 8px;
+    border-radius: var(--r-full);
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .success-info-value.pending::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .success-btn {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: var(--shadow-primary);
+    transition: all 0.25s;
+    margin-bottom: 10px;
+  }
+  .success-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(15,118,110,0.4);
+  }
+  .success-btn svg {
+    width: 17px; height: 17px;
+    stroke: #fff;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .success-btn.secondary {
+    background: var(--white);
+    color: var(--gray-700);
+    border: 1.5px solid var(--gray-200);
+    box-shadow: none;
+    margin-bottom: 0;
+  }
+  .success-btn.secondary:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  .success-btn.secondary svg { stroke: currentColor; }
+
+  /* ══════════ INFO BANNER ══════════ */
+  .info-banner {
+    margin: 0 20px 16px;
+    padding: 12px 14px;
+    background: linear-gradient(135deg, var(--blue-light), #BFDBFE);
+    border-radius: var(--r-md);
+    border: 1px solid #93C5FD;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .info-banner-icon {
+    width: 28px; height: 28px;
+    border-radius: 9px;
+    background: rgba(255,255,255,0.6);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .info-banner-icon svg {
+    width: 14px; height: 14px;
+    stroke: var(--blue);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .info-banner-text {
+    flex: 1;
+    font-size: 11px;
+    color: #1E40AF;
+    font-weight: 600;
+    line-height: 1.55;
+  }
+  .info-banner-text strong {
+    font-weight: 800;
+    display: block;
+    margin-bottom: 2px;
+    font-size: 11.5px;
+  }
+
+  /* ══════════ QUICK CATEGORIES ══════════ */
+  .quick-cat-scroll {
+    display: flex;
+    gap: 6px;
+    padding: 4px 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin-bottom: 12px;
+  }
+  .quick-cat-scroll::-webkit-scrollbar { display: none; }
+  .quick-cat-chip {
+    flex-shrink: 0;
+    padding: 6px 12px;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--r-full);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--gray-700);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .quick-cat-chip:hover {
+    border-color: var(--primary-light);
+    background: var(--primary-soft);
+  }
+  .quick-cat-chip.active {
+    background: var(--primary-soft);
+    border-color: var(--primary);
+    color: var(--primary);
+    font-weight: 700;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>إضافة نشاط — تجربة أصحاب الأعمال</h1>
+  <p>3 خطوات من النموذج · تصميم محفّز · إتمام ناجح</p>
+</div>
+
+<div class="screens-container">
+
+  <!-- ═══════════ SCREEN 1: FORM (Step 2 - Details) ═══════════ -->
+  <div class="screen-wrapper">
+    <div class="phone">
+      <div class="status-bar">
+        <div class="time">9:41</div>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h3v-9H2v9zm5 0h3V9H7v13zm5 0h3V5h-3v17zm5 0h3V2h-3v20z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21l-12-18h24z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm5 4v8h1c.6 0 1-.4 1-1V9c0-.6-.4-1-1-1h-1z"/></svg>
+        </div>
+      </div>
+
+      <div class="screen">
+        <!-- App Bar -->
+        <div class="app-bar">
+          <div class="back-btn">
+            <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+          <div class="app-title">إضافة نشاط</div>
+          <button class="save-draft-btn">
+            <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            حفظ
+          </button>
+        </div>
+
+        <!-- Progress Steps -->
+        <div class="progress-wrap">
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill"></div>
+          </div>
+          <div class="steps-indicator">
+            <div class="step-item completed">
+              <div class="step-circle">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="step-item-label">الأساسية</div>
+            </div>
+            <div class="step-item active">
+              <div class="step-circle">2</div>
+              <div class="step-item-label">التفاصيل</div>
+            </div>
+            <div class="step-item">
+              <div class="step-circle">3</div>
+              <div class="step-item-label">الوسائط</div>
+            </div>
+            <div class="step-item">
+              <div class="step-circle">4</div>
+              <div class="step-item-label">الموقع</div>
+            </div>
+            <div class="step-item">
+              <div class="step-circle">5</div>
+              <div class="step-item-label">المراجعة</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step Header -->
+        <div class="step-header">
+          <div class="step-title">
+            التفاصيل
+            <span class="step-num-badge">الخطوة 2 من 5</span>
+          </div>
+          <div class="step-subtitle">
+            أضف معلومات دقيقة عن نشاطك التجاري لجذب المزيد من العملاء
+          </div>
+        </div>
+
+        <!-- Info Banner -->
+        <div class="info-banner">
+          <div class="info-banner-icon">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          </div>
+          <div class="info-banner-text">
+            <strong>نصيحة سريعة 💡</strong>
+            الأنشطة التي تحتوي على وصف كامل + 5 صور تحصل على 3x مشاهدات أكثر
+          </div>
+        </div>
+
+        <!-- Business Name -->
+        <div class="form-section">
+          <div class="form-label">
+            <span>اسم النشاط <span class="required">*</span></span>
+            <span class="field-counter">12/60</span>
+          </div>
+          <div class="input-wrap">
+            <input type="text" class="form-input with-icon valid" value="متجر ريماس للإلكترونيات" placeholder="مثال: صيدلية النور">
+            <svg class="input-icon" viewBox="0 0 24 24" style="stroke: var(--success);">
+              <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/>
+            </svg>
+          </div>
+          <div class="field-hint success">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            اسم مميز وسهل التذكر
+          </div>
+        </div>
+
+        <!-- Category Grid -->
+        <div class="form-section">
+          <div class="form-label">
+            <span>القطاع الرئيسي <span class="required">*</span></span>
+          </div>
+          <div class="category-grid">
+            <div class="category-card">
+              <div class="category-icon teal">
+                <svg viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+              </div>
+              <div class="category-name">طبي</div>
+            </div>
+            <div class="category-card">
+              <div class="category-icon orange">
+                <svg viewBox="0 0 24 24"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Z"/></svg>
+              </div>
+              <div class="category-name">مطاعم</div>
+            </div>
+            <div class="category-card active">
+              <div class="category-icon blue">
+                <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+              </div>
+              <div class="category-name">تجاري</div>
+            </div>
+            <div class="category-card">
+              <div class="category-icon purple">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              </div>
+              <div class="category-name">رياضة</div>
+            </div>
+            <div class="category-card">
+              <div class="category-icon pink">
+                <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+              </div>
+              <div class="category-name">تعليم</div>
+            </div>
+            <div class="category-card">
+              <div class="category-icon green">
+                <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+              </div>
+              <div class="category-name">خدمات</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub Categories -->
+        <div class="form-section">
+          <div class="form-label">
+            <span>التخصص الفرعي <span class="required">*</span></span>
+            <span class="optional">اختر حتى 3</span>
+          </div>
+          <div class="quick-cat-scroll">
+            <div class="quick-cat-chip">الكل</div>
+            <div class="quick-cat-chip active">إلكترونيات</div>
+            <div class="quick-cat-chip">موبايلات</div>
+            <div class="quick-cat-chip">أجهزة منزلية</div>
+          </div>
+          <div class="specialty-chips">
+            <div class="specialty-chip active">إلكترونيات</div>
+            <div class="specialty-chip active">ساعات ذكية</div>
+            <div class="specialty-chip active">إكسسوارات</div>
+            <div class="specialty-chip">موبايلات</div>
+            <div class="specialty-chip">لابتوبات</div>
+            <div class="specialty-chip">أجهزة منزلية</div>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="form-section">
+          <div class="form-label">
+            <span>الوصف <span class="required">*</span></span>
+            <span class="field-counter">85/500</span>
+          </div>
+          <textarea class="form-input" placeholder="اكتب وصفاً جاذباً لنشاطك التجاري...">متجر متخصص في بيع الإلكترونيات والأجهزة الذكية الأصلية بأسعار تنافسية. نوفر خدمات ما بعد البيع وضمان سنة كامل على جميع المنتجات.</textarea>
+          <div class="field-hint">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            اذكر ما يميز نشاطك عن الآخرين
+          </div>
+        </div>
+
+        <!-- Phone + WhatsApp -->
+        <div class="form-section">
+          <div class="form-label">
+            <span>رقم الهاتف <span class="required">*</span></span>
+          </div>
+          <div class="input-wrap">
+            <input type="tel" class="form-input with-icon valid" value="01002272549" placeholder="01xxxxxxxxx">
+            <svg class="input-icon" viewBox="0 0 24 24" style="stroke: var(--success);">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+          </div>
+          <div class="field-hint success">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            تم التحقق من الرقم بنجاح
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Bottom Actions -->
+      <div class="bottom-actions">
+        <button class="btn-secondary-action">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          السابق
+        </button>
+        <button class="btn-primary-action">
+          التالي
+          <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+
+    </div>
+    <div class="screen-badge">1 · التفاصيل</div>
+  </div>
+
+  <!-- ═══════════ SCREEN 2: MEDIA + HOURS (Step 3) ═══════════ -->
+  <div class="screen-wrapper">
+    <div class="phone">
+      <div class="status-bar">
+        <div class="time">9:41</div>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h3v-9H2v9zm5 0h3V9H7v13zm5 0h3V5h-3v17zm5 0h3V2h-3v20z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21l-12-18h24z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm5 4v8h1c.6 0 1-.4 1-1V9c0-.6-.4-1-1-1h-1z"/></svg>
+        </div>
+      </div>
+
+      <div class="screen">
+        <!-- App Bar -->
+        <div class="app-bar">
+          <div class="back-btn">
+            <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+          <div class="app-title">إضافة نشاط</div>
+          <button class="save-draft-btn">
+            <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            حفظ
+          </button>
+        </div>
+
+        <!-- Progress Steps -->
+        <div class="progress-wrap">
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" style="width: 60%;"></div>
+          </div>
+          <div class="steps-indicator">
+            <div class="step-item completed">
+              <div class="step-circle">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="step-item-label">الأساسية</div>
+            </div>
+            <div class="step-item completed">
+              <div class="step-circle">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="step-item-label">التفاصيل</div>
+            </div>
+            <div class="step-item active">
+              <div class="step-circle">3</div>
+              <div class="step-item-label">الوسائط</div>
+            </div>
+            <div class="step-item">
+              <div class="step-circle">4</div>
+              <div class="step-item-label">الموقع</div>
+            </div>
+            <div class="step-item">
+              <div class="step-circle">5</div>
+              <div class="step-item-label">المراجعة</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step Header -->
+        <div class="step-header">
+          <div class="step-title">
+            الوسائط والمواعيد
+            <span class="step-num-badge">الخطوة 3 من 5</span>
+          </div>
+          <div class="step-subtitle">
+            أضف صوراً عالية الجودة وحدة مواعيد العمل
+          </div>
+        </div>
+
+        <!-- Photos -->
+        <div class="form-section">
+          <div class="form-label">
+            <span>صور النشاط <span class="required">*</span></span>
+            <span class="optional">حتى 10 صور</span>
+          </div>
+          <div class="photo-grid">
+            <div class="photo-preview bg-1">
+              <div class="photo-remove">
+                <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </div>
+              <div class="photo-cover-badge">
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                غلاف
+              </div>
+              <svg viewBox="0 0 24 24">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+            </div>
+            <div class="photo-preview bg-2">
+              <div class="photo-remove">
+                <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </div>
+              <svg viewBox="0 0 24 24">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+            </div>
+            <div class="photo-upload-btn">
+              <svg viewBox="0 0 24 24">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              <div class="photo-upload-text">أضف صورة</div>
+            </div>
+          </div>
+          <div class="field-hint">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            الحد الأدنى 3 صور — الصورة الأولى ستكون الغلاف
+          </div>
+        </div>
+
+        <!-- Logo -->
+        <div class="form-section">
+          <div class="form-label">
+            <span>شعار النشاط <span class="optional">اختياري</span></span>
+          </div>
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <div class="photo-preview bg-2" style="width: 70px; height: 70px; aspect-ratio: auto; border-radius: var(--r-md);">
+              <svg viewBox="0 0 24 24" style="width: 26px; height: 26px;">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              </svg>
+            </div>
+            <div style="flex: 1;">
+              <button style="padding: 10px 14px; background: var(--primary-soft); border: 1px solid var(--primary-light); border-radius: 10px; font-family: inherit; font-size: 12px; font-weight: 700; color: var(--primary); cursor: pointer; display: flex; align-items: center; gap: 6px; width: 100%; justify-content: center;">
+                <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; stroke: currentColor; stroke-width: 2.2; fill: none; stroke-linecap: round; stroke-linejoin: round;">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                رفع شعار
+              </button>
+              <div style="font-size: 10px; color: var(--gray-500); font-weight: 500; margin-top: 4px; text-align: center;">
+                PNG أو JPG · حجم أقصى 2MB
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Working Hours -->
+        <div class="form-section">
+          <div class="form-label">
+            <span>مواعيد العمل <span class="required">*</span></span>
+          </div>
+          <div class="hours-table">
+            <div class="hours-row">
+              <div class="hours-day">السبت</div>
+              <div class="hours-time-inputs">
+                <input type="text" class="time-input" value="10:00 ص">
+                <span class="time-sep">—</span>
+                <input type="text" class="time-input" value="11:00 م">
+              </div>
+              <div class="hours-toggle on"></div>
+            </div>
+            <div class="hours-row">
+              <div class="hours-day">الأحد</div>
+              <div class="hours-time-inputs">
+                <input type="text" class="time-input" value="10:00 ص">
+                <span class="time-sep">—</span>
+                <input type="text" class="time-input" value="11:00 م">
+              </div>
+              <div class="hours-toggle on"></div>
+            </div>
+            <div class="hours-row">
+              <div class="hours-day">الاثنين</div>
+              <div class="hours-time-inputs">
+                <input type="text" class="time-input" value="10:00 ص">
+                <span class="time-sep">—</span>
+                <input type="text" class="time-input" value="11:00 م">
+              </div>
+              <div class="hours-toggle on"></div>
+            </div>
+            <div class="hours-row">
+              <div class="hours-day">الثلاثاء</div>
+              <div class="hours-time-inputs">
+                <input type="text" class="time-input" value="10:00 ص">
+                <span class="time-sep">—</span>
+                <input type="text" class="time-input" value="11:00 م">
+              </div>
+              <div class="hours-toggle on"></div>
+            </div>
+            <div class="hours-row">
+              <div class="hours-day">الأربعاء</div>
+              <div class="hours-time-inputs">
+                <input type="text" class="time-input" value="10:00 ص">
+                <span class="time-sep">—</span>
+                <input type="text" class="time-input" value="11:00 م">
+              </div>
+              <div class="hours-toggle on"></div>
+            </div>
+            <div class="hours-row">
+              <div class="hours-day">الخميس</div>
+              <div class="hours-time-inputs">
+                <input type="text" class="time-input" value="10:00 ص">
+                <span class="time-sep">—</span>
+                <input type="text" class="time-input" value="11:00 م">
+              </div>
+              <div class="hours-toggle on"></div>
+            </div>
+            <div class="hours-row">
+              <div class="hours-day">الجمعة</div>
+              <div class="hours-time-inputs" style="opacity: 0.4;">
+                <input type="text" class="time-input" value="—" disabled style="background: var(--gray-100);">
+                <span class="time-sep">—</span>
+                <input type="text" class="time-input" value="—" disabled style="background: var(--gray-100);">
+              </div>
+              <div class="hours-toggle"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Bottom Actions -->
+      <div class="bottom-actions">
+        <button class="btn-secondary-action">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          السابق
+        </button>
+        <button class="btn-primary-action">
+          التالي
+          <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+
+    </div>
+    <div class="screen-badge">2 · الوسائط والمواعيد</div>
+  </div>
+
+  <!-- ═══════════ SCREEN 3: SUCCESS ═══════════ -->
+  <div class="screen-wrapper">
+    <div class="phone">
+      <div class="status-bar">
+        <div class="time">9:41</div>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h3v-9H2v9zm5 0h3V9H7v13zm5 0h3V5h-3v17zm5 0h3V2h-3v20z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21l-12-18h24z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm5 4v8h1c.6 0 1-.4 1-1V9c0-.6-.4-1-1-1h-1z"/></svg>
+        </div>
+      </div>
+
+      <div class="screen">
+        <div class="success-screen">
+          <div class="success-icon">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+
+          <div class="success-title">تم إرسال طلبك بنجاح! 🎉</div>
+          <div class="success-text">
+            سيتم مراجعة نشاطك من قِبل فريقنا خلال 24-48 ساعة. سنُعلمك فور الموافقة.
+          </div>
+
+          <div class="success-info-card">
+            <div class="success-info-row">
+              <div class="success-info-label">
+                <svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>
+                اسم النشاط
+              </div>
+              <div class="success-info-value">متجر ريماس</div>
+            </div>
+            <div class="success-info-row">
+              <div class="success-info-label">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+                القطاع
+              </div>
+              <div class="success-info-value">المحلات التجارية</div>
+            </div>
+            <div class="success-info-row">
+              <div class="success-info-label">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                الحالة
+              </div>
+              <div class="success-info-value pending">قيد المراجعة</div>
+            </div>
+            <div class="success-info-row">
+              <div class="success-info-label">
+                <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                رقم الطلب
+              </div>
+              <div class="success-info-value">#BIZ-2026-0147</div>
+            </div>
+          </div>
+
+          <button class="success-btn">
+            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            العودة للرئيسية
+          </button>
+
+          <button class="success-btn secondary">
+            <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            متابعة حالة الطلب
+          </button>
+        </div>
+      </div>
+
+    </div>
+    <div class="screen-badge">3 · تم الإرسال</div>
+  </div>
+
+</div>
+
+</body>
+</html>

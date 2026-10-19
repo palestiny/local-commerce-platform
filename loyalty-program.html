@@ -1,0 +1,2085 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>برنامج الولاء — معاينة احترافية</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'IBM Plex Sans Arabic', sans-serif; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --primary: #0F766E;
+    --primary-dark: #115E59;
+    --primary-light: #CCFBF1;
+    --primary-soft: #F0FDFA;
+    --accent: #F59E0B;
+    --accent-dark: #D97706;
+    --accent-light: #FEF3C7;
+    --gold: #F59E0B;
+    --gold-dark: #B45309;
+    --gold-light: #FEF3C7;
+    --danger: #EF4444;
+    --danger-light: #FEF2F2;
+    --success: #10B981;
+    --success-light: #ECFDF5;
+    --purple: #8B5CF6;
+    --purple-light: #EDE9FE;
+    --blue: #2563EB;
+    --blue-light: #DBEAFE;
+    --pink: #EC4899;
+    --pink-light: #FCE7F3;
+    --dark: #0F172A;
+    --gray-700: #374151;
+    --gray-600: #4B5563;
+    --gray-500: #6B7280;
+    --gray-400: #9CA3AF;
+    --gray-300: #D1D5DB;
+    --gray-200: #E5E7EB;
+    --gray-100: #F3F4F6;
+    --bg: #F8FAFC;
+    --white: #FFFFFF;
+
+    --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.07);
+    --shadow-lg: 0 10px 30px rgba(15, 23, 42, 0.09);
+    --shadow-xl: 0 20px 40px rgba(15, 23, 42, 0.14);
+    --shadow-gold: 0 12px 32px rgba(245, 158, 11, 0.35);
+    --shadow-primary: 0 8px 24px rgba(15, 118, 110, 0.32);
+
+    --r-sm: 10px;
+    --r-md: 14px;
+    --r-lg: 18px;
+    --r-xl: 24px;
+    --r-full: 999px;
+  }
+
+  body {
+    background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+    min-height: 100vh;
+    padding: 50px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+  }
+
+  .page-header { text-align: center; color: #fff; max-width: 900px; }
+  .page-header h1 {
+    font-size: 30px; font-weight: 700; margin-bottom: 8px;
+    background: linear-gradient(135deg, #fff, #94A3B8);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .page-header p { color: #94A3B8; font-size: 14px; }
+
+  .screens-container {
+    display: flex; gap: 40px; flex-wrap: wrap; justify-content: center;
+  }
+  .screen-wrapper {
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+  }
+  .screen-badge {
+    background: rgba(245, 158, 11, 0.15);
+    color: #FCD34D;
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid rgba(252, 211, 77, 0.25);
+  }
+
+  .phone {
+    width: 375px;
+    height: 812px;
+    background: var(--bg);
+    border-radius: 44px;
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+      0 0 0 10px #0A0F1E,
+      0 0 0 12px #1E293B,
+      0 30px 60px rgba(0, 0, 0, 0.5),
+      0 0 80px rgba(245, 158, 11, 0.15);
+  }
+  .phone::before {
+    content: '';
+    position: absolute;
+    top: 10px; left: 50%;
+    transform: translateX(-50%);
+    width: 110px; height: 28px;
+    background: #0A0F1E;
+    border-radius: 999px;
+    z-index: 999;
+  }
+
+  .status-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 48px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 28px;
+    font-size: 13px; font-weight: 600;
+    z-index: 100;
+    pointer-events: none;
+    color: #fff;
+  }
+  .status-bar .time { margin-top: 4px; }
+  .status-bar .status-icons { display: flex; gap: 5px; margin-top: 4px; align-items: center; }
+  .status-bar svg { width: 15px; height: 15px; }
+
+  .screen {
+    width: 100%; height: 100%;
+    overflow-y: auto; overflow-x: hidden;
+    scrollbar-width: none;
+    padding-top: 48px;
+    padding-bottom: 30px;
+  }
+  .screen::-webkit-scrollbar { display: none; }
+
+  /* ══════════ HERO MEMBERSHIP CARD ══════════ */
+  .loyalty-hero {
+    position: relative;
+    padding: 8px 20px 0;
+  }
+
+  /* Top App Bar */
+  .app-bar {
+    padding: 8px 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .back-btn {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .back-btn:hover { background: rgba(255,255,255,0.25); }
+  .back-btn svg {
+    width: 18px; height: 18px;
+    stroke: #fff;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .app-title-wrap {
+    flex: 1;
+    text-align: center;
+  }
+  .app-title {
+    font-size: 17px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.3px;
+    margin-bottom: 2px;
+  }
+  .app-subtitle {
+    font-size: 11px;
+    color: rgba(255,255,255,0.75);
+    font-weight: 600;
+  }
+  .history-btn {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .history-btn:hover { background: rgba(255,255,255,0.25); }
+  .history-btn svg {
+    width: 18px; height: 18px;
+    stroke: #fff;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* ══════════ HERO BACKGROUND ══════════ */
+  .loyalty-hero-bg {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 380px;
+    background: linear-gradient(160deg, #B45309 0%, #D97706 40%, #F59E0B 100%);
+    border-radius: 0 0 32px 32px;
+    overflow: hidden;
+    z-index: 0;
+  }
+  .loyalty-hero-bg::before {
+    content: '';
+    position: absolute;
+    top: -100px; right: -80px;
+    width: 280px; height: 280px;
+    background: radial-gradient(circle, rgba(255,255,255,0.2), transparent 70%);
+    border-radius: 50%;
+  }
+  .loyalty-hero-bg::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; left: -60px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(15,23,42,0.3), transparent 70%);
+    border-radius: 50%;
+  }
+  /* Decorative pattern */
+  .hero-pattern {
+    position: absolute;
+    inset: 0;
+    opacity: 0.15;
+    background-image:
+      radial-gradient(circle at 20% 20%, #fff 1px, transparent 1px),
+      radial-gradient(circle at 80% 80%, #fff 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* ══════════ MEMBERSHIP CARD ══════════ */
+  .membership-card-wrap {
+    position: relative;
+    z-index: 2;
+    padding: 0 0 18px;
+  }
+
+  .membership-card {
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.25), rgba(255,255,255,0.1));
+    backdrop-filter: blur(20px);
+    border-radius: var(--r-xl);
+    border: 1.5px solid rgba(255,255,255,0.35);
+    box-shadow:
+      0 20px 40px rgba(0,0,0,0.25),
+      inset 0 2px 0 rgba(255,255,255,0.4);
+    position: relative;
+    overflow: hidden;
+  }
+  .membership-card::before {
+    content: '';
+    position: absolute;
+    top: -60%; right: -50%;
+    width: 200%; height: 200%;
+    background: conic-gradient(from 0deg, transparent 0deg, rgba(255,255,255,0.15) 180deg, transparent 360deg);
+    animation: shineRotate 6s linear infinite;
+  }
+  @keyframes shineRotate {
+    to { transform: rotate(360deg); }
+  }
+
+  .mc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    position: relative;
+    z-index: 2;
+  }
+  .mc-level-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: rgba(15,23,42,0.4);
+    backdrop-filter: blur(10px);
+    border-radius: var(--r-full);
+    border: 1px solid rgba(255,255,255,0.25);
+  }
+  .mc-level-badge svg {
+    width: 12px;
+    height: 12px;
+    fill: #FCD34D;
+    stroke: none;
+  }
+  .mc-level-badge-text {
+    font-size: 11px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+  .mc-logo {
+    font-size: 22px;
+    letter-spacing: 2px;
+  }
+
+  .mc-label {
+    font-size: 10px;
+    color: rgba(255,255,255,0.75);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+    position: relative;
+    z-index: 2;
+  }
+  .mc-points-row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-bottom: 14px;
+    position: relative;
+    z-index: 2;
+  }
+  .mc-points-value {
+    font-size: 38px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -1.5px;
+    line-height: 1;
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    text-shadow: 0 4px 20px rgba(0,0,0,0.25);
+  }
+  .mc-points-value .unit {
+    font-size: 14px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.85);
+  }
+  .mc-points-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #FCD34D, #F59E0B);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 16px rgba(252,211,77,0.5);
+    animation: float 3s ease-in-out infinite;
+    margin-right: auto;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+  .mc-points-icon svg {
+    width: 22px;
+    height: 22px;
+    fill: #fff;
+    stroke: none;
+  }
+
+  /* Membership Footer */
+  .mc-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 14px;
+    border-top: 1px dashed rgba(255,255,255,0.3);
+    position: relative;
+    z-index: 2;
+  }
+  .mc-holder {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .mc-holder-label {
+    font-size: 9px;
+    color: rgba(255,255,255,0.65);
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .mc-holder-name {
+    font-size: 13px;
+    font-weight: 800;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .mc-holder-name .verified-mini {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.25);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .mc-holder-name .verified-mini svg {
+    width: 7px;
+    height: 7px;
+    stroke: #fff;
+    stroke-width: 3.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .mc-since {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    text-align: left;
+  }
+  .mc-since-label {
+    font-size: 9px;
+    color: rgba(255,255,255,0.65);
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .mc-since-value {
+    font-size: 12px;
+    font-weight: 800;
+    color: #fff;
+  }
+
+  /* ══════════ LEVEL PROGRESS ══════════ */
+  .level-progress-card {
+    position: relative;
+    z-index: 3;
+    background: var(--white);
+    border-radius: var(--r-lg);
+    padding: 16px;
+    margin: 0 20px 16px;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--gray-100);
+  }
+  .level-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .level-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .level-title svg {
+    width: 14px;
+    height: 14px;
+    stroke: var(--gold-dark);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .level-percent {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--gold-dark);
+  }
+
+  .level-track {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    position: relative;
+  }
+  .level-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    position: relative;
+    z-index: 2;
+    flex: 1;
+  }
+  .level-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2.5px solid var(--gray-200);
+    background: var(--white);
+    position: relative;
+    transition: all 0.3s;
+  }
+  .level-icon svg {
+    width: 16px;
+    height: 16px;
+    stroke: var(--gray-400);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .level-icon.completed {
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    border-color: var(--gold);
+    box-shadow: 0 4px 12px rgba(245,158,11,0.3);
+  }
+  .level-icon.completed svg { stroke: #fff; }
+  .level-icon.active {
+    background: linear-gradient(135deg, #FCD34D, var(--gold));
+    border-color: var(--gold);
+    box-shadow: 0 0 0 5px rgba(245,158,11,0.2), 0 4px 12px rgba(245,158,11,0.4);
+    animation: levelPulse 2s infinite;
+  }
+  @keyframes levelPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+  .level-icon.active svg { stroke: #fff; }
+
+  .level-name {
+    font-size: 9.5px;
+    font-weight: 700;
+    color: var(--gray-400);
+    white-space: nowrap;
+  }
+  .level-step.completed .level-name,
+  .level-step.active .level-name {
+    color: var(--gold-dark);
+    font-weight: 800;
+  }
+
+  /* Track connecting line */
+  .level-track-line {
+    position: absolute;
+    top: 17px;
+    right: 40px;
+    left: 40px;
+    height: 2px;
+    background: var(--gray-200);
+    z-index: 1;
+  }
+  .level-track-line-fill {
+    height: 100%;
+    width: 50%;
+    background: linear-gradient(90deg, var(--gold), var(--gold-dark));
+    transition: width 0.5s;
+  }
+
+  .level-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 10px;
+    border-top: 1px dashed var(--gray-100);
+  }
+  .level-progress-text {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--gray-600);
+  }
+  .level-progress-text strong {
+    color: var(--gold-dark);
+    font-weight: 800;
+  }
+  .level-next-icon {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--gold-dark);
+  }
+  .level-next-icon svg {
+    width: 11px;
+    height: 11px;
+    fill: var(--gold);
+    stroke: none;
+  }
+
+  /* ══════════ QUICK STATS ══════════ */
+  .quick-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 0 20px 16px;
+  }
+  .stat-mini-card {
+    background: var(--white);
+    border-radius: var(--r-md);
+    padding: 10px 8px;
+    text-align: center;
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-xs);
+    transition: all 0.25s;
+  }
+  .stat-mini-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+  .stat-mini-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    margin: 0 auto 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .stat-mini-icon svg {
+    width: 15px;
+    height: 15px;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .stat-mini-icon.gold { background: var(--gold-light); }
+  .stat-mini-icon.gold svg { stroke: var(--gold-dark); }
+  .stat-mini-icon.green { background: var(--success-light); }
+  .stat-mini-icon.green svg { stroke: var(--success); }
+  .stat-mini-icon.purple { background: var(--purple-light); }
+  .stat-mini-icon.purple svg { stroke: var(--purple); }
+
+  .stat-mini-value {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--dark);
+    letter-spacing: -0.4px;
+    margin-bottom: 1px;
+  }
+  .stat-mini-value .unit {
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--gray-500);
+    margin-right: 1px;
+  }
+  .stat-mini-label {
+    font-size: 9.5px;
+    color: var(--gray-500);
+    font-weight: 700;
+  }
+
+  /* ══════════ SECTION HEADER ══════════ */
+  .section-header {
+    padding: 4px 20px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .section-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    letter-spacing: -0.2px;
+  }
+  .section-title::before {
+    content: '';
+    width: 3px;
+    height: 14px;
+    background: linear-gradient(180deg, var(--gold), var(--gold-dark));
+    border-radius: 4px;
+  }
+  .section-link {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--gold-dark);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    padding: 5px 8px;
+    border-radius: 8px;
+    transition: background 0.2s;
+  }
+  .section-link:hover { background: var(--gold-light); }
+  .section-link svg {
+    width: 11px;
+    height: 11px;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ══════════ FEATURED REWARD ══════════ */
+  .featured-reward {
+    margin: 0 20px 16px;
+    padding: 16px;
+    background: linear-gradient(135deg, #7C2D12, #B45309, #D97706);
+    border-radius: var(--r-lg);
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-gold);
+    cursor: pointer;
+    transition: transform 0.25s;
+  }
+  .featured-reward:hover { transform: translateY(-3px); }
+  .featured-reward::before {
+    content: '';
+    position: absolute;
+    top: -50px; right: -30px;
+    width: 160px; height: 160px;
+    background: radial-gradient(circle, rgba(255,255,255,0.18), transparent 70%);
+    border-radius: 50%;
+  }
+  .featured-reward::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; left: -30px;
+    width: 140px; height: 140px;
+    background: radial-gradient(circle, rgba(252,211,77,0.4), transparent 70%);
+    border-radius: 50%;
+  }
+
+  .fr-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 10px;
+    position: relative;
+    z-index: 1;
+  }
+  .fr-badge {
+    padding: 4px 10px;
+    background: rgba(252,211,77,0.95);
+    color: var(--gold-dark);
+    border-radius: var(--r-full);
+    font-size: 9.5px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .fr-badge svg {
+    width: 10px;
+    height: 10px;
+    fill: currentColor;
+    stroke: none;
+  }
+
+  .fr-content {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: relative;
+    z-index: 1;
+  }
+  .fr-icon {
+    width: 68px;
+    height: 68px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #FCD34D, #F59E0B);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 8px 24px rgba(252,211,77,0.5);
+    animation: float 3s ease-in-out infinite;
+  }
+  .fr-icon svg {
+    width: 34px;
+    height: 34px;
+    stroke: #fff;
+    stroke-width: 1.8;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .fr-info { flex: 1; min-width: 0; }
+  .fr-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 5px;
+    letter-spacing: -0.2px;
+    line-height: 1.3;
+  }
+  .fr-desc {
+    font-size: 11px;
+    color: rgba(255,255,255,0.85);
+    font-weight: 600;
+    margin-bottom: 8px;
+    line-height: 1.5;
+  }
+  .fr-points {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(10px);
+    border-radius: var(--r-full);
+    font-size: 11px;
+    font-weight: 800;
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.3);
+  }
+  .fr-points svg {
+    width: 12px;
+    height: 12px;
+    fill: #FCD34D;
+    stroke: none;
+  }
+
+  /* ══════════ REWARDS GRID ══════════ */
+  .rewards-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 0 20px 16px;
+  }
+  .reward-card {
+    background: var(--white);
+    border-radius: var(--r-md);
+    padding: 12px;
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-xs);
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .reward-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: transparent;
+  }
+  .reward-card.locked {
+    opacity: 0.7;
+  }
+  .reward-card.locked::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(45deg, transparent 0, transparent 8px, rgba(15,23,42,0.02) 8px, rgba(15,23,42,0.02) 16px);
+    pointer-events: none;
+  }
+  .reward-card.locked .reward-icon {
+    filter: grayscale(0.4);
+    opacity: 0.85;
+  }
+
+  .reward-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .reward-icon.teal { background: linear-gradient(135deg, #CCFBF1, #99F6E4); }
+  .reward-icon.teal svg { stroke: var(--primary); }
+  .reward-icon.orange { background: linear-gradient(135deg, #FEF3C7, #FDE68A); }
+  .reward-icon.orange svg { stroke: var(--accent-dark); }
+  .reward-icon.purple { background: linear-gradient(135deg, #EDE9FE, #DDD6FE); }
+  .reward-icon.purple svg { stroke: var(--purple); }
+  .reward-icon.pink { background: linear-gradient(135deg, #FCE7F3, #FBCFE8); }
+  .reward-icon.pink svg { stroke: var(--pink); }
+  .reward-icon.blue { background: linear-gradient(135deg, #DBEAFE, #BFDBFE); }
+  .reward-icon.blue svg { stroke: var(--blue); }
+  .reward-icon.red { background: linear-gradient(135deg, #FEE2E2, #FECACA); }
+  .reward-icon.red svg { stroke: var(--danger); }
+  .reward-icon svg {
+    width: 22px;
+    height: 22px;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .reward-content { position: relative; z-index: 1; }
+  .reward-title {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 3px;
+    letter-spacing: -0.2px;
+    line-height: 1.3;
+  }
+  .reward-desc {
+    font-size: 10px;
+    color: var(--gray-500);
+    font-weight: 600;
+    margin-bottom: 8px;
+    line-height: 1.4;
+  }
+
+  .reward-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    position: relative;
+    z-index: 1;
+  }
+  .reward-points {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    background: var(--gold-light);
+    border-radius: var(--r-full);
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--gold-dark);
+    white-space: nowrap;
+  }
+  .reward-points svg {
+    width: 10px;
+    height: 10px;
+    fill: var(--gold);
+    stroke: none;
+  }
+  .reward-points.locked {
+    background: var(--gray-100);
+    color: var(--gray-500);
+  }
+  .reward-points.locked svg { fill: var(--gray-400); }
+
+  .redeem-btn {
+    padding: 5px 10px;
+    background: var(--dark);
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .redeem-btn:hover {
+    background: var(--primary);
+    transform: scale(1.05);
+  }
+  .redeem-btn.locked {
+    background: var(--gray-200);
+    color: var(--gray-500);
+    cursor: not-allowed;
+  }
+  .redeem-btn.locked:hover {
+    background: var(--gray-200);
+    transform: none;
+  }
+  .redeem-btn.locked svg {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    margin-left: 3px;
+    vertical-align: middle;
+  }
+
+  /* ══════════ DAILY TASKS ══════════ */
+  .tasks-list {
+    padding: 0 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .task-card {
+    background: var(--white);
+    border-radius: var(--r-md);
+    padding: 12px;
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-xs);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.25s;
+  }
+  .task-card:hover {
+    transform: translateX(-3px);
+    box-shadow: var(--shadow-md);
+  }
+  .task-card.done {
+    background: linear-gradient(90deg, var(--success-light), var(--white));
+    border-color: #A7F3D0;
+  }
+
+  .task-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .task-icon.teal { background: var(--primary-soft); }
+  .task-icon.teal svg { stroke: var(--primary); }
+  .task-icon.orange { background: var(--accent-light); }
+  .task-icon.orange svg { stroke: var(--accent-dark); }
+  .task-icon.purple { background: var(--purple-light); }
+  .task-icon.purple svg { stroke: var(--purple); }
+  .task-icon.blue { background: var(--blue-light); }
+  .task-icon.blue svg { stroke: var(--blue); }
+  .task-icon svg {
+    width: 18px;
+    height: 18px;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .task-icon.done {
+    background: linear-gradient(135deg, var(--success), #059669);
+    box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+  }
+  .task-icon.done svg { stroke: #fff; }
+
+  .task-info { flex: 1; min-width: 0; }
+  .task-title {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 2px;
+  }
+  .task-card.done .task-title {
+    color: var(--success);
+    text-decoration: line-through;
+    text-decoration-color: rgba(16,185,129,0.5);
+    text-decoration-thickness: 1.5px;
+  }
+  .task-desc {
+    font-size: 10.5px;
+    color: var(--gray-500);
+    font-weight: 600;
+  }
+
+  .task-reward {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    padding: 5px 10px;
+    background: var(--gold-light);
+    border-radius: var(--r-full);
+    font-size: 10.5px;
+    font-weight: 800;
+    color: var(--gold-dark);
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  .task-reward svg {
+    width: 10px;
+    height: 10px;
+    fill: var(--gold);
+    stroke: none;
+  }
+  .task-card.done .task-reward {
+    background: var(--success-light);
+    color: var(--success);
+  }
+  .task-card.done .task-reward svg { fill: var(--success); }
+  .task-card.done .task-reward::before {
+    content: '✓';
+    font-weight: 900;
+    font-size: 11px;
+  }
+
+  .task-cta {
+    padding: 7px 12px;
+    background: var(--dark);
+    color: #fff;
+    border: none;
+    border-radius: 9px;
+    font-family: inherit;
+    font-size: 10.5px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .task-cta:hover {
+    background: var(--primary);
+  }
+  .task-cta.disabled {
+    background: var(--success);
+    cursor: default;
+    opacity: 1;
+  }
+
+  /* ══════════ REFERRAL CARD ══════════ */
+  .referral-card {
+    margin: 0 20px 16px;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-radius: var(--r-lg);
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-primary);
+  }
+  .referral-card::before {
+    content: '';
+    position: absolute;
+    top: -50px; right: -30px;
+    width: 160px; height: 160px;
+    background: radial-gradient(circle, rgba(255,255,255,0.15), transparent 70%);
+    border-radius: 50%;
+  }
+  .referral-card::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; left: -20px;
+    width: 120px; height: 120px;
+    background: radial-gradient(circle, rgba(245,158,11,0.3), transparent 70%);
+    border-radius: 50%;
+  }
+
+  .ref-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    position: relative;
+    z-index: 1;
+  }
+  .ref-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .ref-icon svg {
+    width: 20px;
+    height: 20px;
+    stroke: #fff;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .ref-title-wrap { flex: 1; min-width: 0; }
+  .ref-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 2px;
+    letter-spacing: -0.2px;
+  }
+  .ref-subtitle {
+    font-size: 10.5px;
+    color: rgba(255,255,255,0.85);
+    font-weight: 600;
+  }
+
+  .ref-code-box {
+    padding: 10px 12px;
+    background: rgba(0,0,0,0.25);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    border: 1.5px dashed rgba(255,255,255,0.35);
+    position: relative;
+    z-index: 1;
+  }
+  .ref-code-label {
+    font-size: 9px;
+    color: rgba(255,255,255,0.75);
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .ref-code {
+    font-family: 'Courier New', monospace;
+    font-size: 17px;
+    font-weight: 900;
+    color: #FCD34D;
+    letter-spacing: 2.5px;
+    flex: 1;
+  }
+  .ref-copy-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .ref-copy-btn:hover {
+    background: rgba(255,255,255,0.35);
+    transform: scale(1.1);
+  }
+  .ref-copy-btn svg {
+    width: 13px;
+    height: 13px;
+    stroke: #fff;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .ref-share-btn {
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.98);
+    color: var(--primary-dark);
+    border: none;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    transition: all 0.25s;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+  .ref-share-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+  }
+  .ref-share-btn svg {
+    width: 15px;
+    height: 15px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ══════════ ACHIEVEMENTS ══════════ */
+  .achievements-scroll {
+    display: flex;
+    gap: 10px;
+    padding: 0 20px 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .achievements-scroll::-webkit-scrollbar { display: none; }
+  .achievement-badge {
+    flex-shrink: 0;
+    width: 100px;
+    background: var(--white);
+    border-radius: var(--r-md);
+    padding: 12px 8px;
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-xs);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+  }
+  .achievement-badge:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+  }
+  .achievement-badge.locked {
+    opacity: 0.55;
+  }
+  .achievement-badge.locked .badge-icon {
+    filter: grayscale(1);
+  }
+  .badge-icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    margin: 0 auto 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .badge-icon.gold {
+    background: linear-gradient(135deg, #FCD34D, #F59E0B);
+    box-shadow: 0 6px 16px rgba(245,158,11,0.35), inset 0 -3px 8px rgba(0,0,0,0.1);
+  }
+  .badge-icon.purple {
+    background: linear-gradient(135deg, #C4B5FD, #8B5CF6);
+    box-shadow: 0 6px 16px rgba(139,92,246,0.35), inset 0 -3px 8px rgba(0,0,0,0.1);
+  }
+  .badge-icon.teal {
+    background: linear-gradient(135deg, #5EEAD4, #0F766E);
+    box-shadow: 0 6px 16px rgba(15,118,110,0.35), inset 0 -3px 8px rgba(0,0,0,0.1);
+  }
+  .badge-icon.pink {
+    background: linear-gradient(135deg, #F9A8D4, #EC4899);
+    box-shadow: 0 6px 16px rgba(236,72,153,0.35), inset 0 -3px 8px rgba(0,0,0,0.1);
+  }
+  .badge-icon.blue {
+    background: linear-gradient(135deg, #93C5FD, #2563EB);
+    box-shadow: 0 6px 16px rgba(37,99,235,0.35), inset 0 -3px 8px rgba(0,0,0,0.1);
+  }
+  .badge-icon.gray {
+    background: linear-gradient(135deg, #E2E8F0, #94A3B8);
+    box-shadow: 0 6px 16px rgba(148,163,184,0.3);
+  }
+  .badge-icon::before {
+    content: '';
+    position: absolute;
+    top: 6px; left: 8px; right: 8px;
+    height: 30%;
+    background: radial-gradient(ellipse at center, rgba(255,255,255,0.5), transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .badge-icon svg {
+    width: 26px;
+    height: 26px;
+    stroke: #fff;
+    stroke-width: 1.8;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+  }
+
+  .badge-name {
+    font-size: 10.5px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 2px;
+    letter-spacing: -0.2px;
+  }
+  .badge-desc {
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--gray-500);
+    line-height: 1.35;
+  }
+  .achievement-badge.locked .badge-name,
+  .achievement-badge.locked .badge-desc {
+    color: var(--gray-400);
+  }
+
+  /* ══════════ POINTS HISTORY ══════════ */
+  .history-list {
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .history-item {
+    background: var(--white);
+    border-radius: var(--r-md);
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-xs);
+    transition: all 0.25s;
+  }
+  .history-item:hover {
+    transform: translateX(-3px);
+    box-shadow: var(--shadow-md);
+  }
+  .history-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .history-icon.gold { background: var(--gold-light); }
+  .history-icon.gold svg { stroke: var(--gold-dark); }
+  .history-icon.green { background: var(--success-light); }
+  .history-icon.green svg { stroke: var(--success); }
+  .history-icon.red { background: var(--danger-light); }
+  .history-icon.red svg { stroke: var(--danger); }
+  .history-icon.blue { background: var(--blue-light); }
+  .history-icon.blue svg { stroke: var(--blue); }
+  .history-icon svg {
+    width: 17px;
+    height: 17px;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .history-info { flex: 1; min-width: 0; }
+  .history-title {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .history-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: var(--gray-500);
+    font-weight: 600;
+  }
+  .history-meta .sep {
+    width: 3px;
+    height: 3px;
+    background: var(--gray-300);
+    border-radius: 50%;
+  }
+
+  .history-points {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: -0.4px;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  .history-points.plus { color: var(--success); }
+  .history-points.minus { color: var(--danger); }
+  .history-points .unit {
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--gray-500);
+    margin-right: 2px;
+  }
+
+  /* Copy toast */
+  .copy-toast {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    padding: 12px 18px;
+    background: var(--dark);
+    color: #fff;
+    border-radius: var(--r-lg);
+    font-size: 12.5px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s;
+    white-space: nowrap;
+  }
+  .copy-toast.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  .copy-toast svg {
+    width: 16px;
+    height: 16px;
+    stroke: var(--success);
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>برنامج الولاء — Loyalty Program</h1>
+  <p>نقاط · مستويات · مكافآت · إحالات · إنجازات</p>
+</div>
+
+<div class="screens-container">
+  <div class="screen-wrapper">
+    <div class="phone">
+      <div class="status-bar">
+        <div class="time">9:41</div>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h3v-9H2v9zm5 0h3V9H7v13zm5 0h3V5h-3v17zm5 0h3V2h-3v20z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21l-12-18h24z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm5 4v8h1c.6 0 1-.4 1-1V9c0-.6-.4-1-1-1h-1z"/></svg>
+        </div>
+      </div>
+
+      <div class="screen">
+
+        <!-- HERO with Background -->
+        <div class="loyalty-hero" style="position: relative;">
+          <div class="loyalty-hero-bg">
+            <div class="hero-pattern"></div>
+          </div>
+
+          <!-- App Bar -->
+          <div class="app-bar" style="position: relative; z-index: 2;">
+            <div class="back-btn">
+              <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            <div class="app-title-wrap">
+              <div class="app-title">برنامج الولاء</div>
+              <div class="app-subtitle">اجمع نقاط · اكسب مكافآت</div>
+            </div>
+            <button class="history-btn">
+              <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Membership Card -->
+          <div class="membership-card-wrap">
+            <div class="membership-card">
+              <div class="mc-header">
+                <div class="mc-level-badge">
+                  <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <div class="mc-level-badge-text">عضو ذهبي</div>
+                </div>
+                <div class="mc-logo">✨</div>
+              </div>
+
+              <div class="mc-label">رصيد النقاط</div>
+              <div class="mc-points-row">
+                <div class="mc-points-value">
+                  2,450 <span class="unit">نقطة</span>
+                </div>
+                <div class="mc-points-icon">
+                  <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+              </div>
+
+              <div class="mc-footer">
+                <div class="mc-holder">
+                  <div class="mc-holder-label">صاحب العضوية</div>
+                  <div class="mc-holder-name">
+                    خالد محمود
+                    <div class="verified-mini"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+                  </div>
+                </div>
+                <div class="mc-since">
+                  <div class="mc-since-label">عضو منذ</div>
+                  <div class="mc-since-value">يناير 2024</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Level Progress Card -->
+        <div class="level-progress-card">
+          <div class="level-header">
+            <div class="level-title">
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              تقدمك للمستوى التالي
+            </div>
+            <div class="level-percent">50%</div>
+          </div>
+
+          <div class="level-track">
+            <div class="level-track-line">
+              <div class="level-track-line-fill"></div>
+            </div>
+
+            <div class="level-step completed">
+              <div class="level-icon completed">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="level-name">برونزي</div>
+            </div>
+
+            <div class="level-step completed">
+              <div class="level-icon completed">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="level-name">فضي</div>
+            </div>
+
+            <div class="level-step active">
+              <div class="level-icon active">
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              </div>
+              <div class="level-name">ذهبي</div>
+            </div>
+
+            <div class="level-step">
+              <div class="level-icon">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              </div>
+              <div class="level-name">بلاتيني</div>
+            </div>
+          </div>
+
+          <div class="level-footer">
+            <div class="level-progress-text">
+              باقي <strong>2,550 نقطة</strong> للمستوى البلاتيني
+            </div>
+            <div class="level-next-icon">
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              خصم 15%
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="quick-stats">
+          <div class="stat-mini-card">
+            <div class="stat-mini-icon gold">
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+            <div class="stat-mini-value">6,750</div>
+            <div class="stat-mini-label">إجمالي النقاط</div>
+          </div>
+          <div class="stat-mini-card">
+            <div class="stat-mini-icon green">
+              <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.83z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+            </div>
+            <div class="stat-mini-value">18</div>
+            <div class="stat-mini-label">مكافأة مستردة</div>
+          </div>
+          <div class="stat-mini-card">
+            <div class="stat-mini-icon purple">
+              <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="stat-mini-value">3</div>
+            <div class="stat-mini-label">إحالات</div>
+          </div>
+        </div>
+
+        <!-- Featured Reward -->
+        <div class="section-header">
+          <div class="section-title">مكافأة الأسبوع</div>
+        </div>
+
+        <div class="featured-reward">
+          <div class="fr-header">
+            <div class="fr-badge">
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              عرض محدود
+            </div>
+          </div>
+
+          <div class="fr-content">
+            <div class="fr-icon">
+              <svg viewBox="0 0 24 24">
+                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.83z"/>
+                <line x1="7" y1="7" x2="7.01" y2="7"/>
+              </svg>
+            </div>
+            <div class="fr-info">
+              <div class="fr-title">قسيمة شراء 500 ج.م مجاناً</div>
+              <div class="fr-desc">استردها الآن واستخدمها على أي طلب</div>
+              <div class="fr-points">
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                1,500 نقطة فقط
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Available Rewards -->
+        <div class="section-header">
+          <div class="section-title">المكافآت المتاحة</div>
+          <div class="section-link">
+            الكل
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </div>
+        </div>
+
+        <div class="rewards-grid">
+          <div class="reward-card">
+            <div class="reward-icon teal">
+              <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <div class="reward-content">
+              <div class="reward-title">قسيمة 50 ج.م</div>
+              <div class="reward-desc">خصم على أي طلب</div>
+            </div>
+            <div class="reward-footer">
+              <div class="reward-points">
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                200
+              </div>
+              <button class="redeem-btn">استرد</button>
+            </div>
+          </div>
+
+          <div class="reward-card">
+            <div class="reward-icon orange">
+              <svg viewBox="0 0 24 24">
+                <rect x="1" y="3" width="15" height="13"/>
+                <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+                <circle cx="5.5" cy="18.5" r="2.5"/>
+                <circle cx="18.5" cy="18.5" r="2.5"/>
+              </svg>
+            </div>
+            <div class="reward-content">
+              <div class="reward-title">شحن مجاني</div>
+              <div class="reward-desc">على طلبك القادم</div>
+            </div>
+            <div class="reward-footer">
+              <div class="reward-points">
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                300
+              </div>
+              <button class="redeem-btn">استرد</button>
+            </div>
+          </div>
+
+          <div class="reward-card">
+            <div class="reward-icon purple">
+              <svg viewBox="0 0 24 24">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+            </div>
+            <div class="reward-content">
+              <div class="reward-title">هدية مجانية</div>
+              <div class="reward-desc">من متجر شريك</div>
+            </div>
+            <div class="reward-footer">
+              <div class="reward-points">
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                500
+              </div>
+              <button class="redeem-btn">استرد</button>
+            </div>
+          </div>
+
+          <div class="reward-card locked">
+            <div class="reward-icon pink">
+              <svg viewBox="0 0 24 24">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+              </svg>
+            </div>
+            <div class="reward-content">
+              <div class="reward-title">خصم 25%</div>
+              <div class="reward-desc">يحتاج مستوى بلاتيني</div>
+            </div>
+            <div class="reward-footer">
+              <div class="reward-points locked">
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                800
+              </div>
+              <button class="redeem-btn locked">
+                مقفل
+                <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Daily Tasks -->
+        <div class="section-header">
+          <div class="section-title">مهام يومية</div>
+          <div class="section-link">
+            اكسب نقاط
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </div>
+        </div>
+
+        <div class="tasks-list">
+          <div class="task-card done">
+            <div class="task-icon done">
+              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="task-info">
+              <div class="task-title">تسجيل الدخول اليومي</div>
+              <div class="task-desc">تم اليوم ✓</div>
+            </div>
+            <div class="task-reward">
+              +10
+            </div>
+          </div>
+
+          <div class="task-card">
+            <div class="task-icon teal">
+              <svg viewBox="0 0 24 24">
+                <circle cx="9" cy="21" r="1"/>
+                <circle cx="20" cy="21" r="1"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+              </svg>
+            </div>
+            <div class="task-info">
+              <div class="task-title">أكمل أول طلب</div>
+              <div class="task-desc">اطلب الآن واكسب نقاط فورية</div>
+            </div>
+            <button class="task-cta">اطلب</button>
+          </div>
+
+          <div class="task-card">
+            <div class="task-icon purple">
+              <svg viewBox="0 0 24 24">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+            </div>
+            <div class="task-info">
+              <div class="task-title">قيّم تجربتك</div>
+              <div class="task-desc">أضف تقييم لأي نشاط</div>
+            </div>
+            <button class="task-cta">قيّم</button>
+          </div>
+
+          <div class="task-card">
+            <div class="task-icon blue">
+              <svg viewBox="0 0 24 24">
+                <circle cx="18" cy="5" r="3"/>
+                <circle cx="6" cy="12" r="3"/>
+                <circle cx="18" cy="19" r="3"/>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+              </svg>
+            </div>
+            <div class="task-info">
+              <div class="task-title">شارك التطبيق</div>
+              <div class="task-desc">شارك رابط مع 3 أصدقاء</div>
+            </div>
+            <button class="task-cta">شارك</button>
+          </div>
+        </div>
+
+        <!-- Referral Card -->
+        <div class="section-header">
+          <div class="section-title">ادعُ صديق واكسب</div>
+        </div>
+
+        <div class="referral-card">
+          <div class="ref-header">
+            <div class="ref-icon">
+              <svg viewBox="0 0 24 24">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="8.5" cy="7" r="4"/>
+                <line x1="20" y1="8" x2="20" y2="14"/>
+                <line x1="23" y1="11" x2="17" y2="11"/>
+              </svg>
+            </div>
+            <div class="ref-title-wrap">
+              <div class="ref-title">اكسب 500 نقطة لكل صديق</div>
+              <div class="ref-subtitle">عند أول طلب لصديقك</div>
+            </div>
+          </div>
+
+          <div class="ref-code-box">
+            <div>
+              <div class="ref-code-label">كود الإحالة</div>
+              <div class="ref-code">KHALED500</div>
+            </div>
+            <button class="ref-copy-btn" onclick="showToast()">
+              <svg viewBox="0 0 24 24">
+                <rect x="9" y="9" width="13" height="13" rx="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+            </button>
+          </div>
+
+          <button class="ref-share-btn">
+            <svg viewBox="0 0 24 24">
+              <circle cx="18" cy="5" r="3"/>
+              <circle cx="6" cy="12" r="3"/>
+              <circle cx="18" cy="19" r="3"/>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+            </svg>
+            شارك مع أصدقائك
+          </button>
+        </div>
+
+        <!-- Achievements -->
+        <div class="section-header">
+          <div class="section-title">إنجازاتك</div>
+          <div class="section-link">
+            8 / 12
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </div>
+        </div>
+
+        <div class="achievements-scroll">
+          <div class="achievement-badge">
+            <div class="badge-icon gold">
+              <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="8" r="7"/>
+                <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>
+              </svg>
+            </div>
+            <div class="badge-name">أول طلب</div>
+            <div class="badge-desc">أكملت أول طلب</div>
+          </div>
+
+          <div class="achievement-badge">
+            <div class="badge-icon purple">
+              <svg viewBox="0 0 24 24">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+            </div>
+            <div class="badge-name">عضو ذهبي</div>
+            <div class="badge-desc">وصلت 2000 نقطة</div>
+          </div>
+
+          <div class="achievement-badge">
+            <div class="badge-icon teal">
+              <svg viewBox="0 0 24 24">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </div>
+            <div class="badge-name">مقيّم نشط</div>
+            <div class="badge-desc">10 تقييمات</div>
+          </div>
+
+          <div class="achievement-badge">
+            <div class="badge-icon pink">
+              <svg viewBox="0 0 24 24">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+            </div>
+            <div class="badge-name">متابع وفي</div>
+            <div class="badge-desc">30 يوم متتالي</div>
+          </div>
+
+          <div class="achievement-badge locked">
+            <div class="badge-icon gray">
+              <svg viewBox="0 0 24 24">
+                <rect x="3" y="11" width="18" height="11" rx="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </div>
+            <div class="badge-name">سفير</div>
+            <div class="badge-desc">10 إحالات</div>
+          </div>
+
+          <div class="achievement-badge locked">
+            <div class="badge-icon gray">
+              <svg viewBox="0 0 24 24">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+            </div>
+            <div class="badge-name">بلاتيني</div>
+            <div class="badge-desc">وصل 5000 نقطة</div>
+          </div>
+        </div>
+
+        <!-- Points History -->
+        <div class="section-header">
+          <div class="section-title">آخر النقاط</div>
+          <div class="section-link">
+            الكل
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </div>
+        </div>
+
+        <div class="history-list">
+          <div class="history-item">
+            <div class="history-icon green">
+              <svg viewBox="0 0 24 24">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </div>
+            <div class="history-info">
+              <div class="history-title">طلب من متجر ريماس</div>
+              <div class="history-meta">
+                <span>اليوم · 3:42م</span>
+                <span class="sep"></span>
+                <span>350 ج.م</span>
+              </div>
+            </div>
+            <div class="history-points plus">+35 <span class="unit">نقطة</span></div>
+          </div>
+
+          <div class="history-item">
+            <div class="history-icon gold">
+              <svg viewBox="0 0 24 24">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <div class="history-info">
+              <div class="history-title">تسجيل دخول يومي</div>
+              <div class="history-meta">
+                <span>اليوم · 9:15ص</span>
+                <span class="sep"></span>
+                <span>مكافأة يومية</span>
+              </div>
+            </div>
+            <div class="history-points plus">+10 <span class="unit">نقطة</span></div>
+          </div>
+
+          <div class="history-item">
+            <div class="history-icon red">
+              <svg viewBox="0 0 24 24">
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </div>
+            <div class="history-info">
+              <div class="history-title">استرداد قسيمة 50 ج.م</div>
+              <div class="history-meta">
+                <span>أمس · 2:30م</span>
+                <span class="sep"></span>
+                <span>قسيمة شراء</span>
+              </div>
+            </div>
+            <div class="history-points minus">-200 <span class="unit">نقطة</span></div>
+          </div>
+
+          <div class="history-item">
+            <div class="history-icon blue">
+              <svg viewBox="0 0 24 24">
+                <circle cx="18" cy="5" r="3"/>
+                <circle cx="6" cy="12" r="3"/>
+                <circle cx="18" cy="19" r="3"/>
+              </svg>
+            </div>
+            <div class="history-info">
+              <div class="history-title">إحالة صديق: أحمد</div>
+              <div class="history-meta">
+                <span>منذ يومين</span>
+                <span class="sep"></span>
+                <span>مكافأة إحالة</span>
+              </div>
+            </div>
+            <div class="history-points plus">+500 <span class="unit">نقطة</span></div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+    <div class="screen-badge">برنامج الولاء</div>
+  </div>
+</div>
+
+<!-- Copy Toast -->
+<div class="copy-toast" id="copyToast" style="position: fixed;">
+  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+  تم نسخ الكود بنجاح!
+</div>
+
+<script>
+  function showToast() {
+    const toast = document.getElementById('copyToast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
+  }
+</script>
+
+</body>
+</html>
