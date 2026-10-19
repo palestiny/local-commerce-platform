@@ -99,9 +99,12 @@ export default function HomeScreen() {
   );
 
   const popularCategories = useMemo(() => [...categories]
-    .map((category) => ({ category, count: listings.filter((item) => item.categoryId === category.id).length }))
-    .filter(({ count }) => count > 0)
-    .sort((a, b) => b.count - a.count)
+    .map((category) => ({
+      category,
+      views: listings.filter((item) => item.categoryId === category.id).reduce((total, item) => total + (item.views ?? 0), 0),
+    }))
+    .filter(({ views }) => views > 0)
+    .sort((a, b) => b.views - a.views)
     .map(({ category }) => category), []);
   const latestListings = useMemo(() => [...listings].sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? "")), []);
   const mostViewed = useMemo(() => [...listings].sort((a, b) => (b.views ?? 0) - (a.views ?? 0)), []);
