@@ -3,7 +3,7 @@ import React from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText, Screen, uiStyles } from "../../src/components/ui";
-import { categories, listings } from "../../src/data/demo";
+import { categories, listings, products } from "../../src/data/demo";
 import { useAppState } from "../../src/state/AppProvider";
 import { colors, radii, spacing } from "../../src/theme/tokens";
 
@@ -44,7 +44,7 @@ export default function CategoryDetailsScreen() {
             <Pressable
               key={item.id}
               accessibilityRole="button"
-              onPress={() => router.push({ pathname: "/listing/[id]", params: { id: item.id } })}
+              onPress={() => router.push(products.some((product) => product.storeId === item.id) ? { pathname: "/store/[id]", params: { id: item.id } } : { pathname: "/listing/[id]", params: { id: item.id } })}
               style={({ pressed }) => [uiStyles.card, styles.listingCard, pressed && styles.pressed]}
             >
               <View style={[styles.listingRow, { flexDirection: isAr ? "row-reverse" : "row" }]}>
