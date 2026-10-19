@@ -134,9 +134,9 @@ public sealed class CreateOrderPersistenceTests
 
     private sealed class SaveThenFailOrderWriter(CommerceDbContext db) : IOrderWriter
     {
-        public async Task AddAsync(Order order,string orderNumber,CancellationToken ct)
+        public async Task AddAsync(Order order,Guid customerId,string orderNumber,CancellationToken ct)
         {
-            await new EfOrderWriter(db).AddAsync(order,orderNumber,ct);
+            await new EfOrderWriter(db).AddAsync(order,customerId,orderNumber,ct);
             await db.SaveChangesAsync(ct);
         }
     }
