@@ -130,7 +130,7 @@ export default function HomeScreen() {
           <View style={[styles.topRow, { flexDirection: isAr ? "row-reverse" : "row" }]}>
             <View style={{ flex: 1, gap: 4 }}><AppText style={styles.brand}>{t.brand}</AppText></View>
             <Pressable accessibilityRole="button" accessibilityLabel={isAr ? "تحديث الصفحة" : "Refresh page"} onPress={refreshHome} style={styles.utilityButton}><AppText style={styles.utilityGlyph}>↻</AppText></Pressable>
-            <Pressable accessibilityRole="button" accessibilityLabel={isAr ? "الإشعارات" : "Notifications"} onPress={() => router.push("/notifications")} style={styles.utilityButton}><AppText style={styles.profileGlyph}>♧</AppText></Pressable>
+            <Pressable accessibilityRole="button" accessibilityLabel={isAr ? "الإشعارات" : "Notifications"} onPress={() => router.push("/notifications")} style={styles.utilityButton}><AppText style={styles.profileGlyph}>🔔</AppText></Pressable>
             <Pressable accessibilityRole="button" accessibilityLabel={isAr ? "حسابي" : "My account"} onPress={() => router.push("/profile")} style={styles.utilityButton}><AppText style={styles.profileGlyph}>♙</AppText></Pressable>
             <Pressable onPress={() => setLanguage(isAr ? "en" : "ar")} accessibilityRole="button" style={styles.languageButton}><AppText style={styles.languageText}>{isAr ? "EN" : "عربي"}</AppText></Pressable>
           </View>
