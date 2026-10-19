@@ -49,8 +49,7 @@ export default function HomeScreen() {
   const refreshHome = useCallback(() => {
     if (refreshing) return;
     setRefreshing(true);
-    // Demo content is local for now; replace this with a real API refetch when the backend is connected.
-    setQuery("");
+    // The API is not connected yet. Keep the current search and provide native refresh feedback for the demo.
     setTimeout(() => setRefreshing(false), 450);
   }, [refreshing]);
 
