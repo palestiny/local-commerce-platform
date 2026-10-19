@@ -13,7 +13,7 @@ export default function CategoryDetailsScreen() {
   const insets = useSafeAreaInsets();
   const isAr = language === "ar";
   const category = categories.find((item) => item.id === id);
-  const categoryListings = listings.filter((item) => item.categoryId === id);
+  const categoryListings = listings.filter((item) => item.categoryId === id).sort((a, b) => Number(b.membershipTier === "premium") - Number(a.membershipTier === "premium") || (b.views ?? 0) - (a.views ?? 0));
 
   if (!category) {
     return (
@@ -50,7 +50,7 @@ export default function CategoryDetailsScreen() {
               <View style={[styles.listingRow, { flexDirection: isAr ? "row-reverse" : "row" }]}>
                 <View style={styles.listingIcon}><AppText style={{ fontSize: 28 }}>{item.icon}</AppText></View>
                 <View style={{ flex: 1, gap: 5 }}>
-                  <AppText selectable={false} style={styles.listingName}>{isAr ? item.nameAr : item.nameEn}</AppText>
+                  <View style={{ flexDirection: isAr ? "row-reverse" : "row", alignItems: "center", flexWrap: "wrap", gap: 5 }}><AppText selectable={false} style={styles.listingName}>{isAr ? item.nameAr : item.nameEn}</AppText>{item.membershipTier === "premium" ? <View style={styles.memberBadge}><AppText style={styles.memberBadgeText}>{isAr ? "✦ مشترك مميز" : "✦ Premium member"}</AppText></View> : null}</View>
                   <AppText selectable={false} style={styles.muted}>{isAr ? item.distanceAr : item.distanceEn} · ★ {item.rating}</AppText>
                   <AppText selectable={false} style={styles.price}>{isAr ? item.priceAr : item.priceEn}</AppText>
                 </View>
@@ -82,7 +82,9 @@ const styles = StyleSheet.create({
   listingCard: { userSelect: "none" },
   listingRow: { flexDirection: "row", alignItems: "center", gap: spacing.md },
   listingIcon: { width: 58, height: 58, borderRadius: 16, backgroundColor: colors.primarySoft, alignItems: "center", justifyContent: "center" },
-  listingName: { fontSize: 14, fontWeight: "800" },
+  listingName: { fontSize: 14, fontWeight: "800", flexShrink: 1 },
+  memberBadge: { alignSelf: "flex-start", paddingHorizontal: 7, paddingVertical: 3, borderRadius: radii.pill, backgroundColor: "#FFF0CF" },
+  memberBadgeText: { color: "#805400", fontSize: 9, fontWeight: "900" },
   muted: { color: colors.muted, fontSize: 12 },
   price: { color: colors.primaryDark, fontSize: 12, fontWeight: "800" },
   chevron: { color: colors.primary, fontSize: 24 },
