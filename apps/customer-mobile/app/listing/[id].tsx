@@ -3,7 +3,7 @@ import React from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText, PrimaryButton, Screen, uiStyles } from "../../src/components/ui";
-import { listings } from "../../src/data/demo";
+import { listings, products } from "../../src/data/demo";
 import { useAppState } from "../../src/state/AppProvider";
 import { colors, radii, spacing } from "../../src/theme/tokens";
 
@@ -46,7 +46,7 @@ export default function ListingDetailsScreen() {
           <AppText style={styles.sectionTitle}>{isAr ? "الموقع والتواصل" : "Location & contact"}</AppText>
           <AppText style={styles.muted}>{isAr ? "دكرنس، الدقهلية (موقع تجريبي)" : "Dekernes, Dakahlia (demo location)"}</AppText>
         </View>
-        <PrimaryButton title={isAr ? "اطلب الخدمة / تواصل" : "Request service / Contact"} onPress={showDemoMessage} />
+        {products.some((product) => product.storeId === item.id) ? <PrimaryButton title={isAr ? "عرض منتجات المتجر" : "View store products"} onPress={() => router.push({ pathname: "/store/[id]", params: { id: item.id } })} /> : <PrimaryButton title={isAr ? "اطلب الخدمة / تواصل" : "Request service / Contact"} onPress={showDemoMessage} />}
         <AppText style={styles.disclaimer}>{isAr ? "تنبيه: لا يتم إرسال طلب أو دفع أموال من هذه الشاشة حاليًا." : "Note: this screen does not submit a real request or payment."}</AppText>
       </View>
     </ScrollView>
