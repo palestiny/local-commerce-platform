@@ -2,7 +2,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { AppText, Screen, SearchInput, uiStyles } from "../../src/components/ui";
-import { categories, listings } from "../../src/data/demo";
+import { categories, listings, products } from "../../src/data/demo";
 import { useAppState } from "../../src/state/AppProvider";
 import { colors, radii, spacing } from "../../src/theme/tokens";
 
@@ -34,7 +34,7 @@ export default function CategoriesScreen() {
       </View>
       <View style={{ gap: spacing.md }}>
         <AppText style={styles.sectionTitle}>{isAr ? "أنشطة مقترحة" : "Suggested listings"}</AppText>
-        {visibleListings.map((item) => <Pressable key={item.id} onPress={() => router.push({ pathname: "/listing/[id]", params: { id: item.id } })} style={uiStyles.card}>
+        {visibleListings.map((item) => <Pressable key={item.id} onPress={() => router.push(products.some((product) => product.storeId === item.id) ? { pathname: "/store/[id]", params: { id: item.id } } : { pathname: "/listing/[id]", params: { id: item.id } })} style={uiStyles.card}>
           <View style={[styles.listingRow, { flexDirection: isAr ? "row-reverse" : "row" }]}>
             <View style={styles.listingIcon}><AppText style={{ fontSize: 25 }}>{item.icon}</AppText></View>
             <View style={{ flex: 1, gap: 5 }}>
