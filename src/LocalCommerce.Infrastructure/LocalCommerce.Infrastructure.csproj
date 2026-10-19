@@ -13,6 +13,6 @@
     <ProjectReference Include="..\LocalCommerce.Domain\LocalCommerce.Domain.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Persistence\\Migrations\\001_initial.sql" />
+    <EmbeddedResource Include="Persistence\\Migrations\\*.sql" />
   </ItemGroup>
 </Project>
