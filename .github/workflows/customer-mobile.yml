@@ -1,0 +1,37 @@
+name: customer-mobile
+
+on:
+  push:
+    branches:
+      - "integration/**"
+      - "feature/**"
+      - "fix/**"
+  pull_request:
+    branches:
+      - main
+      - "feature/**"
+      - "fix/**"
+      - "integration/**"
+    paths:
+      - "apps/customer-mobile/**"
+      - ".github/workflows/customer-mobile.yml"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/customer-mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/customer-mobile/package.json
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: TypeScript check
+        run: npm run typecheck
+      - name: Expo Doctor
+        run: npx expo-doctor
