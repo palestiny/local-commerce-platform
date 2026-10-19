@@ -1,38 +1,68 @@
 import { router } from "expo-router";
-import React, { useMemo, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Animated, Pressable, RefreshControl, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText, Screen, SearchInput, SectionHeading, uiStyles } from "../../src/components/ui";
-import { categories, demoNotice, listings } from "../../src/data/demo";
+import { categories, demoNotice, listings, type Category, type LocalListing } from "../../src/data/demo";
 import { useAppState } from "../../src/state/AppProvider";
 import { colors, radii, spacing } from "../../src/theme/tokens";
 
 export default function HomeScreen() {
   const { language, setLanguage, favorites, toggleFavorite } = useAppState();
   const [query, setQuery] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
   const insets = useSafeAreaInsets();
   const isAr = language === "ar";
   const t = isAr
-    ? { brand: "بلدنا", greeting: "كل اللي تحتاجه… أقرب ليك", subtitle: "متاجر وخدمات وأخبار وعروض من مكان واحد", categories: "اكتشف الأقسام", all: "عرض الكل", featured: "اختيارات مميزة", search: "بتدور على إيه؟ متجر، خدمة، منتج...", demo: "بيانات تجريبية", searchResults: "نتائج البحث", offers: "عروض مميزة", news: "آخر الأخبار", sponsored: "إعلان ممول", noResults: "مفيش نتائج مطابقة لبحثك." }
-    : { brand: "Baladna", greeting: "Everything you need, closer", subtitle: "Local shops, services, news and offers in one place", categories: "Explore categories", all: "View all", featured: "Featured places", search: "Search shops, services, products...", demo: "Demo data", searchResults: "Search results", offers: "Featured offers", news: "Latest news", sponsored: "Sponsored", noResults: "No results match your search." };
+    ? {
+        brand: "بلدنا", greeting: "أهلاً بيك في بلدنا 👋", subtitle: "اكتشف متاجر وخدمات قريبة منك",
+        categories: "كل القطاعات", popularSectors: "أشهر القطاعات", all: "عرض الكل",
+        featured: "اختيارات مميزة", search: "بتدور على إيه؟ متجر، خدمة، منتج...",
+        demo: "بيانات تجريبية", searchResults: "نتائج البحث", offers: "عروض مميزة",
+        news: "آخر الأخبار", sponsored: "مساحة إعلانية", noResults: "مفيش نتائج مطابقة لبحثك.",
+        latest: "المضافة حديثًا", viewed: "الأكثر مشاهدة", rated: "الأعلى تقييمًا",
+        members: "الأنشطة المشتركة المميزة", premium: "مشترك مميز", refresh: "تحديث الصفحة",
+        empty: "لا توجد أنشطة في هذا القسم حاليًا", clear: "مسح البحث",
+      }
+    : {
+        brand: "Baladna", greeting: "Welcome to Baladna 👋", subtitle: "Discover local shops and services",
+        categories: "All sectors", popularSectors: "Popular sectors", all: "View all",
+        featured: "Featured places", search: "Search shops, services, products...",
+        demo: "Demo data", searchResults: "Search results", offers: "Featured offers",
+        news: "Latest news", sponsored: "Ad space", noResults: "No results match your search.",
+        latest: "Recently added", viewed: "Most viewed", rated: "Top rated",
+        members: "Premium members", premium: "Premium member", refresh: "Refresh page",
+        empty: "No listings in this section yet", clear: "Clear search",
+      };
+
   const filtered = useMemo(() => {
     const normalizedQuery = normalizeSearchText(query);
     return listings.filter((item) => {
       const category = categories.find((entry) => entry.id === item.categoryId);
-      const searchableText = [
-        item.nameAr, item.nameEn, item.categoryAr, item.categoryEn,
-        category?.nameAr, category?.nameEn,
-      ].filter(Boolean).join(" ");
+      const searchableText = [item.nameAr, item.nameEn, item.categoryAr, item.categoryEn, category?.nameAr, category?.nameEn]
+        .filter(Boolean).join(" ");
       return normalizeSearchText(searchableText).includes(normalizedQuery);
-    });
+    }).sort(compareMembership);
   }, [query]);
 
-  const renderListing = (item: (typeof listings)[number]) => (
-    <Pressable key={item.id} onPress={() => router.push({ pathname: "/listing/[id]", params: { id: item.id } })} style={uiStyles.card}>
+  const refreshHome = useCallback(() => {
+    if (refreshing) return;
+    setRefreshing(true);
+    // Demo content is local for now; replace this with a real API refetch when the backend is connected.
+    setQuery("");
+    setTimeout(() => setRefreshing(false), 450);
+  }, [refreshing]);
+
+  const openListing = (item: LocalListing) => router.push({ pathname: "/listing/[id]", params: { id: item.id } });
+  const renderListing = (item: LocalListing) => (
+    <Pressable key={item.id} onPress={() => openListing(item)} style={uiStyles.card}>
       <View style={[styles.listingRow, { flexDirection: isAr ? "row-reverse" : "row" }]}>
         <View style={styles.listingIcon}><AppText style={{ fontSize: 28 }}>{item.icon}</AppText></View>
         <View style={{ flex: 1, gap: 5 }}>
-          <AppText style={styles.listingName}>{isAr ? item.nameAr : item.nameEn}</AppText>
+          <View style={[styles.titleLine, { flexDirection: isAr ? "row-reverse" : "row" }]}>
+            <AppText style={styles.listingName}>{isAr ? item.nameAr : item.nameEn}</AppText>
+            {item.membershipTier === "premium" ? <View style={styles.memberBadge}><AppText style={styles.memberBadgeText}>✦ {t.premium}</AppText></View> : null}
+          </View>
           <AppText style={uiStyles.muted}>{isAr ? item.categoryAr : item.categoryEn} · {isAr ? item.distanceAr : item.distanceEn}</AppText>
           <AppText style={styles.rating}>★ {item.rating} <AppText style={uiStyles.muted}>({item.reviews})</AppText></AppText>
           <AppText style={styles.price}>{isAr ? item.priceAr : item.priceEn}</AppText>
@@ -44,67 +74,171 @@ export default function HomeScreen() {
     </Pressable>
   );
 
-  return <Screen style={{ paddingHorizontal: 0, paddingTop: 0 }}>
-    <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" automaticallyAdjustKeyboardInsets>
-      <View style={[styles.hero, { paddingTop: Math.max(20, insets.top + 12) }]}>
-        <View style={[styles.topRow, { flexDirection: isAr ? "row-reverse" : "row" }]}>
-          <View style={{ flex: 1, gap: 4 }}><AppText style={styles.brand}>{t.brand}</AppText></View>
-          <Pressable accessibilityRole="button" accessibilityLabel={isAr ? "حسابي" : "My account"} onPress={() => router.push("/profile")} style={styles.profileButton}><AppText style={styles.profileGlyph}>♙</AppText></Pressable>
-          <Pressable onPress={() => setLanguage(isAr ? "en" : "ar")} accessibilityRole="button" style={styles.languageButton}><AppText style={styles.languageText}>{isAr ? "EN" : "عربي"}</AppText></Pressable>
-        </View>
-        <AppText style={styles.greeting}>{t.greeting}</AppText>
-        <AppText style={styles.subtitle}>{t.subtitle}</AppText>
-        <SearchInput value={query} onChangeText={setQuery} placeholder={t.search} returnKeyType="search" />
+  const renderHorizontalCard = (item: LocalListing) => (
+    <Pressable key={item.id} onPress={() => openListing(item)} style={({ pressed }) => [styles.horizontalCard, pressed && styles.cardPressed]}>
+      <View style={styles.horizontalCardTop}>
+        <View style={styles.horizontalIcon}><AppText style={{ fontSize: 29 }}>{item.icon}</AppText></View>
+        {item.membershipTier === "premium" ? <View style={styles.starBadge}><AppText style={styles.starBadgeText}>✦</AppText></View> : null}
       </View>
+      <AppText numberOfLines={1} style={styles.horizontalName}>{isAr ? item.nameAr : item.nameEn}</AppText>
+      <AppText numberOfLines={1} style={styles.horizontalCategory}>{isAr ? item.categoryAr : item.categoryEn}</AppText>
+      <View style={styles.horizontalMeta}><AppText style={styles.rating}>★ {item.rating}</AppText><AppText style={styles.views}>◉ {item.views ?? 0}</AppText></View>
+      {item.membershipTier === "premium" ? <AppText style={styles.premiumCaption}>{t.premium}</AppText> : null}
+    </Pressable>
+  );
 
-      {query.trim().length > 0 ? (
-        <View style={styles.section}>
-          <SectionHeading title={t.searchResults} />
-          <View style={{ gap: spacing.md }}>
-            {filtered.map(renderListing)}
-            {filtered.length === 0 ? <View style={uiStyles.card}><AppText>{t.noResults}</AppText><Pressable onPress={() => setQuery("")} style={styles.clearFilters}><AppText style={styles.clearFiltersText}>{isAr ? "مسح البحث" : "Clear search"}</AppText></Pressable></View> : null}
+  const renderListingSection = (title: string, items: LocalListing[], action?: boolean) => (
+    <View style={styles.section} key={title}>
+      <SectionHeading title={title} action={action ? t.all : undefined} onAction={action ? () => router.push("/(tabs)/categories") : undefined} />
+      {items.length ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalRow} decelerationRate="fast" directionalLockEnabled>
+          {items.map(renderHorizontalCard)}
+        </ScrollView>
+      ) : <View style={styles.emptySection}><AppText style={styles.emptyText}>{t.empty}</AppText></View>}
+    </View>
+  );
+
+  const popularCategories = useMemo(() => [...categories]
+    .map((category) => ({ category, count: listings.filter((item) => item.categoryId === category.id).length }))
+    .filter(({ count }) => count > 0)
+    .sort((a, b) => b.count - a.count)
+    .map(({ category }) => category), []);
+  const latestListings = useMemo(() => [...listings].sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? "")), []);
+  const mostViewed = useMemo(() => [...listings].sort((a, b) => (b.views ?? 0) - (a.views ?? 0)), []);
+  const topRated = useMemo(() => [...listings].sort((a, b) => Number(b.rating) - Number(a.rating)), []);
+  const premiumListings = useMemo(() => [...listings].filter((item) => item.membershipTier === "premium").sort(compareMembership), []);
+  const featuredListings = useMemo(() => [...listings].filter((item) => item.featured).sort(compareMembership), []);
+
+  return (
+    <Screen style={{ paddingHorizontal: 0, paddingTop: 0 }}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        automaticallyAdjustKeyboardInsets
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refreshHome} tintColor={colors.primary} colors={[colors.primary]} />}
+      >
+        <View style={[styles.hero, { paddingTop: Math.max(20, insets.top + 12) }]}>
+          <View style={[styles.topRow, { flexDirection: isAr ? "row-reverse" : "row" }]}>
+            <View style={{ flex: 1, gap: 4 }}><AppText style={styles.brand}>{t.brand}</AppText></View>
+            <Pressable accessibilityRole="button" accessibilityLabel={isAr ? "تحديث الصفحة" : "Refresh page"} onPress={refreshHome} style={styles.utilityButton}><AppText style={styles.utilityGlyph}>↻</AppText></Pressable>
+            <Pressable accessibilityRole="button" accessibilityLabel={isAr ? "حسابي" : "My account"} onPress={() => router.push("/profile")} style={styles.utilityButton}><AppText style={styles.profileGlyph}>♙</AppText></Pressable>
+            <Pressable onPress={() => setLanguage(isAr ? "en" : "ar")} accessibilityRole="button" style={styles.languageButton}><AppText style={styles.languageText}>{isAr ? "EN" : "عربي"}</AppText></Pressable>
           </View>
+          <AppText style={styles.greeting}>{t.greeting}</AppText>
+          <AppText style={styles.subtitle}>{t.subtitle}</AppText>
+          <SearchInput value={query} onChangeText={setQuery} placeholder={t.search} returnKeyType="search" />
         </View>
-      ) : <>
-      <View style={styles.demoNotice}><AppText style={styles.demoNoticeText}>ⓘ {demoNotice[language]}</AppText></View>
 
-      <View style={styles.section}>
-        <SectionHeading title={t.categories} action={t.all} onAction={() => router.push("/(tabs)/categories")} />
-        <View style={styles.categoryGrid}>
-          {categories.slice(0, 8).map((category) => (
-            <Pressable key={category.id} accessibilityRole="button" onPress={() => router.push({ pathname: "/category/[id]", params: { id: category.id } })} style={({ pressed }) => [styles.categoryCard, pressed && { opacity: 0.75 }]}>
-              <View style={styles.categoryIcon}><AppText style={{ fontSize: 25 }}>{category.icon}</AppText></View>
-              <AppText style={styles.categoryName}>{isAr ? category.nameAr : category.nameEn}</AppText>
-            </Pressable>
-          ))}
-        </View>
-      </View>
+        {query.trim().length > 0 ? (
+          <View style={styles.section}>
+            <SectionHeading title={t.searchResults} />
+            <View style={{ gap: spacing.md }}>
+              {filtered.map(renderListing)}
+              {filtered.length === 0 ? <View style={uiStyles.card}><AppText>{t.noResults}</AppText><Pressable onPress={() => setQuery("")} style={styles.clearFilters}><AppText style={styles.clearFiltersText}>{t.clear}</AppText></Pressable></View> : null}
+            </View>
+          </View>
+        ) : (
+          <>
+            <View style={styles.demoNotice}><AppText style={styles.demoNoticeText}>ⓘ {demoNotice[language]}</AppText></View>
+            <View style={styles.section}>
+              <SectionHeading title={t.categories} action={t.all} onAction={() => router.push("/(tabs)/categories")} />
+              <MovingCategoryBar categories={categories} isAr={isAr} onSelect={(category) => router.push({ pathname: "/category/[id]", params: { id: category.id } })} />
+            </View>
+            {renderListingSection(t.popularSectors, popularListings(popularCategories), true)}
+            {renderListingSection(t.members, premiumListings)}
+            {renderListingSection(t.featured, featuredListings)}
+            {renderListingSection(t.latest, latestListings)}
+            {renderListingSection(t.viewed, mostViewed)}
+            {renderListingSection(t.rated, topRated)}
+            <View style={styles.promoCard}>
+              <AppText style={styles.promoEyebrow}>{t.sponsored}</AppText>
+              <AppText style={styles.promoTitle}>{isAr ? "خلّي نشاطك يوصل لعملاء أكتر" : "Help more customers discover your business"}</AppText>
+              <AppText style={styles.promoBody}>{isAr ? "هتظهر الإعلانات المدفوعة هنا بعلامة واضحة بعد تفعيل نظام الإعلانات." : "Paid promotions will appear here with clear labels once ads are enabled."}</AppText>
+            </View>
+            <View style={styles.section}>
+              <SectionHeading title={t.offers} />
+              <View style={styles.editorialCard}><AppText style={styles.editorialIcon}>🏷️</AppText><View style={{ flex: 1, gap: 4 }}><AppText style={styles.editorialTitle}>{isAr ? "العروض قريبًا" : "Offers coming soon"}</AppText><AppText style={styles.editorialBody}>{isAr ? "العروض الفعلية هتظهر عند ربط بيانات المتاجر." : "Live offers will appear when store data is connected."}</AppText></View></View>
+            </View>
+            <View style={styles.section}>
+              <SectionHeading title={t.news} />
+              <View style={styles.editorialCard}><AppText style={styles.editorialIcon}>📰</AppText><View style={{ flex: 1, gap: 4 }}><AppText style={styles.editorialTitle}>{isAr ? "أخبار مجتمع بلدنا" : "Baladna community news"}</AppText><AppText style={styles.editorialBody}>{isAr ? "أخبار محلية وتحديثات موثوقة من مجتمعك." : "Local news and trusted community updates."}</AppText></View></View>
+            </View>
+            <AppText style={styles.footer}>{t.demo}</AppText>
+          </>
+        )}
+      </ScrollView>
+    </Screen>
+  );
+}
 
-      <View style={styles.section}>
-        <SectionHeading title={t.featured} />
-        <View style={{ gap: spacing.md }}>
-          {listings.filter((item) => item.featured).map(renderListing)}
+function compareMembership(a: LocalListing, b: LocalListing) {
+  const tier = (item: LocalListing) => item.membershipTier === "premium" ? 1 : 0;
+  return tier(b) - tier(a) || (b.views ?? 0) - (a.views ?? 0);
+}
 
-        </View>
-      </View>
-      <View style={styles.promoCard}><AppText style={styles.promoEyebrow}>{t.sponsored}</AppText><AppText style={styles.promoTitle}>{isAr ? "مساحة إعلانية لأصحاب الأنشطة" : "Promote your local business"}</AppText><AppText style={styles.promoBody}>{isAr ? "سيظهر هنا محتوى إعلاني واضح ومميز عند تفعيل الإعلانات." : "Clearly labeled local promotions will appear here when enabled."}</AppText></View>
-      <View style={styles.section}><SectionHeading title={t.offers} /><View style={styles.editorialCard}><AppText style={styles.editorialIcon}>🏷️</AppText><View style={{flex:1,gap:4}}><AppText style={styles.editorialTitle}>{isAr ? "العروض قريبًا" : "Offers coming soon"}</AppText><AppText style={styles.editorialBody}>{isAr ? "هنعرض العروض الفعلية بعد اعتماد بيانات المتاجر." : "Verified store offers will appear here once available."}</AppText></View></View></View>
-      <View style={styles.section}><SectionHeading title={t.news} /><View style={styles.editorialCard}><AppText style={styles.editorialIcon}>📰</AppText><View style={{flex:1,gap:4}}><AppText style={styles.editorialTitle}>{isAr ? "أخبار مجتمع بلدنا" : "Baladna community news"}</AppText><AppText style={styles.editorialBody}>{isAr ? "مساحة للأخبار المحلية والإعلانات المجتمعية المعتمدة." : "A place for verified local news and community updates."}</AppText></View></View></View>
-      <AppText style={styles.footer}>{t.demo}</AppText>
-      </>}
-    </ScrollView>
-  </Screen>;
+function popularListings(items: Category[]): LocalListing[] {
+  const categoryIds = new Set(items.map((category) => category.id));
+  return listings.filter((item) => categoryIds.has(item.categoryId)).sort(compareMembership);
+}
+
+function MovingCategoryBar({ categories: items, isAr, onSelect }: { categories: Category[]; isAr: boolean; onSelect: (category: Category) => void }) {
+  const translateX = useRef(new Animated.Value(0)).current;
+  const [itemRowWidth, setItemRowWidth] = useState(0);
+
+  useEffect(() => {
+    if (!itemRowWidth) return;
+    const animation = Animated.loop(Animated.timing(translateX, {
+      toValue: -itemRowWidth,
+      duration: Math.max(26000, itemRowWidth * 32),
+      useNativeDriver: true,
+      isInteraction: false,
+    }));
+    animation.start();
+    return () => animation.stop();
+  }, [itemRowWidth, translateX]);
+
+  const renderItems = (suffix: string) => (
+    <View
+      key={suffix}
+      style={styles.tickerRow}
+      onLayout={suffix === "first" ? (event) => setItemRowWidth(event.nativeEvent.layout.width) : undefined}
+    >
+      {items.map((category) => (
+        <Pressable key={category.id + suffix} onPress={() => onSelect(category)} style={({ pressed }) => [styles.tickerItem, pressed && styles.cardPressed]}>
+          <AppText style={styles.tickerIcon}>{category.icon}</AppText>
+          <AppText numberOfLines={1} style={styles.tickerText}>{isAr ? category.nameAr : category.nameEn}</AppText>
+          <AppText style={styles.tickerArrow}>›</AppText>
+        </Pressable>
+      ))}
+    </View>
+  );
+
+  return (
+    <View style={styles.tickerViewport}>
+      <Animated.View style={[styles.tickerTrack, { transform: [{ translateX }] }]}>
+        {renderItems("first")}
+        {renderItems("second")}
+      </Animated.View>
+    </View>
+  );
+}
+
+function normalizeSearchText(value: string): string {
+  return value.normalize("NFKC").replace(/[\u064B-\u065F\u0670\u0640]/g, "").replace(/[أإآٱ]/g, "ا").replace(/ى/g, "ي").toLocaleLowerCase().replace(/\s+/g, " ").trim();
 }
 
 const styles = StyleSheet.create({
-  content: { paddingBottom: 24, gap: spacing.lg },
+  content: { paddingBottom: 28, gap: spacing.lg },
   clearFilters: { alignSelf: "flex-start", paddingTop: spacing.md },
   clearFiltersText: { color: colors.primary, fontWeight: "800", fontSize: 12 },
-  hero: { backgroundColor: colors.primary, paddingHorizontal: spacing.lg, paddingTop: 20, paddingBottom: 24, borderBottomLeftRadius: 28, borderBottomRightRadius: 28, gap: spacing.md },
-  topRow: { flexDirection: "row", alignItems: "center", gap: spacing.md, marginBottom: 8 },
+  hero: { backgroundColor: colors.primary, paddingHorizontal: spacing.lg, paddingBottom: 24, borderBottomLeftRadius: 28, borderBottomRightRadius: 28, gap: spacing.md },
+  topRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginBottom: 8 },
   brand: { color: "#FFFFFF", fontWeight: "900", fontSize: 22 },
-  profileButton: { width: 46, height: 46, borderRadius: 23, borderColor: "#83BFB5", borderWidth: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#FFFFFF15" },
-  profileGlyph: { color: "#FFFFFF", fontSize: 26, lineHeight: 30 },
+  utilityButton: { width: 42, height: 42, borderRadius: 21, borderColor: "#83BFB5", borderWidth: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#FFFFFF15" },
+  utilityGlyph: { color: "#FFFFFF", fontSize: 28, lineHeight: 31 },
+  profileGlyph: { color: "#FFFFFF", fontSize: 24, lineHeight: 28 },
   languageButton: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: radii.pill, borderColor: "#83BFB5", borderWidth: 1 },
   languageText: { color: "#FFFFFF", fontWeight: "800", fontSize: 12 },
   greeting: { color: "#FFFFFF", fontSize: 24, lineHeight: 33, fontWeight: "900" },
@@ -112,16 +246,36 @@ const styles = StyleSheet.create({
   demoNotice: { marginHorizontal: spacing.lg, padding: spacing.md, backgroundColor: "#FFF4E4", borderRadius: radii.sm },
   demoNoticeText: { color: "#79521F", fontSize: 11, lineHeight: 17 },
   section: { paddingHorizontal: spacing.lg, gap: spacing.md },
-  categoryGrid: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
-  categoryCard: { userSelect: "none", width: "31.5%", minHeight: 105, backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: radii.md, alignItems: "center", justifyContent: "center", padding: 8, gap: 8 },
-  categoryIcon: { width: 48, height: 48, borderRadius: 16, backgroundColor: colors.primarySoft, alignItems: "center", justifyContent: "center" },
-  categoryName: { fontSize: 11, fontWeight: "700", textAlign: "center", lineHeight: 16 },
+  tickerViewport: { overflow: "hidden", paddingVertical: 2 },
+  tickerTrack: { flexDirection: "row", alignSelf: "flex-start" },
+  tickerRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm, paddingEnd: spacing.sm },
+  tickerItem: { minWidth: 132, minHeight: 64, flexDirection: "row", alignItems: "center", gap: 7, paddingHorizontal: 11, paddingVertical: 10, borderRadius: radii.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  tickerIcon: { fontSize: 22 },
+  tickerText: { flexShrink: 1, color: colors.text, fontSize: 11, fontWeight: "800" },
+  tickerArrow: { color: colors.primary, fontSize: 20, fontWeight: "900" },
+  horizontalRow: { gap: spacing.md, paddingEnd: spacing.lg },
+  horizontalCard: { width: 174, minHeight: 190, padding: spacing.md, borderWidth: 1, borderColor: colors.border, borderRadius: radii.lg, backgroundColor: colors.surface, gap: 7 },
+  cardPressed: { opacity: 0.78, transform: [{ scale: 0.985 }] },
+  horizontalCardTop: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" },
+  horizontalIcon: { width: 58, height: 58, borderRadius: 18, backgroundColor: colors.primarySoft, alignItems: "center", justifyContent: "center" },
+  starBadge: { width: 28, height: 28, borderRadius: 14, backgroundColor: "#FFF0CF", alignItems: "center", justifyContent: "center" },
+  starBadgeText: { color: "#96620A", fontSize: 16, fontWeight: "900" },
+  horizontalName: { fontSize: 13, fontWeight: "900", color: colors.text },
+  horizontalCategory: { color: colors.muted, fontSize: 11 },
+  horizontalMeta: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  views: { color: colors.muted, fontSize: 11, fontWeight: "700" },
+  premiumCaption: { color: "#96620A", fontSize: 10, fontWeight: "900" },
+  titleLine: { alignItems: "center", flexWrap: "wrap", gap: 5 },
+  memberBadge: { alignSelf: "flex-start", paddingHorizontal: 7, paddingVertical: 3, borderRadius: radii.pill, backgroundColor: "#FFF0CF" },
+  memberBadgeText: { color: "#805400", fontSize: 9, fontWeight: "900" },
   listingRow: { flexDirection: "row", alignItems: "center", gap: spacing.md },
   listingIcon: { width: 62, height: 62, borderRadius: 18, backgroundColor: colors.primarySoft, alignItems: "center", justifyContent: "center" },
-  listingName: { fontSize: 14, fontWeight: "800" },
+  listingName: { fontSize: 14, fontWeight: "800", flexShrink: 1 },
   rating: { color: "#D88A20", fontWeight: "800", fontSize: 12 },
   price: { color: colors.primaryDark, fontWeight: "700", fontSize: 12 },
   favoriteButton: { width: 46, height: 46, borderRadius: 23, alignItems: "center", justifyContent: "center", backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border },
+  emptySection: { borderRadius: radii.md, borderColor: colors.border, borderWidth: 1, padding: spacing.md },
+  emptyText: { color: colors.muted, fontSize: 12 },
   promoCard: { marginHorizontal: spacing.lg, backgroundColor: colors.primaryDark, borderRadius: radii.lg, padding: spacing.lg, gap: spacing.sm },
   promoEyebrow: { color: "#BFE4DC", fontSize: 11, fontWeight: "800" },
   promoTitle: { color: "#FFFFFF", fontSize: 17, fontWeight: "900" },
@@ -132,13 +286,3 @@ const styles = StyleSheet.create({
   editorialBody: { color: colors.muted, fontSize: 12, lineHeight: 18 },
   footer: { color: colors.muted, textAlign: "center", fontSize: 10, paddingHorizontal: spacing.lg },
 });
-function normalizeSearchText(value: string): string {
-  return value
-    .normalize("NFKC")
-    .replace(/[\u064B-\u065F\u0670\u0640]/g, "")
-    .replace(/[أإآٱ]/g, "ا")
-    .replace(/ى/g, "ي")
-    .toLocaleLowerCase()
-    .replace(/\s+/g, " ")
-    .trim();
-}
