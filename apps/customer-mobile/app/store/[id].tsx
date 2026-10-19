@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { AppText, PrimaryButton, Screen, uiStyles } from "../../src/components/ui";
 import { listings, products } from "../../src/data/demo";
 import { useAppState } from "../../src/state/AppProvider";
@@ -16,10 +16,7 @@ export default function StoreScreen() {
 
   if (!store) return <Screen><AppText>{isAr ? "المتجر غير موجود في البيانات التجريبية." : "Store not found in demo data."}</AppText><PrimaryButton title={isAr ? "رجوع" : "Go back"} onPress={() => router.back()} /></Screen>;
 
-  const addProduct = (productId: string) => {
-    addToCart(productId);
-    Alert.alert(isAr ? "اتضاف للسلة" : "Added to cart", isAr ? "تقدر تكمل التسوق أو تراجع السلة." : "Keep shopping or open your cart.");
-  };
+  const addProduct = (productId: string) => addToCart(productId);
 
   return <Screen style={{ paddingHorizontal: 0, paddingTop: 0 }}>
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
