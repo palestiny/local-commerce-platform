@@ -61,7 +61,7 @@ public interface IProductReader
 
 public interface IOrderWriter
 {
-    Task AddAsync(Order order, string orderNumber, CancellationToken cancellationToken);
+    Task AddAsync(Order order, Guid customerId, string orderNumber, CancellationToken cancellationToken);
 }
 
 public interface ICreateOrderUnitOfWork
@@ -220,6 +220,7 @@ public sealed class CreateOrderHandler
 
             await OrderWriter.AddAsync(
                 order,
+                command.CustomerId,
                 orderNumber,
                 transactionCancellationToken);
 
