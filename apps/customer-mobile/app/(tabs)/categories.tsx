@@ -17,7 +17,7 @@ export default function CategoriesScreen() {
     const name = isAr ? item.nameAr : item.nameEn;
     return name.toLowerCase().includes(query.toLowerCase());
   }), [isAr, query]);
-  const visibleListings = listings.filter((item) => (!selected || item.categoryId === selected) && (isAr ? item.nameAr : item.nameEn).toLowerCase().includes(query.toLowerCase()));
+  const visibleListings = listings.filter((item) => (!selected || item.categoryId === selected) && (isAr ? item.nameAr : item.nameEn).toLowerCase().includes(query.toLowerCase())).sort((a, b) => Number(b.membershipTier === "premium") - Number(a.membershipTier === "premium") || (b.views ?? 0) - (a.views ?? 0));
   return <Screen>
     <View style={styles.header}>
       <AppText style={styles.title}>{isAr ? "كل الأقسام" : "All categories"}</AppText>
@@ -38,7 +38,7 @@ export default function CategoriesScreen() {
           <View style={[styles.listingRow, { flexDirection: isAr ? "row-reverse" : "row" }]}>
             <View style={styles.listingIcon}><AppText style={{ fontSize: 25 }}>{item.icon}</AppText></View>
             <View style={{ flex: 1, gap: 5 }}>
-              <AppText style={styles.categoryName}>{isAr ? item.nameAr : item.nameEn}</AppText>
+              <View style={{ flexDirection: isAr ? "row-reverse" : "row", alignItems: "center", flexWrap: "wrap", gap: 5 }}><AppText style={styles.categoryName}>{isAr ? item.nameAr : item.nameEn}</AppText>{item.membershipTier === "premium" ? <View style={styles.memberBadge}><AppText style={styles.memberBadgeText}>{isAr ? "✦ مشترك مميز" : "✦ Premium member"}</AppText></View> : null}</View>
               <AppText style={styles.description}>{isAr ? item.distanceAr : item.distanceEn} · ★ {item.rating}</AppText>
             </View>
             <AppText style={{ color: colors.primary, fontSize: 22 }}>‹</AppText>
@@ -59,7 +59,9 @@ const styles = StyleSheet.create({
   selectedCategory: { borderColor: colors.primary, backgroundColor: colors.primarySoft },
   categoryPressed: { opacity: 0.75, borderColor: colors.primary },
   icon: { width: 48, height: 48, borderRadius: 15, backgroundColor: colors.primarySoft, alignItems: "center", justifyContent: "center" },
-  categoryName: { fontWeight: "800", fontSize: 13 },
+  categoryName: { fontWeight: "800", fontSize: 13, flexShrink: 1 },
+  memberBadge: { alignSelf: "flex-start", paddingHorizontal: 7, paddingVertical: 3, borderRadius: radii.pill, backgroundColor: "#FFF0CF" },
+  memberBadgeText: { color: "#805400", fontSize: 9, fontWeight: "900" },
   description: { color: colors.muted, fontSize: 11, lineHeight: 16 },
   sectionTitle: { fontSize: 17, fontWeight: "800" },
   listingRow: { flexDirection: "row", alignItems: "center", gap: spacing.md },
