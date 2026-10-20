@@ -110,6 +110,47 @@ This section records repository facts and upstream compatibility guidance. It is
 
 This section is a security recommendation, not an approved implementation specification. Exact OpenIddict endpoints, client registration, redirect URIs per environment, scopes, token lifetimes, signing-key provider, refresh-token settings, secure-storage package, and logout semantics remain to be verified and approved. No mobile dependencies, app configuration, API code, secrets, or runtime settings were changed.
 
+## Identity persistence, migrations, recovery and abuse controls — review proposal
+
+### Persistence and migration ownership
+
+Observed in the current infrastructure project:
+- The backend targets `net8.0` and references EF Core 8.0.31 with Npgsql EF provider 8.0.11.
+- The existing infrastructure embeds SQL files under `Persistence/Migrations/*.sql`; the CI workflow runs the solution tests and a PostgreSQL 16 backup/restore smoke test.
+- No API host, Identity store, OpenIddict store, or identity-specific migration is present in the reviewed baseline.
+
+Recommended design, pending approval:
+1. Keep identity/account persistence in the existing PostgreSQL deployment initially unless scale, security isolation, or operations requirements justify a separate database. This is a deployment recommendation, not a claim that the schema has been implemented.
+2. Decide explicitly whether identity tables live in a dedicated PostgreSQL schema and how Identity/OpenIddict tables relate to the existing commerce schema. Avoid accidental coupling through shared entity types or cascade deletion into orders.
+3. Choose one authoritative migration process for each schema. The existing embedded SQL migration runner and EF Core migrations must not both attempt to own the same tables. Document migration ordering, fresh-database setup, upgrades from existing installations, rollback/forward-repair strategy, and deployment locking before adding identity tables.
+4. Do not run schema migrations automatically at application startup in production without an approved deployment and concurrency strategy. Apply migrations through a controlled deployment step with backup/recovery expectations.
+5. Verify restore from backup and the existing migration/recovery workflow after any eventual schema change; tests must use PostgreSQL rather than relying only on EF InMemory behavior.
+
+### Registration, recovery and abuse protection
+
+Recommended minimum policy to design and test:
+1. Define the login identifier first (verified phone, verified email, or another explicitly approved option). Do not assume an unverified phone/email uniquely proves a person's identity or customer ownership.
+2. Keep account creation separate from customer-profile provisioning. The profile-to-account link becomes active only after the chosen verification and duplicate-resolution workflow succeeds.
+3. Provide account recovery through a verified channel, with single-use, expiring recovery tokens; do not disclose whether an account exists in public recovery responses.
+4. Configure password policy and breached-password defenses according to the selected Identity capabilities and product risk. Avoid arbitrary complexity rules that encourage weak predictable passwords.
+5. Add rate limits and progressive abuse controls to registration, login, verification resend, and password reset. Use account lockout carefully so an attacker cannot trivially lock out another user; combine per-IP/device and per-account controls where feasible.
+6. Set explicit expiry and resend cooldowns for verification challenges; prevent replay and avoid putting codes or tokens in URLs, logs, analytics, or support messages.
+7. Audit security events with correlation IDs and minimal personal data. Do not log credentials, one-time codes, access tokens, refresh tokens, or recovery tokens.
+8. Keep email/SMS provider selection, delivery costs, anti-abuse thresholds, and service-level expectations open until requirements and operational cost are compared.
+
+### Verification checklist before implementation approval
+
+- Identity schema and OpenIddict schema can be created on a fresh PostgreSQL database and upgraded safely from the existing schema.
+- Re-running migration/deployment steps is safe and does not duplicate or corrupt schema state.
+- Duplicate account registration and conflicting customer mappings fail safely.
+- Unverified contact methods cannot activate a customer mapping.
+- Recovery responses do not reveal account existence; recovery tokens expire, are single-use, and cannot be replayed.
+- Rate limits, lockout behavior, resend cooldowns, and audit events are tested without leaking secrets.
+- Disabling an account prevents new authentication and refresh operations according to the approved revocation model.
+- Existing orders and customer data are not cascade-deleted when an Identity account is disabled or removed.
+
+**Decision boundary:** these are review recommendations only. No database/schema, migration, account policy, delivery provider, package, API, or runtime configuration was changed. Exact contact verification, recovery channel, lockout/rate-limit thresholds, schema ownership, and migration deployment strategy remain open for owner review.
+
 ## Decisions still open before implementation
 
 1. **Provisioning verification details:** specify how a person is verified and matched to the customer profile in the separate provisioning step, how duplicate profiles/conflicts are resolved, and how mapping activation is made atomic and auditable. Always fail closed if the mapping is missing or inactive.
