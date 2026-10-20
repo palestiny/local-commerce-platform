@@ -610,3 +610,75 @@ The detailed provisioning design must define: (a) the trusted evidence required 
 
 **Decision status:** product-level rules approved. Detailed verification and conflict-resolution design remains open. No application code, database schema, migrations, or API behavior was changed by this decision record.
 
+## Detailed provisioning workflow — proposed design for review
+
+**Status: ARCHITECTURE PROPOSAL — not yet owner-approved for implementation.** This section turns the approved product rules above into a reviewable workflow. It intentionally does not change application behavior.
+
+### Separate account activation from customer-data access
+
+These are two distinct states and must not be conflated:
+
+- **Login account activation:** allowed after at least one contact channel is verified, consistent with the approved product rule.
+- **Customer mapping activation:** allowed only after a trusted server-side workflow has selected or created exactly one intended customer profile and resolved any profile conflict. Contact verification alone does not activate ownership of legacy commerce data.
+- **Customer API access:** requires a valid authenticated principal, an enabled account, and exactly one active mapping to the internal customer identity. Fail closed if the mapping is missing, pending, disabled, or ambiguous.
+
+### Proposed state model
+
+| Object | Proposed states | Transition rule |
+|---|---|---|
+| Login account | PendingVerification → Active; Active ↔ Disabled | At least one contact channel verified before activation; disablement blocks login/access; re-enable requires an authorized recovery/admin path. |
+| Customer provisioning | NotStarted → Pending → Completed; Pending → Conflict; Pending → RetryRequired | Server-owned, idempotent workflow; retries must not create duplicate profiles or mappings. |
+| Account/customer mapping | Pending → Active; Pending → Conflict; Active → Disabled | Activate only after trusted profile selection/creation and uniqueness checks; never activate by client-supplied CustomerId. |
+| Legacy ownership case | Unclaimed → UnderReview → Verified / Rejected | Separate auditable resolution; no implicit order backfill or exposure. |
+
+The exact persisted representation (enum/status columns, workflow table, or another mechanism) is deliberately left open until schema and transaction ownership are designed.
+
+### Recommended happy path
+
+1. Create the authentication account with an idempotent registration request; store passwords only using the selected framework's approved password-hashing mechanism, never as reversible/plain text.
+2. Start the contact verification challenge. Keep email and phone verification independent and apply rate limits/resend controls.
+3. Once at least one contact channel is verified, activate the login account as approved. Do not infer customer-data ownership from this transition.
+4. Run a server-side customer-provisioning operation. Use normalized contact values only as candidate-search signals for potential duplicates, not as sufficient proof to claim a profile or historical order.
+5. If no conflicting customer profile exists, create a new commerce customer profile and its pending account mapping using an idempotent operation and database uniqueness constraints. If the workflow can guarantee both writes in one database transaction, commit them together; otherwise use durable workflow state/outbox-orchestration and retries.
+6. Activate the mapping only after the profile and mapping are persisted, uniqueness constraints are satisfied, and the workflow confirms there is no unresolved profile conflict.
+7. On each customer API request, validate the token and resolve the subject to one active mapping server-side. Do not cache mapping state in a way that bypasses account disablement or mapping revocation.
+
+### Duplicate/conflict handling
+
+- A possible match is a **review signal**, not an auto-link instruction.
+- Do not disclose whether a particular email/phone or legacy profile exists in public registration responses; use privacy-safe generic responses.
+- Keep conflicting mappings inactive. Do not create two active mappings for one login account or attach one customer profile to multiple login accounts in the first version.
+- Offer a recovery path that proves control of the existing login account where possible. If recovery is impossible, use a documented support review requiring evidence beyond matching contact details alone.
+- Support resolution must record actor, timestamp, reason, evidence category, previous state, and resulting state. Avoid storing excessive sensitive evidence or secrets in audit logs.
+- A duplicate profile resolution and a legacy-order ownership claim are separate decisions. Resolving the profile does not automatically authorize reassignment of historical orders.
+
+### Partial failure and retry behavior
+
+Recommended default: a durable, idempotent provisioning workflow, because the reviewed repository does not yet establish that Identity and commerce writes share one transaction boundary.
+
+- If account creation succeeds but profile/mapping provisioning fails, leave the account active if the contact-verification policy allows it, but keep customer commerce access unavailable until provisioning completes.
+- Persist a retryable provisioning status and a correlation/idempotency identifier; retries resume the same logical operation rather than creating another customer profile.
+- If a conflict is found, stop automatic retries that would repeatedly attempt to create or link profiles; route to conflict resolution.
+- If profile creation succeeds but mapping activation fails, retry activation idempotently after checking the persisted profile and uniqueness constraints.
+- If the account is disabled while provisioning is pending, the workflow must not activate access; the final activation step rechecks account and mapping state.
+- Make failures observable through structured, privacy-safe logs/metrics and an operational path for stuck Pending/RetryRequired cases. Do not log passwords, verification codes, access tokens, refresh tokens, or raw secrets.
+
+### Minimum tests before implementation can pass its gate
+
+1. Verified email only and verified phone only can each activate a login account; the other channel remains unverified.
+2. No mapping, pending mapping, disabled account, disabled mapping, duplicate mapping, or ambiguous subject all deny customer API access.
+3. A fresh profile and mapping are created once under repeated/concurrent registration retries.
+4. A candidate existing profile never gets auto-linked based only on email/phone equality.
+5. A conflict remains inaccessible until an explicit resolution is recorded.
+6. A legacy order with null/unverified ownership is not returned by list/detail endpoints and is not reassigned by registration.
+7. Failure after account creation, after profile creation, and before mapping activation can be retried without duplicates or partial access.
+8. Account disablement racing with provisioning prevents mapping activation/access.
+9. Public responses do not reveal whether an account, profile, or order exists; verification/recovery endpoints enforce expiry, single use, and rate limits.
+10. Audit events cover mapping activation/deactivation and conflict resolution without sensitive credential/token data.
+
+### Decisions still needed before implementation
+
+Owner review is required for: (1) whether support-assisted resolution is in the first release or all unresolved conflicts remain blocked; (2) what evidence categories support may accept to resolve a legacy profile/order claim; (3) whether the Identity and commerce stores will share a database/transaction or use a durable orchestration workflow; and (4) the operational owner and SLA for stuck provisioning cases.
+
+**Recommendation:** approve the state separation, fail-closed API rule, idempotent provisioning workflow, and no-contact-only auto-link rule as design direction. Keep legacy-order reassignment as a separate exceptional process. Do not start implementation until storage/transaction ownership and conflict-resolution evidence are decided and a separate implementation gate is explicitly approved.
+
