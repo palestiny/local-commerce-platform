@@ -848,3 +848,105 @@ These are recommendations only. The owner still needs to approve or amend the su
 | Operational owner / response expectation | Must be named before launch; do not assume staffed support | Open |
 
 **Gate status remains: design review required; implementation not authorized.** The next design task is to resolve these decisions and then define the exact API contracts for registration, verification, provisioning status, recovery, and customer-order access. No authentication or database implementation should begin until the owner explicitly approves the implementation gate.
+
+
+## First customer API slice — contract proposal
+
+**Status: PROPOSED CONTRACT; no API host or endpoints are being implemented by this document.** The route shapes below are intentionally illustrative until the identity provider, API host, token validation, and deployment topology are approved.
+
+### Scope and non-goals
+
+In scope for the first authenticated vertical slice:
+- safe liveness/readiness health checks that disclose no secrets or infrastructure details publicly;
+- registration initiation and contact-verification flow through the approved identity provider;
+- authenticated provisioning status for the caller's own account;
+- customer order list and order detail, with ownership derived only from the authenticated subject and active server-side mapping.
+
+Out of scope unless separately approved: merchant, store-management, driver, admin, payment/refund, customer-profile claiming, legacy-order reassignment, public catalog, and broad service-request endpoints. Do not expose a generic endpoint that accepts a caller-provided `CustomerId` as an ownership credential.
+
+### Proposed routes and contracts
+
+| Method / route | Authentication | Proposed behavior | Key safety rule |
+|---|---|---|---|
+| `GET /health/live` | Public | Confirms process is alive | No database credentials, provider state, exception text, or internal topology |
+| `GET /health/ready` | Deployment-policy dependent | Confirms required dependencies are usable | Return only a generic readiness result publicly; detailed diagnostics stay in protected telemetry |
+| `POST /api/v1/identity/registrations` | Public, rate-limited | Initiates account registration using the approved sign-in/provider direction | Idempotency and privacy-safe response; never claim commerce ownership |
+| `POST /api/v1/identity/verification` | Public, rate-limited | Starts or confirms a purpose-bound verification challenge, depending on provider design | Never accept a client assertion as proof without server/provider verification |
+| `GET /api/v1/customer/provisioning-status` | Authenticated | Returns the caller's provisioning state | Resolve account subject from validated token; never accept subject/customer IDs from query/body |
+| `GET /api/v1/customer/orders` | Authenticated | Lists orders belonging to the caller's active mapped customer | Missing/inactive/ambiguous mapping fails closed |
+| `GET /api/v1/customer/orders/{orderId}` | Authenticated | Reads one order after resource-ownership check | Use the same ownership predicate as list; random IDs are not authorization |
+
+Registration and verification route details must be reconciled with the selected Identity/OpenIddict flow before implementation. If the identity provider owns a protocol endpoint, do not duplicate it with a custom application endpoint without a documented need.
+
+### Request and response shape principles
+
+- Use dedicated request/response DTOs; never bind EF entities or Identity entities directly.
+- Registration input may include only the identifier(s) required by the chosen flow and must be validated/normalized consistently. Never accept `CustomerId`, role, mapping status, account activation status, or verification status from the client.
+- Return a correlation identifier on accepted operations and a safe status such as `PendingVerification`, `Provisioning`, `ActionRequired`, or `Ready`; do not return candidate customer data or disclose whether an old profile/order exists.
+- The provisioning-status response is scoped to the validated caller and should expose only actionable state, for example `state`, `nextAction`, and a non-sensitive `correlationId`. Do not expose raw internal errors, provider responses, retry stack traces, or another person's profile identifiers.
+- Order responses contain only customer-authorized order fields. Do not leak internal notes, other customers' data, driver personal data, secrets, or internal exception details.
+- Standardize error envelopes with a stable machine-readable code, safe human-readable message, and correlation/trace identifier. Exact DTO names and JSON casing remain subject to the repository's established conventions.
+
+### Error mapping proposal
+
+| Condition | HTTP behavior proposal | Notes |
+|---|---|---|
+| Malformed or invalid input | `400` | Field-level errors only where they do not reveal account existence |
+| Unauthenticated / invalid token | `401` | Do not reveal token-validation internals |
+| Authenticated but no active customer mapping | `403` or a deliberately designed safe `409` workflow response | Choose one consistent contract; never fall back to caller-supplied CustomerId |
+| Order does not exist or is not owned by caller | `404` | Avoid confirming another customer's order exists |
+| Rate limit exceeded | `429` | Include retry guidance only when safe and supported |
+| Idempotency key reused with different logical request | `409` | Stable error code; do not mutate the original operation |
+| Temporary dependency/storage failure | `503` where appropriate | Safe message, correlation ID, retry only when semantics allow |
+| Unexpected server failure | `500` | Generic public response; detailed exception remains in protected logs |
+
+The exact choice between `403` and a safe provisioning workflow response for a valid account without a mapping is still an owner/API-contract decision. Avoid status differences that allow an unauthenticated caller to enumerate registrations or legacy records.
+
+### Idempotency and rate-limit boundaries
+
+- Apply an idempotency key to registration/provisioning mutations where the client may safely retry after a lost response. Scope it to the authenticated subject when available and the operation type; for unauthenticated registration, use a server-defined privacy-safe scope and bounded retention.
+- Store a request fingerprint for the logical intent. Same key + same intent returns the durable prior outcome; same key + different intent returns a conflict without replacing the original result.
+- Never place raw email, phone, verification codes, passwords, access tokens, or refresh tokens in an idempotency key, URL, logs, or metric labels.
+- Rate-limit registration, resend, verification, recovery, and failed authentication independently. Exact thresholds require threat-model and provider review; do not invent fixed production limits in the API contract.
+- Avoid response timing or message differences that expose whether an email, phone, profile, or order exists.
+
+### Authorization decision procedure for customer orders
+
+Every customer order read must follow this server-side sequence:
+1. Validate token issuer, audience, signature, expiry, and applicable revocation/session rules.
+2. Obtain the immutable account subject from the validated principal; ignore client-supplied subject/customer identifiers.
+3. Confirm the account remains eligible for access under the chosen disablement/revocation mechanism.
+4. Resolve exactly one active account-to-customer mapping.
+5. Query the order with both the requested order identifier and the resolved `CustomerId` ownership predicate in the database query.
+6. Return the minimal DTO; use the same rule for list, detail, pagination, counts, exports, and future customer-order operations.
+7. Emit a correlation-aware audit/security event for denied access without logging tokens or unnecessary personal data.
+
+A mapping check followed by an unconstrained order lookup is not acceptable. Resource ownership must be enforced at the data access boundary to reduce time-of-check/time-of-use mistakes. Missing, inactive, duplicated, or inconsistent mappings must fail closed and produce protected diagnostics.
+
+### Contract and security acceptance tests
+
+1. Anonymous callers cannot access customer order list/detail or provisioning status.
+2. A valid token with no mapping cannot read orders, even when the request includes a guessed `CustomerId`.
+3. A mapping for customer A cannot read customer B's order by changing `orderId`.
+4. List, detail, pagination totals, and any included counts all use the same ownership predicate.
+5. Null-owned legacy orders never appear in customer results.
+6. Disabled accounts and revoked/expired sessions are denied according to the documented revocation latency contract.
+7. Registration and verification responses do not disclose whether an identifier, candidate profile, or historical order exists.
+8. Same idempotency key and same request replay a safe stable outcome; changed request conflicts without changing the original operation.
+9. Rate limits cover registration, resend, verification, recovery, and repeated failures without leaking account existence.
+10. Public errors contain stable codes and correlation IDs but no exception, SQL, token, provider, or secret details.
+11. Health endpoints do not reveal connection strings, database names, dependency topology, or secret/configuration values.
+12. Every denied ownership attempt is observable through protected logs/audit events without logging credentials or raw verification material.
+
+### Required design closure before implementation
+
+The API design gate cannot close until these are documented and reviewed:
+- exact identity provider/protocol responsibilities and callback/redirect URI policy;
+- token issuer/audience, access-token lifetime, refresh/session strategy, revocation and account-disablement latency;
+- registration/verification/recovery contracts, safe responses, rate-limit policy, and provider delivery cost/reliability;
+- the final no-mapping HTTP behavior and standardized error envelope;
+- host/deployment topology and the durable provisioning/recovery mechanism;
+- migration/backfill plan for nullable legacy `Orders.CustomerId` and proof that no unverified historical order is exposed;
+- test environment strategy for PostgreSQL, identity flows, API authorization, and mobile integration.
+
+**Current gate outcome: NOT READY FOR IMPLEMENTATION.** This contract proposal narrows the design, but does not authorize creating the API host, adding Identity/OpenIddict packages, changing database schema, or connecting mobile login to a live backend.
