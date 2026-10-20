@@ -1,5 +1,17 @@
 # Customer Authentication and First API Slice — Design Gate
 
+## Verification status update — 2026-10-20
+
+
+This status note supersedes older verification notes below where they describe the current idempotency test or current CI state. Older sections are retained as review history; their point-in-time statements should not be read as current results.
+
+- Current branch HEAD at this update: `e15f818b43424abb8d214fb8f9c1327789853c63`.
+- The PostgreSQL contention test now polls `pg_stat_activity` for the competing backend's lock wait (bounded to five seconds), instead of asserting contention after a fixed 100 ms delay.
+- GitHub Actions passed on this HEAD: [.NET build/test and migration/recovery smoke test](https://github.com/palestiny/local-commerce-platform/actions/runs/39431964868) and [customer-mobile TypeScript/Expo Doctor checks](https://github.com/palestiny/local-commerce-platform/actions/runs/39431964902). Duplicate runs also passed: [ .NET ](https://github.com/palestiny/local-commerce-platform/actions/runs/39431955592) and [mobile](https://github.com/palestiny/local-commerce-platform/actions/runs/39431955024).
+- These CI results verify the configured automated checks; they do **not** establish Android/iOS runtime behavior, live mobile-to-API integration, ambiguous-commit recovery, or every proposed failure-injection scenario.
+- Existing open product/security decisions remain open where identified below. This update changes documentation only; it does not authorize API/auth implementation, framework/package changes, database changes, or PR promotion/merge.
+
+
 Status: **OWNER DECISIONS RECORDED — DESIGN REVIEW REQUIRED; IMPLEMENTATION NOT AUTHORIZED**
 
 ## Objective
