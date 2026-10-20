@@ -147,6 +147,31 @@ public sealed class CreateOrderPersistenceTests
     }
 
     [Fact]
+    public async Task Sequential_retry_with_same_key_returns_original_order_after_cart_consumed()
+    {
+        await using var seedDb = CreateDb();
+        await DatabaseInitializer.InitializeAsync(seedDb);
+        await ResetAsync(seedDb);
+        var s = await SeedAsync(seedDb);
+        var command = new CreateOrderCommand(s.customerId, s.cartId, "replay-key");
+
+        CreateOrderResult first;
+        await using (var firstDb = CreateDb())
+            first = await Handler(firstDb).HandleAsync(command);
+
+        await using (var retryDb = CreateDb())
+        {
+            var replay = await Handler(retryDb).HandleAsync(command);
+            Assert.Equal(first, replay);
+        }
+
+        await using var verifyDb = CreateDb();
+        Assert.Equal(1, await verifyDb.Orders.CountAsync());
+        Assert.Equal(1, await verifyDb.IdempotencyRecords.CountAsync());
+        Assert.False((await verifyDb.Carts.SingleAsync(x => x.Id == s.cartId)).IsActive);
+    }
+
+    [Fact]
     public async Task Concurrent_different_keys_on_same_cart_create_only_one_order()
     {
         await using var seedDb=CreateDb(); await DatabaseInitializer.InitializeAsync(seedDb); await ResetAsync(seedDb);

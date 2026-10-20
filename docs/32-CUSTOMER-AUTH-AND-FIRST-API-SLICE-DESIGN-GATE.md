@@ -66,6 +66,23 @@ This section records repository facts and upstream compatibility guidance. It is
 
 **Current result:** compatibility direction looks feasible from upstream support information, but the repository has not yet been upgraded or tested on .NET 10. The target-framework and package changes remain unauthorized until the implementation gate is separately approved.
 
+## Create-order idempotency contract — reviewed and test-backed
+
+This contract describes the current implementation boundary; it does not authorize changes to the HTTP API or database schema.
+
+- **Key namespace:** a key is unique within the pair `(customer scope, operation)`. For checkout the operation is `CreateOrder`; two different customers do not collide, and different operations have separate namespaces.
+- **Exact key handling:** a key must contain a non-whitespace character and must be at most 256 .NET string characters. The key is otherwise treated as opaque and compared exactly; it is not trimmed or case-folded. Clients should generate a fresh, unpredictable key per checkout attempt and reuse that exact key for retries of that attempt.
+- **Request binding:** the current CreateOrder fingerprint binds the authenticated/internal customer ID and cart ID. Reusing the same key for a different cart is rejected as `IdempotencyKeyReused`. The cart's line items and prices are not part of the fingerprint: the key identifies one checkout attempt for that customer/cart, not a mutable serialization of the cart.
+- **Successful replay:** once checkout succeeds, retrying the same customer + operation + key + cart returns the stored original order ID and order number, even though the cart has already been consumed. It must not create a second order or consume the cart again.
+- **Atomicity:** reservation, order persistence, cart consumption, and completion of the idempotency record must commit or roll back in the same database transaction. A failed transaction must leave no completed reservation and must not leave a partial order/cart mutation.
+- **Concurrency:** competing requests with the same key converge on one persisted result. Different keys against the same cart may not create duplicate orders; only one may successfully consume the active cart.
+- **Unresolved reliability boundary:** if the client loses its connection around commit, the client must retry with the same key. The server should return the committed result if commit succeeded, or safely allow a new attempt if the transaction rolled back. Automated tests currently cover transaction rollback/retry and successful replay, but do not yet simulate a genuinely ambiguous commit/connection loss.
+- **Scope limitation:** this is a checkout idempotency contract, not a payment idempotency contract. Payment authorization/capture/refund must have separate provider-operation keys and reconciliation rules when payment is introduced.
+
+### Evidence and remaining verification
+
+The infrastructure suite covers key length at and over the storage limit, same-key concurrent convergence, sequential replay (added with this update), different-cart key reuse rejection, different-key contention on one cart, and rollback after a failure following order persistence. The generalized store also has a PostgreSQL lock-wait concurrency test and a transaction rollback/retry test. Passing CI is required on the current commit before this point is marked verified.
+
 ## Customer identity mapping — code review findings (proposal, not approved)
 
 ### Verified from inspected files
