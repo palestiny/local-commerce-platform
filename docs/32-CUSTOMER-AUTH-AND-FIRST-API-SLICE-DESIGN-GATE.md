@@ -682,3 +682,32 @@ Owner review is required for: (1) whether support-assisted resolution is in the 
 
 **Recommendation:** approve the state separation, fail-closed API rule, idempotent provisioning workflow, and no-contact-only auto-link rule as design direction. Keep legacy-order reassignment as a separate exceptional process. Do not start implementation until storage/transaction ownership and conflict-resolution evidence are decided and a separate implementation gate is explicitly approved.
 
+## Repository evidence review — persistence and transaction boundary
+
+**Review status: VERIFIED FROM THE CURRENT BRANCH TREE AND SOURCE FILES. This is an architecture finding, not implementation approval.**
+
+Reviewed branch: `integration/baladna-foundation-mobile`  
+Reviewed head before this note: `793a241ae98861eee567a2f4a9e0b3d7fcfec4a2`
+
+### Confirmed repository facts
+
+1. The only current EF Core context found in the source tree is `LocalCommerce.Infrastructure.Persistence.CommerceDbContext`. It maps commerce entities such as Orders, OrderItems, Carts, Deliveries, Stores, Products, and IdempotencyRecords. It does not map an authentication account, customer profile, or account/customer mapping entity.
+2. The Infrastructure project targets `.NET 8` and references EF Core `8.0.31` plus Npgsql EF Core provider `8.0.11`. The Application project also targets `.NET 8` and references Domain, not EF Core.
+3. The current migration resources are embedded SQL scripts `001_initial.sql` and `002_order_customer_ownership.sql`. `DatabaseInitializer.InitializeAsync` discovers and executes the embedded scripts in ordinal name order through the same `CommerceDbContext.Database` connection. In the reviewed initializer and migration files, no migration-history/checksum ledger or durable provisioning-workflow table is defined.
+4. `Orders.CustomerId` is nullable and indexed, but the reviewed SQL does not define it as a foreign key to a customer table. Migration `002` explicitly preserves legacy orders as unowned unless verified backfill data exists.
+5. The current source tree contains no API host/ `Program.cs`, ASP.NET Core Identity store/context, OpenIddict store/context, customer-profile table/entity, or account/customer mapping implementation. These remain future design/implementation work.
+6. The existing persistence design gate documents transactional idempotency for Create Order. That transaction boundary is specific to the commerce checkout path; it does not establish a transaction spanning a future identity store and commerce persistence.
+
+### Consequence for the provisioning decision
+
+**A shared Identity + commerce database transaction is not currently available to rely on:** the reviewed branch has no implemented identity store, customer-profile persistence, or mapping persistence to join to the existing commerce transaction. Merely choosing PostgreSQL for both later would not prove that separate EF contexts/stores share one connection and transaction.
+
+**Recommended direction for the first implementation design:**
+- Treat the identity account and commerce customer/mapping as separate persistence responsibilities.
+- Design provisioning as a durable, idempotent workflow with explicit states and observable retries, so partial failure cannot grant customer-data access.
+- Use a local database transaction for the commerce-side customer-profile/mapping writes once their schema and ownership are defined. If identity and commerce are deliberately consolidated under one shared transaction in a future design, require evidence of shared connection/transaction ownership before changing this recommendation.
+- Keep customer API authorization fail-closed until the server can resolve exactly one active mapping.
+- Decide whether workflow state/outbox belongs in the commerce database or a dedicated workflow store only after the API host, identity persistence, deployment topology, and operational recovery ownership are designed.
+
+This is a recommended architecture based on the current repository evidence, **not an owner-approved implementation decision**. No code, schema, migration, package, or runtime configuration was changed as part of this review.
+
