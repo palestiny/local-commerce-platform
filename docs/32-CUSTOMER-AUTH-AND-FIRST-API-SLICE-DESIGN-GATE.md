@@ -1074,3 +1074,41 @@ This is a documentation-only dependency assessment; no package was installed and
 5. Pin exact dependency versions only after verifying the SDK 57 compatibility matrix and then run clean install, typecheck, lint, and CI. Do not infer that latest-version documentation proves compatibility with SDK 57.
 
 **Decision status:** `expo-auth-session` + `expo-secure-store` is the recommended first candidate to validate, not an approved implementation or proven runtime combination. The auth design gate remains **NOT READY FOR IMPLEMENTATION** until owner review and the required package/device/security evidence are recorded.
+
+
+### Logout, refresh, and account-disablement policy — decision proposal
+
+**Purpose:** make session invalidation a measurable contract before choosing token settings or writing auth code. The current mobile app has no live session flow, so these are design options and acceptance criteria, not implemented behavior.
+
+#### Options considered
+
+| Approach | Benefit | Cost / limitation | Assessment |
+|---|---|---|---|
+| Short-lived self-contained access token + revocable rotating refresh token | Low API lookup overhead for ordinary requests; refresh can be stopped centrally | An already-issued access token can remain usable until expiry unless the API checks server-side account/session state; rotation and replay detection add state and tests | Reasonable baseline only if the accepted disablement window is explicit |
+| Server-checked session/account state on every sensitive request | Can enforce disablement and session revocation quickly and consistently | Adds database/cache dependency and latency; cache invalidation and outage behavior must be designed | Recommended for customer/order/payment-sensitive APIs if fast disablement is a product requirement |
+| Long-lived self-contained access token with no server-side session check | Simple request validation | Logout or account disablement cannot reliably invalidate an already-issued token immediately | Reject for customer data and commerce operations |
+
+#### Recommended policy for owner review
+
+1. **Logout current device:** revoke the app's refresh/session credential on the server, then delete local secure-storage entries. If the network is unavailable, clear local credentials immediately and record that server revocation is pending only if a safe retry mechanism exists; do not claim remote revocation succeeded without a server response.
+2. **Logout all devices / credential compromise:** revoke all refresh sessions for the account and invalidate the server-side session/security version used by sensitive APIs. Password changes and account recovery should trigger the same policy, subject to the final threat model.
+3. **Disable account:** prevent new authentication and refresh immediately; deny sensitive API access using server-checked account/session state. Do not rely solely on access-token expiry if the product requires prompt disablement.
+4. **Access-token lifetime:** do not select a numeric duration until deployment, load, and threat-model decisions are recorded. Use a short-lived access token as a starting principle; define the maximum tolerated stale-access window explicitly.
+5. **Refresh-token behavior:** if refresh tokens are selected, use rotation and replay/reuse detection when supported by the chosen provider. Persist only the app-issued refresh/session credential in platform-backed secure storage; never put it in logs or URLs.
+6. **Availability trade-off:** define fail-closed behavior for sensitive customer data when authoritative session/account state cannot be checked. Do not silently fall back to trusting a token whose account may have been disabled.
+7. **Auditability:** log security event type, subject identifier in a privacy-appropriate form, session identifier, timestamp, result, and correlation ID. Never log raw tokens, passwords, codes, or provider secrets.
+
+#### Acceptance tests required before release
+
+- A revoked refresh token cannot mint another access token.
+- Reusing a rotated refresh token is detected and follows the documented family/session-revocation policy.
+- Logging out one device does not unintentionally log out other devices unless the user selected “log out everywhere.”
+- Logging out everywhere and password recovery invalidate all sessions according to the documented contract.
+- A disabled account cannot sign in, refresh, or read customer orders using a previously issued access token beyond the explicitly accepted propagation window.
+- Session-state store outage follows the documented fail-closed behavior for sensitive endpoints.
+- Local logout clears credentials even if remote revocation fails, while UI/telemetry does not falsely claim the server revoked the session.
+- No token or secret appears in application logs, analytics, crash reports, URL parameters, or error responses.
+
+**Recommended design direction:** use revocable server-side refresh sessions with rotation/reuse detection, plus server-side account/session eligibility checks on sensitive customer endpoints. The maximum disablement/revocation latency, session persistence schema, and outage policy still require owner approval and deployment-specific verification. Do not implement these defaults without closing the gate.
+
+Official background: Microsoft documents that backend account disablement does not automatically invalidate an already-issued authentication cookie, and that periodic/server-side validation trades latency against database load ([ASP.NET Core cookie authentication](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie)). Its Identity API guidance similarly describes short-lived access tokens, longer-lived refresh tokens, and the security/performance trade-off of session revalidation ([Identity API authorization](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity-api-authorization)).
