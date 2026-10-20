@@ -84,6 +84,32 @@ This section records repository facts and upstream compatibility guidance. It is
 
 **Decision status:** the above product directions are owner-approved. The exact customer verification method, data fields, disablement enforcement mechanism, and retention/anonymization policy still require detailed design. No domain model, schema, migration, package, or runtime code was changed by this review.
 
+## Native mobile OAuth/OIDC security profile — recommendation, not implementation approval
+
+### Repository evidence
+
+- `apps/customer-mobile/package.json` identifies an Expo Router / React Native app using Expo SDK `~57.0.16` and React Native `0.86.3`.
+- `apps/customer-mobile/app.json` declares the `baladna` URL scheme and the Android/iOS application identifiers.
+- The inspected mobile dependencies do not currently include an OAuth/OIDC client library or a secure token-storage package. The app authentication UI is not evidence of a working authentication protocol.
+- No API host or OpenIddict configuration exists in the reviewed backend baseline.
+
+### Recommended profile for owner review
+
+1. **Native authorization flow:** use OpenID Connect Authorization Code Flow with PKCE (S256) for the native public client. Do not use the implicit flow or resource-owner-password grant. Do not ship a client secret in the mobile bundle.
+2. **Redirect handling:** register exact redirect URIs for the app, prefer platform-appropriate claimed HTTPS redirects where operationally supported, and treat the existing `baladna` scheme as a candidate that still requires collision and platform-configuration review. Validate redirect URIs exactly; do not allow arbitrary wildcard redirects.
+3. **Token validation:** the API validates signature, trusted issuer, intended audience, expiration/not-before, and required scopes/claims. A mobile UI check is never authorization. Customer ownership still comes from the server-controlled account-to-customer mapping.
+4. **Access-token lifetime:** use short-lived access tokens with a documented policy; select the actual lifetime based on the API threat model and operational requirements before configuration.
+5. **Refresh tokens:** if persistent sessions are required, use refresh-token rotation and replay detection/revocation, bind token state to the account/session as supported, revoke on account disablement and relevant security events, and test concurrent refresh behavior. Do not silently reuse a rotated refresh token.
+6. **Secure storage:** keep tokens out of AsyncStorage, logs, crash reports, analytics, URLs, and deep-link payloads. Use a maintained platform-backed secure-storage mechanism after verifying compatibility with the selected Expo SDK and Android/iOS runtime. Keep any transient authorization code handling within the OIDC library's supported flow.
+7. **Signing keys and issuer:** production must use stable HTTPS issuer URLs and protected signing keys/certificates with documented rotation and recovery. Do not rely on ephemeral development signing keys for production or commit secrets to the repository.
+8. **Logout and account disablement:** define local session clearing and server-side refresh-token/session revocation separately. Account disablement must block future authorization promptly; do not assume deleting local tokens alone revokes server-issued credentials.
+9. **Error handling and observability:** never log passwords, authorization codes, access/refresh tokens, or secrets. Record security-relevant events with correlation IDs and minimal personal data. Return stable API errors without exposing protocol internals.
+10. **Verification before mobile integration:** test invalid issuer/audience/signature, expired tokens, PKCE mismatch, invalid redirect URI, refresh-token replay, revoked/disabled accounts, missing customer mapping, and cross-customer order access on the API. Test Android deep links and release builds; development-client success alone is insufficient.
+
+### Decision boundary
+
+This section is a security recommendation, not an approved implementation specification. Exact OpenIddict endpoints, client registration, redirect URIs per environment, scopes, token lifetimes, signing-key provider, refresh-token settings, secure-storage package, and logout semantics remain to be verified and approved. No mobile dependencies, app configuration, API code, secrets, or runtime settings were changed.
+
 ## Decisions still open before implementation
 
 1. **Provisioning verification details:** specify how a person is verified and matched to the customer profile in the separate provisioning step, how duplicate profiles/conflicts are resolved, and how mapping activation is made atomic and auditable. Always fail closed if the mapping is missing or inactive.
