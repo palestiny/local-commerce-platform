@@ -950,3 +950,70 @@ The API design gate cannot close until these are documented and reviewed:
 - test environment strategy for PostgreSQL, identity flows, API authorization, and mobile integration.
 
 **Current gate outcome: NOT READY FOR IMPLEMENTATION.** This contract proposal narrows the design, but does not authorize creating the API host, adding Identity/OpenIddict packages, changing database schema, or connecting mobile login to a live backend.
+
+
+## Repository-grounded compatibility and mobile session review
+
+**Review date:** 2026-10-20. This section records source-level facts observed on the current branch and identifies checks still required; it is not a package-compatibility verdict.
+
+### Facts verified in the current branch
+
+- The domain, application, and infrastructure project files currently target `net8.0`.
+- Infrastructure currently references Entity Framework Core `8.0.31` and Npgsql EF Core provider `8.0.11`.
+- No ASP.NET Core API host, ASP.NET Core Identity configuration, or OpenIddict integration was identified in the current source tree reviewed for this gate. This is a scoped repository observation, not proof that no code exists in every branch.
+- The customer mobile app uses Expo SDK `~57.0.16`, React Native `0.86.3`, and TypeScript `~6.0.3`.
+- The current `apps/customer-mobile/app/auth.tsx` is explicitly a prototype: Google and email/password actions show a “not connected” message and do not submit credentials. This is the correct fail-safe prototype behavior, not a completed login implementation.
+- The configured GitHub Actions runs for commit `9f27c96978ccac14d98e8ccd01c2b528149f62de` completed successfully: [.NET workflow](https://github.com/palestiny/local-commerce-platform/actions/runs/39468154318) and [customer-mobile workflow](https://github.com/palestiny/local-commerce-platform/actions/runs/39468154476). The duplicate push-triggered runs also succeeded: [.NET](https://github.com/palestiny/local-commerce-platform/actions/runs/39468145871) and [customer-mobile](https://github.com/palestiny/local-commerce-platform/actions/runs/39468145720). These are the configured checks only; they do not test live auth, device secure storage, provider callbacks, or mobile-to-API integration.
+
+### Framework and package decision — must be evidence-led
+
+The constitution records .NET 10 LTS as the target direction, but the reviewed projects still target .NET 8. Therefore, adding Identity/OpenIddict directly to this branch would create a decision gap unless the target framework and package matrix are first reconciled.
+
+Before implementation, produce a compatibility table for:
+- selected target framework and installed .NET SDK used by CI;
+- ASP.NET Core Identity and EF Core versions;
+- OpenIddict server/validation package versions and supported target frameworks;
+- Npgsql EF Core provider compatibility with the selected EF Core major version;
+- database migration and existing embedded SQL migration behavior;
+- the mobile OAuth/OIDC client library and Expo SDK 57 / React Native compatibility;
+- deployment runtime availability and the support policy for the chosen framework.
+
+Do not upgrade the solution to .NET 10, mix EF Core major versions, or add auth packages as part of a documentation-only change. If the target is changed, treat it as a separate, focused compatibility work item with a full-solution build, all tests, PostgreSQL migration smoke tests, and rollback notes. A successful existing .NET 8 workflow does not establish .NET 10 compatibility.
+
+### Proposed mobile authentication/session baseline
+
+These defaults are recommended for review, not yet owner-approved implementation settings:
+
+1. Use a standards-based Authorization Code flow with PKCE for the native app if the chosen provider and deployment architecture support it. Do not embed a client secret in the mobile binary.
+2. Use the system browser/provider-supported native flow and validate exact redirect URI schemes/hosts. Reject open redirects and do not accept arbitrary callback URLs.
+3. Keep access tokens short-lived; select the actual lifetime only after threat-model and provider review. If refresh tokens are used, require rotation/reuse detection where supported and define revocation behavior explicitly.
+4. Store refresh/session credentials only in platform-backed secure storage with appropriate iOS Keychain and Android Keystore-backed behavior. Do not put credentials in AsyncStorage, ordinary app state persistence, URLs, logs, analytics, or crash reports.
+5. Biometrics, if later approved, may gate local access to a protected credential/session; they are not proof to the server and do not replace token validation, MFA, or revocation. If secure storage or lifecycle handling is unavailable, omit the feature.
+6. Logout must clear local credentials and request server-side session/refresh-token revocation where supported. Local deletion alone must not be described as revoking a stolen token.
+7. Account disablement must block new sign-ins and refreshes and meet a documented maximum access-revocation latency. If self-contained access tokens cannot be revoked immediately, define a server-side account/session validation strategy for sensitive endpoints rather than promising instant invalidation.
+8. Never log tokens, passwords, OAuth authorization codes, verification codes, or raw provider payloads. Scrub sensitive fields from structured telemetry and mobile crash reports.
+
+### Authentication sequence to test before enabling real login
+
+1. Mobile opens the approved provider authorization endpoint using Authorization Code + PKCE.
+2. Provider returns only to a registered redirect URI; state and PKCE correlation are checked.
+3. The app exchanges the code using the selected supported client flow; no client secret is shipped in the app.
+4. The API validates issuer, audience, signature, expiry, and applicable session/account state.
+5. The API resolves the authenticated subject to exactly one active commerce mapping before any customer resource is returned.
+6. The app persists credentials only in approved secure storage and displays pending provisioning separately from successful customer readiness.
+7. Logout, refresh rotation, expired token, disabled account, provider outage, lost response, and reinstall/recovery paths are tested.
+8. Tests prove that a UI navigation state or locally stored customer ID cannot bypass API authorization.
+
+### Remaining decisions (owner review required)
+
+| Decision | Recommended direction | Status |
+|---|---|---|
+| Runtime target for the first API host | Reconcile constitution's .NET 10 target with current net8.0 projects in a separate compatibility decision | Open |
+| Identity and protocol package versions | Select only after official compatibility matrix and CI runtime are verified | Open |
+| Native OAuth/OIDC client and callback registration | Authorization Code + PKCE, no embedded secret; choose library after Expo compatibility check | Open |
+| Access/refresh token lifetime and revocation | Short access-token lifetime; rotation/reuse detection if refresh tokens are used; define disablement latency | Open |
+| Secure credential storage | Platform-backed secure storage; do not use ordinary persistent app storage | Proposed |
+| Login providers for first release | Google priority; email/password and phone/password subject to provider/verification design; Facebook deferred as previously agreed | Previously agreed direction; implementation open |
+| Biometric unlock | Optional and local-only; omit if secure session storage/lifecycle is not robust | Previously agreed direction; implementation open |
+
+**Gate status remains NOT READY FOR IMPLEMENTATION.** The next technical design output should be the package/runtime compatibility matrix and the exact OAuth/OIDC sequence for the chosen identity provider, followed by owner review of unresolved defaults. No package, framework, API, schema, or mobile-auth implementation is authorized by this section.
