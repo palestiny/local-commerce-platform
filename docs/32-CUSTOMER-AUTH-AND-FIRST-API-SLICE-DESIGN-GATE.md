@@ -1054,3 +1054,23 @@ These defaults are recommended for review, not yet owner-approved implementation
 | Biometric unlock | Optional and local-only; omit if secure session storage/lifecycle is not robust | Previously agreed direction; implementation open |
 
 **Gate status remains NOT READY FOR IMPLEMENTATION.** The next technical design output should be the package/runtime compatibility matrix and the exact OAuth/OIDC sequence for the chosen identity provider, followed by owner review of unresolved defaults. No package, framework, API, schema, or mobile-auth implementation is authorized by this section.
+
+
+### Expo 57 authentication library evidence — 2026-10-20
+
+This is a documentation-only dependency assessment; no package was installed and no device flow was run.
+
+- Expo's SDK reference confirms SDK 57 targets React Native 0.86, matching the repository's recorded React Native 0.86.3 line ([SDK reference](https://docs.expo.dev/versions/latest/)).
+- Expo's OAuth/OIDC guide documents `expo-auth-session` for browser-based OAuth/OpenID Connect across Android, iOS, and web, including redirect URI generation and PKCE support ([Expo authentication guide](https://docs.expo.dev/guides/authentication/), [AuthSession reference](https://docs.expo.dev/versions/latest/sdk/auth-session/)).
+- Expo documents `expo-secure-store` as platform-backed storage using Android encrypted preferences and iOS Keychain, and explicitly distinguishes it from AsyncStorage ([Expo storage/auth guidance](https://docs.expo.dev/guides/authentication/)).
+- Expo also notes that some provider-specific native SDKs require custom native code and a development build; its Google authentication guide identifies native-library choices and this build requirement ([Google authentication guide](https://docs.expo.dev/guides/google-authentication/)).
+
+#### Recommended first validation path
+
+1. Evaluate Expo's maintained `expo-auth-session` as the initial generic OIDC client candidate for the app's Authorization Code + PKCE flow. This is a candidate, not yet a locked dependency: verify the exact SDK-57-matched package versions with the repository's Expo install tooling and CI before adoption.
+2. Evaluate `expo-secure-store` for native credential persistence, but do not store provider access tokens as a substitute for the application's own API session model. Define precisely which app-issued refresh/session credential is persisted and how it is revoked.
+3. Because Google is the first-priority social provider, compare the generic browser OIDC route with Expo's documented native Google SDK options. Prefer one coherent, tested flow rather than combining two token/session models. Provider choice and callback registration remain open.
+4. Plan an Expo development build and real-device Android/iOS smoke tests; Expo Go or TypeScript checks alone are not evidence that registered callbacks, native modules, Keychain/Keystore behavior, reinstall, logout, and revocation work in production.
+5. Pin exact dependency versions only after verifying the SDK 57 compatibility matrix and then run clean install, typecheck, lint, and CI. Do not infer that latest-version documentation proves compatibility with SDK 57.
+
+**Decision status:** `expo-auth-session` + `expo-secure-store` is the recommended first candidate to validate, not an approved implementation or proven runtime combination. The auth design gate remains **NOT READY FOR IMPLEMENTATION** until owner review and the required package/device/security evidence are recorded.
