@@ -965,6 +965,21 @@ The API design gate cannot close until these are documented and reviewed:
 - The current `apps/customer-mobile/app/auth.tsx` is explicitly a prototype: Google and email/password actions show a “not connected” message and do not submit credentials. This is the correct fail-safe prototype behavior, not a completed login implementation.
 - The configured GitHub Actions runs for commit `9f27c96978ccac14d98e8ccd01c2b528149f62de` completed successfully: [.NET workflow](https://github.com/palestiny/local-commerce-platform/actions/runs/39468154318) and [customer-mobile workflow](https://github.com/palestiny/local-commerce-platform/actions/runs/39468154476). The duplicate push-triggered runs also succeeded: [.NET](https://github.com/palestiny/local-commerce-platform/actions/runs/39468145871) and [customer-mobile](https://github.com/palestiny/local-commerce-platform/actions/runs/39468145720). These are the configured checks only; they do not test live auth, device secure storage, provider callbacks, or mobile-to-API integration.
 
+### Latest verification and integration review — 2026-10-20
+
+The exact current head `b230ccad9ef20e1bcf92054a97c1268736c1674b` has now completed all four configured GitHub Actions runs successfully:
+
+- [customer-mobile pull-request run](https://github.com/palestiny/local-commerce-platform/actions/runs/39469482222) — success.
+- [.NET pull-request run](https://github.com/palestiny/local-commerce-platform/actions/runs/39469482291) — success.
+- [customer-mobile push run](https://github.com/palestiny/local-commerce-platform/actions/runs/39469475753) — success.
+- [.NET push run](https://github.com/palestiny/local-commerce-platform/actions/runs/39469475977) — success.
+
+This confirms the configured CI jobs on this exact commit only. It does not prove live authentication, device/emulator behavior, Android/iOS secure-storage behavior, RTL/LTR visual correctness, or mobile-to-API integration.
+
+PR #22 remains **open and Draft**, with 83 changed files. Its base is `fix/replacement-delivery-store-consistency`, not protected `main`. The PR's first integration commit is based on the base branch's then-current commit, so the non-main base appears intentional for this integration candidate; however, it remains an owner-visible release-path decision and must not be silently retargeted. Before merge, review the full combined scope (mobile app, numerous HTML design references, order-ownership migration, CI workflows, and design docs) against the intended integration target and confirm whether a separate follow-up PR into `main` is required.
+
+**Gate status remains NOT READY FOR IMPLEMENTATION.** Passing CI does not close the identity/provider, runtime/package compatibility, provisioning recovery, API contract, or deployment-topology decisions below.
+
 ### Framework and package decision — must be evidence-led
 
 The constitution records .NET 10 LTS as the target direction, but the reviewed projects still target .NET 8. Therefore, adding Identity/OpenIddict directly to this branch would create a decision gap unless the target framework and package matrix are first reconciled.
