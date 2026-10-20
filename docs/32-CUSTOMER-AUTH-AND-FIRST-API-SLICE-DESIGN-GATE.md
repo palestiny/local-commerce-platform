@@ -4,8 +4,8 @@
 
 This is the current verification record for the document. Older status notes below are historical and must not override this section.
 
-- **Latest confirmed CI evidence for the previous documentation head:** commit `07d540e71cff1978b4b00d9b0c5db38018b22d31` passed [.NET workflow](https://github.com/palestiny/local-commerce-platform/actions/runs/39452565054) and [customer-mobile workflow](https://github.com/palestiny/local-commerce-platform/actions/runs/39452565096) on October 20, 2026.
-- This documentation-only update follows that verified head. Recheck CI on the new current branch head before treating the newest commit as green; do not imply that an earlier commit's checks verify a later head.
+- **Latest confirmed CI evidence for current branch head:** commit `b92222f19ac30ac1d5cbf8d08e2c816123e9ad20` passed [.NET PR workflow](https://github.com/palestiny/local-commerce-platform/actions/runs/39453793434) and [customer-mobile PR workflow](https://github.com/palestiny/local-commerce-platform/actions/runs/39453793745) on October 20, 2026. The corresponding push workflows also passed: [.NET](https://github.com/palestiny/local-commerce-platform/actions/runs/39453781635) and [customer-mobile](https://github.com/palestiny/local-commerce-platform/actions/runs/39453781677).
+- These CI results verify the current documentation-only head against the configured workflows; they do not establish runtime behavior or authorize implementation.
 - The configured .NET workflow builds/tests the solution and runs its PostgreSQL 16 migration/backup-restore smoke check; the mobile workflow runs TypeScript checking and Expo Doctor. These results do **not** establish Android/iOS runtime behavior, live mobile-to-API integration, a physical PostgreSQL connection failure during COMMIT, or every failure-injection scenario.
 - PR #22 remains open and Draft. No API/auth implementation, framework/package change, database change, or PR promotion/merge is authorized by this documentation update.
 
@@ -162,7 +162,8 @@ This section advances the design but does not claim an implementation decision h
 
 ### Decisions still requiring explicit owner approval
 
-- **Approved: both email and phone are supported at first launch** as independently verifiable contact/login channels. A user may sign in with either verified identifier and their password; the product must not require both identifiers just to sign in. The policy for whether account activation requires one verified channel or both remains a separate security/product decision. Recommendation: require at least one verified channel before enabling sign-in, then let the user add and verify the second channel later.
+- **Approved: both email and phone are supported at first launch** as independently verifiable contact/login channels. A user may sign in with either verified identifier and their password; the product must not require both identifiers just to sign in.
+- **Approved: activate after at least one channel is verified.** Successful verification of either email or phone permits account activation. The second channel may be added and verified later; its verification state remains independent. Requiring both channels before activation is explicitly not the chosen policy.
 - The exact verification expiry, resend cooldown and rate-limit thresholds.
 - SMS/email delivery provider and cost budget.
 - Whether MFA/passkeys are in the first release or a later milestone.
@@ -303,7 +304,7 @@ Recommended minimum policy to design and test:
 1. **Provisioning verification details:** specify how a person is verified and matched to the customer profile in the separate provisioning step, how duplicate profiles/conflicts are resolved, and how mapping activation is made atomic and auditable. Always fail closed if the mapping is missing or inactive.
 2. **OAuth/OIDC detailed security profile:** confirm supported flows for native mobile clients, public-client registration, PKCE, redirect URI policy, issuer/audience values, signing-key management and rotation, access-token lifetime, refresh-token rotation/revocation, logout semantics, and development versus production settings. Do not invent a custom OAuth flow.
 3. **Persistence and migrations:** decide how ASP.NET Core Identity tables and OpenIddict stores fit the existing PostgreSQL setup, migration ownership/order, schema conventions, and deployment-time migration policy. Review compatibility before upgrading to .NET 10.
-4. **Account recovery and abuse controls:** decide whether initial account activation requires one or both verified channels (recommend at least one), then define password reset, rate limiting/lockout, verification expiry/resend thresholds, and delivery provider. Provider and operational cost are not yet approved.
+4. **Account recovery and abuse controls:** the activation threshold is owner-approved: at least one of email or phone must be verified, and the second channel can be verified later. Still define password reset/recovery details, rate limiting/lockout, verification expiry/resend thresholds, and delivery provider. Provider and operational cost are not yet approved.
 5. **Deployment and secrets:** choose API hosting, public issuer/base URL, TLS termination, secret storage, database credentials, signing certificate/key storage and rotation, health/readiness behavior, and environment separation before production.
 6. **Order API contract:** confirm which existing order fields are safe to expose, pagination/detail behavior, status/error mapping, and create-order idempotency. Legacy orders with null CustomerId must remain invisible to customer endpoints until verified ownership backfill exists.
 
