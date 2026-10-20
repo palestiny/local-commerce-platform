@@ -4,8 +4,8 @@
 
 This is the current verification record for the document. Older status notes below are historical and must not override this section.
 
-- **Latest confirmed CI evidence for the code baseline:** commit `220155d3f24d94927222eb1248341ce293a4cf69` passed [.NET workflow](https://github.com/palestiny/local-commerce-platform/actions/runs/39449647278) and [customer-mobile workflow](https://github.com/palestiny/local-commerce-platform/actions/runs/39449647527) on October 20, 2026.
-- A subsequent documentation-only update records that evidence. Recheck CI on the current branch head before treating the newest commit as green; this section must not imply that an earlier commit's checks verify a later head.
+- **Latest confirmed CI evidence for the previous documentation head:** commit `07d540e71cff1978b4b00d9b0c5db38018b22d31` passed [.NET workflow](https://github.com/palestiny/local-commerce-platform/actions/runs/39452565054) and [customer-mobile workflow](https://github.com/palestiny/local-commerce-platform/actions/runs/39452565096) on October 20, 2026.
+- This documentation-only update follows that verified head. Recheck CI on the new current branch head before treating the newest commit as green; do not imply that an earlier commit's checks verify a later head.
 - The configured .NET workflow builds/tests the solution and runs its PostgreSQL 16 migration/backup-restore smoke check; the mobile workflow runs TypeScript checking and Expo Doctor. These results do **not** establish Android/iOS runtime behavior, live mobile-to-API integration, a physical PostgreSQL connection failure during COMMIT, or every failure-injection scenario.
 - PR #22 remains open and Draft. No API/auth implementation, framework/package change, database change, or PR promotion/merge is authorized by this documentation update.
 
@@ -162,7 +162,7 @@ This section advances the design but does not claim an implementation decision h
 
 ### Decisions still requiring explicit owner approval
 
-- Whether phone and email are both available at first launch or one is the initial required verified identifier.
+- **Approved: both email and phone are supported at first launch** as independently verifiable contact/login channels. A user may sign in with either verified identifier and their password; the product must not require both identifiers just to sign in. The policy for whether account activation requires one verified channel or both remains a separate security/product decision. Recommendation: require at least one verified channel before enabling sign-in, then let the user add and verify the second channel later.
 - The exact verification expiry, resend cooldown and rate-limit thresholds.
 - SMS/email delivery provider and cost budget.
 - Whether MFA/passkeys are in the first release or a later milestone.
@@ -303,7 +303,7 @@ Recommended minimum policy to design and test:
 1. **Provisioning verification details:** specify how a person is verified and matched to the customer profile in the separate provisioning step, how duplicate profiles/conflicts are resolved, and how mapping activation is made atomic and auditable. Always fail closed if the mapping is missing or inactive.
 2. **OAuth/OIDC detailed security profile:** confirm supported flows for native mobile clients, public-client registration, PKCE, redirect URI policy, issuer/audience values, signing-key management and rotation, access-token lifetime, refresh-token rotation/revocation, logout semantics, and development versus production settings. Do not invent a custom OAuth flow.
 3. **Persistence and migrations:** decide how ASP.NET Core Identity tables and OpenIddict stores fit the existing PostgreSQL setup, migration ownership/order, schema conventions, and deployment-time migration policy. Review compatibility before upgrading to .NET 10.
-4. **Account recovery and abuse controls:** define email confirmation, password reset, rate limiting/lockout, verification delivery provider, and required configuration. Provider and operational cost are not yet approved.
+4. **Account recovery and abuse controls:** decide whether initial account activation requires one or both verified channels (recommend at least one), then define password reset, rate limiting/lockout, verification expiry/resend thresholds, and delivery provider. Provider and operational cost are not yet approved.
 5. **Deployment and secrets:** choose API hosting, public issuer/base URL, TLS termination, secret storage, database credentials, signing certificate/key storage and rotation, health/readiness behavior, and environment separation before production.
 6. **Order API contract:** confirm which existing order fields are safe to expose, pagination/detail behavior, status/error mapping, and create-order idempotency. Legacy orders with null CustomerId must remain invisible to customer endpoints until verified ownership backfill exists.
 
@@ -561,3 +561,12 @@ PR #22 remains open and Draft. No merge was performed.
 4. Do not automatically merge accounts because their email addresses or phone numbers match. Any future account-linking flow must prove control of the relevant identifiers and handle conflicts explicitly.
 5. One-time-code-only login is not part of the first approved login mechanism. OTP/passwordless login and MFA may be evaluated later as separate product/security decisions; do not infer approval for them from approval of email + phone.
 6. This direction does not authorize implementation, new packages, database/schema changes, migrations, token settings, or PR promotion/merge. Before implementation, detail password policy and storage, verification/recovery flows, rate limits, session/token revocation, lockout/abuse controls, and privacy-safe responses, then obtain approval at the implementation gate.
+
+
+## Owner decision clarification — both contact channels at first launch
+
+The owner-approved direction is that **both email and phone are available from the first release**, and either verified identifier can be used with the account password. This supersedes older wording that left open whether both channels would be offered at launch. It does not decide whether users must verify both channels before account activation.
+
+**Recommended next policy (pending owner approval):** require at least one verified channel before enabling sign-in; allow registration to begin with either email or phone; prompt the user to add the second channel without blocking initial use; and require the relevant channel to be verified before it can be used for login or recovery. Keep recovery responses privacy-safe and apply the same abuse controls regardless of channel. This balances lower signup friction against account-recovery resilience. Requiring both channels before activation improves contact completeness but increases signup abandonment and may exclude users who lack reliable access to one channel.
+
+**Implementation remains unauthorized** until the detailed security design and explicit implementation gate are approved.
