@@ -399,3 +399,12 @@ Keep the existing database unique index as a necessary invariant, but do **not**
 The concrete store has a sound PostgreSQL conflict-resolution pattern for ordinary concurrent reservations, and the repository contains meaningful integration tests for reservation contention, same-key replay, cart contention, and transaction rollback. The remaining blocker is **verification breadth and current CI evidence**, not a proven defect in the `ON CONFLICT` implementation itself. Do not claim all ambiguous-commit, stale-reservation, DbContext-recovery, or HTTP error-mapping paths are covered until they are tested and the relevant CI run is checked.
 
 **Decision boundary:** this remains a documentation-only review. No code, schema, migration, package, runtime setting, test, or PR state was changed.
+
+
+## Create-order idempotency — lost-response retry verification
+
+**Latest verification addition:** PostgreSQL integration test `CreateOrderPersistenceTests.Retry_after_committed_order_but_lost_response_replays_original_result` commits the complete order transaction, deliberately simulates the caller losing the response after commit, then retries the same command with a fresh DbContext. The retry must return the persisted order, leave exactly one idempotency record, and leave the cart consumed exactly once.
+
+This is a deterministic test of the client-visible ambiguous-outcome recovery contract **after a successful commit**. It is not a physical network fault injected during PostgreSQL's COMMIT exchange; that infrastructure-level fault remains unsimulated. The implementation relies on the durable completed idempotency record to resolve the retry. Do not interpret this test as proving every database/network failure mode.
+
+The current commit's CI must pass before this addition is treated as verified. The PR remains open and Draft; no merge is authorized by this work.

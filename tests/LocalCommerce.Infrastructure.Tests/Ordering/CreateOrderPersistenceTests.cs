@@ -37,9 +37,9 @@ public sealed class CreateOrderPersistenceTests
         return(customerId,cartId,productId,storeId);
     }
 
-    private static CreateOrderHandler Handler(CommerceDbContext db, ICartCheckout? checkout=null, IOrderWriter? writer=null, IOrderNumberGenerator? generator=null)
+    private static CreateOrderHandler Handler(CommerceDbContext db, ICartCheckout? checkout=null, IOrderWriter? writer=null, IOrderNumberGenerator? generator=null, ICreateOrderUnitOfWork? unitOfWork=null)
         => new(new EfCartReader(db),checkout??new EfCartCheckout(db),new EfStoreReader(db),new EfProductReader(db),
-            writer??new EfOrderWriter(db),new EfGeneralizedIdempotencyStore(db),new EfCreateOrderUnitOfWork(db),
+            writer??new EfOrderWriter(db),new EfGeneralizedIdempotencyStore(db),unitOfWork??new EfCreateOrderUnitOfWork(db),
             generator??new SequentialOrderNumberGenerator());
 
     [Fact]
@@ -172,6 +172,33 @@ public sealed class CreateOrderPersistenceTests
     }
 
     [Fact]
+    public async Task Retry_after_committed_order_but_lost_response_replays_original_result()
+    {
+        await using var seedDb = CreateDb();
+        await DatabaseInitializer.InitializeAsync(seedDb);
+        await ResetAsync(seedDb);
+        var s = await SeedAsync(seedDb);
+        var command = new CreateOrderCommand(s.customerId, s.cartId, "lost-response-key");
+
+        await using (var firstDb = CreateDb())
+        {
+            var unitOfWork = new CommitThenLoseResponseUnitOfWork(new EfCreateOrderUnitOfWork(firstDb));
+            await Assert.ThrowsAsync<IOException>(() =>
+                Handler(firstDb, unitOfWork: unitOfWork).HandleAsync(command));
+        }
+
+        await using (var retryDb = CreateDb())
+        {
+            var replay = await Handler(retryDb).HandleAsync(command);
+            await using var verifyDb = CreateDb();
+            var persisted = await verifyDb.Orders.SingleAsync();
+            Assert.Equal(persisted.Id, replay.OrderId);
+            Assert.Equal(1, await verifyDb.IdempotencyRecords.CountAsync());
+            Assert.False((await verifyDb.Carts.SingleAsync(x => x.Id == s.cartId)).IsActive);
+        }
+    }
+
+    [Fact]
     public async Task Concurrent_different_keys_on_same_cart_create_only_one_order()
     {
         await using var seedDb=CreateDb(); await DatabaseInitializer.InitializeAsync(seedDb); await ResetAsync(seedDb);
@@ -222,6 +249,15 @@ public sealed class CreateOrderPersistenceTests
     private static async Task<(bool Success, CreateOrderResult? Result)> Capture(Task<CreateOrderResult> task)
     {
         try { return (true,await task); } catch(CreateOrderRejectedException) { return (false,null); }
+    }
+
+    private sealed class CommitThenLoseResponseUnitOfWork(ICreateOrderUnitOfWork inner) : ICreateOrderUnitOfWork
+    {
+        public async Task ExecuteAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken)
+        {
+            await inner.ExecuteAsync(operation, cancellationToken);
+            throw new IOException("Simulated lost response after the database transaction committed.");
+        }
     }
 
     private sealed class ThrowingCartCheckout : ICartCheckout
