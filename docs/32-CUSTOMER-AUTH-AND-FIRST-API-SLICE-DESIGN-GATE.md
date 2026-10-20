@@ -4,8 +4,8 @@
 
 This is the current verification record for the document. Older status notes below are historical and must not override this section.
 
-- Verified branch HEAD: `525a5991d9776483a0b2aa9035c517df493fcc28`.
-- **CI PASS on this exact HEAD:** [.NET PR workflow](https://github.com/palestiny/local-commerce-platform/actions/runs/39448222238), [customer-mobile PR workflow](https://github.com/palestiny/local-commerce-platform/actions/runs/39448223284), [.NET push workflow](https://github.com/palestiny/local-commerce-platform/actions/runs/39448210768), and [customer-mobile push workflow](https://github.com/palestiny/local-commerce-platform/actions/runs/39448210868).
+- Verified branch HEAD: `220155d3f24d94927222eb1248341ce293a4cf69`.
+- **CI PASS on this exact HEAD:** [.NET push workflow](https://github.com/palestiny/local-commerce-platform/actions/runs/39449647278) and [customer-mobile push workflow](https://github.com/palestiny/local-commerce-platform/actions/runs/39449647527). Both runs completed successfully on October 20, 2026. The earlier four-run evidence on `525a5991` remains historical evidence for that earlier commit.
 - The configured .NET workflow builds/tests the solution and runs its PostgreSQL 16 migration/backup-restore smoke check; the mobile workflow runs TypeScript checking and Expo Doctor. These results do **not** establish Android/iOS runtime behavior, live mobile-to-API integration, a physical PostgreSQL connection failure during COMMIT, or every failure-injection scenario.
 - PR #22 remains open and Draft. No API/auth implementation, framework/package change, database change, or PR promotion/merge is authorized by this documentation update.
 
