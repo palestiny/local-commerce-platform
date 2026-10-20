@@ -295,3 +295,42 @@ Do not add catalog, store-management, driver, admin, payment, refund, or general
 - The handler's concurrent idempotency reservation behavior and PostgreSQL failure/retry cases require targeted integration tests before implementation approval.
 
 **Decision boundary:** this is documentation-only design review. No application code, API host, DTO, endpoint, database schema, migration, package, CI configuration, or PR state was changed by this review.
+
+
+## Create-order idempotency and failure-path review — partial findings
+
+**Status: application-flow review only; persistence-store implementation and PostgreSQL concurrency tests were not verified in this pass. No runtime tests were run.**
+
+### Confirmed from the current application handler and EF model
+
+1. `CreateOrderHandler` first reads an idempotency record using the customer scope, operation `CreateOrder`, and the supplied key. If a record exists, it validates the request fingerprint and returns the stored completed result; a persisted `Reserved` record is treated as an unexpected failure because the handler cannot prove that work is still in progress.
+2. If no record is found, the handler validates the cart/store/products and builds the order before opening its unit-of-work transaction. Inside the transaction it attempts to reserve the key again, writes the order, consumes the cart, and marks the idempotency record complete.
+3. The fingerprint is SHA-256 over normalized GUID text for CustomerId and CartId. Thus it identifies the cart-based command, not a snapshot of the cart's line contents or prices. That may be correct if the contract defines the idempotent command as “checkout this cart once,” but it must be an explicit decision.
+4. EF model configuration declares a unique database index on `(ScopeId, Operation, IdempotencyKey)`. This is useful protection against duplicate reservations, but it does not by itself prove that a concurrent request is translated into a deterministic replay response.
+5. The unit-of-work implementation begins a database transaction, runs the operation, saves changes, and commits; on an exception it attempts rollback and rethrows. The exact behavior still depends on the concrete idempotency-store implementation, EF tracking state, PostgreSQL uniqueness handling, and how a failed transaction is recovered.
+
+### Risks to close before calling idempotency reliable
+
+- **Concurrent reservation race:** both requests can observe no existing record before either reserves it. One transaction may hit the unique constraint. The implementation must distinguish that specific reservation conflict from unrelated database failures, recover/clear failed EF state as needed, then re-read the winner's record in a fresh valid transaction/context and validate its fingerprint/result. Do not assume a failed PostgreSQL transaction can continue normally.
+- **Result visibility and transaction boundaries:** order creation, cart consumption, and the completed idempotency result should commit atomically. If reservation is committed independently, a crash can strand a permanent `Reserved` record; if it is inside the same transaction, an interrupted transaction should roll back, but this needs verification against the actual store implementation.
+- **Replay semantics after cart changes:** the handler computes the fingerprint from customer and cart IDs, while it reads cart contents before the reservation inside the transaction. Define whether a retry after a cart changes should replay the original result, reject the changed command, or treat the cart as a distinct checkout intent. Current fingerprinting does not detect changed cart contents.
+- **Key validation and normalization:** define accepted length/characters, whitespace handling, maximum retention, and whether key comparison is case-sensitive. Ensure the database key limit and HTTP contract agree. Do not log raw keys.
+- **Cancellation and transient failures:** verify cancellation at each awaited step, connection loss around commit, retry after an ambiguous commit result, and rollback failure behavior. A client timeout does not prove that the order transaction failed.
+- **Order-number generation:** generation currently occurs before the transactional operation. Confirm uniqueness-conflict handling and ensure retries do not accidentally create multiple orders or return an inconsistent result.
+
+### Required PostgreSQL integration test matrix
+
+1. Same customer + same key + same cart sent sequentially: one order, cart consumed once, stable result replayed.
+2. Same customer + same key + different cart: deterministic key-reuse error and no second order.
+3. Same key concurrently submitted from two independent database contexts: exactly one order, one cart consumption, and both callers receive a consistent result or one receives a documented retryable response.
+4. Inject failure before order insert, after order insert but before cart consumption, after cart consumption but before completion, and around commit: all persisted state must be atomic and safe to retry.
+5. Simulate ambiguous commit/connection loss and then retry with the same key; verify no duplicate order.
+6. Force the unique idempotency index conflict and verify that only the expected constraint is handled as a reservation race; unrelated uniqueness/database errors must remain failures.
+7. Reuse the same key with changed cart contents and verify the explicitly chosen semantic.
+8. Verify key length/normalization, completed record corruption, stale reservation handling, and result payload/resource-ID consistency.
+9. Verify transaction rollback and EF DbContext state recovery after a PostgreSQL constraint violation.
+10. Verify idempotency scope includes authenticated customer and operation so another customer or another operation cannot replay the record.
+
+### Recommendation and decision boundary
+
+Keep the existing database unique index as a necessary invariant, but do **not** mark create-order idempotency as fully verified until the concrete store implementation and these PostgreSQL concurrency/failure tests are inspected and pass. Decide explicitly whether the fingerprint means “same cart checkout intent” or “same immutable request payload.” This is a documentation-only review: no code, schema, migration, package, runtime setting, test result, or PR state was changed.
