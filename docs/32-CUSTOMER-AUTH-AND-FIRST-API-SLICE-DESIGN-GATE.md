@@ -299,7 +299,7 @@ Do not add catalog, store-management, driver, admin, payment, refund, or general
 
 ## Create-order idempotency and failure-path review — partial findings
 
-**Status: application-flow review only; persistence-store implementation and PostgreSQL concurrency tests were not verified in this pass. No runtime tests were run.**
+**Status: application flow, concrete persistence-store implementation, and existing PostgreSQL test coverage reviewed from source. No tests were executed in this review session; CI evidence must be checked separately before claiming current green status.**
 
 ### Confirmed from the current application handler and EF model
 
@@ -334,3 +334,39 @@ Do not add catalog, store-management, driver, admin, payment, refund, or general
 ### Recommendation and decision boundary
 
 Keep the existing database unique index as a necessary invariant, but do **not** mark create-order idempotency as fully verified until the concrete store implementation and these PostgreSQL concurrency/failure tests are inspected and pass. Decide explicitly whether the fingerprint means “same cart checkout intent” or “same immutable request payload.” This is a documentation-only review: no code, schema, migration, package, runtime setting, test result, or PR state was changed.
+
+
+## Create-order idempotency — concrete store and test review
+
+**Scope:** source inspection of `GeneralizedIdempotencyPersistence.cs`, `CreateOrderPersistence.cs`, `GeneralizedIdempotencyPersistenceTests.cs`, and `CreateOrderPersistenceTests.cs`. This review did not execute tests or change runtime code.
+
+### Confirmed implementation behavior
+
+1. `EfGeneralizedIdempotencyStore.ReserveAsync` uses a parameterized PostgreSQL `INSERT ... ON CONFLICT ("ScopeId","Operation","IdempotencyKey") DO NOTHING`. If it inserts no row, it re-reads the existing record and returns it. This is stronger than relying on a raw unique-constraint exception and is designed to handle the normal unique-key race without leaving the PostgreSQL transaction aborted.
+2. The uniqueness scope is `(ScopeId, Operation, IdempotencyKey)`. The store itself returns the existing record even when the supplied fingerprint differs; the command handler is responsible for comparing fingerprints and rejecting key reuse.
+3. `CompleteAsync` loads the reservation, rejects missing or already-completed records, and sets the completed resource reference/payload. The create-order unit of work wraps reservation, order write, cart consumption, completion, `SaveChangesAsync`, and commit in one transaction.
+4. Because reservation and completion are inside the same create-order transaction, the intended behavior is that a failure before commit rolls both back. The handler treats a previously persisted `Reserved` record as an unexpected failure; this is appropriate for detecting an invariant violation but does not itself recover a stale reservation created by another caller or code path.
+
+### Existing PostgreSQL tests located
+
+- `GeneralizedIdempotencyPersistenceTests.Concurrent_reservation_allows_only_one_winner`: uses two independent DbContexts and transactions, holds the first insert uncommitted, then verifies the second reservation waits and returns the first record after commit.
+- `GeneralizedIdempotencyPersistenceTests.Reservation_and_completion_rollback_as_one_transaction`: verifies reservation and completion disappear together after rollback.
+- `CreateOrderPersistenceTests.Same_idempotency_key_converges_to_one_order`: concurrent same-key requests using independent DbContexts return the same Order ID and leave one order.
+- `CreateOrderPersistenceTests.Concurrent_different_keys_on_same_cart_create_only_one_order`: verifies only one of two different-key attempts can create an order from the same cart.
+- `CreateOrderPersistenceTests.Failure_after_order_write_rolls_back_order_and_cart`: injects a failure during cart checkout after an order write and checks that the order and idempotency record are absent and the cart remains active.
+- Other tests cover replay fingerprint conflicts, completed payload persistence, and cart-based key reuse.
+
+### Remaining gaps / verification caveats
+
+1. **No test run was performed in this review.** The presence of test code is not proof that the current branch's tests pass. Inspect the latest workflow run for the current head before using a GREEN/VERIFIED label.
+2. The concurrent reservation test uses a fixed `Task.Delay(100)` to assert the second operation is waiting. This can be scheduler-sensitive; a bounded synchronization/timeout approach would make the test more deterministic.
+3. Existing tests do not establish behavior for a connection loss or ambiguous result around transaction commit, nor exhaustive failure injection at every boundary (before insert, after cart consumption, during completion, and during commit).
+4. The rollback test that deliberately calls `SaveChangesAsync` inside a transaction before throwing verifies persisted rollback state. It does not fully establish that reusing the same DbContext after rollback is safe in every EF change-tracker state; a targeted same-context retry test or a documented fresh-context retry boundary is still needed.
+5. The command fingerprint remains based on CustomerId + CartId, not cart-line/pricing content. This is consistent only if the product contract deliberately defines the idempotent intent as “checkout this cart once.” The owner-facing API contract must decide whether cart mutations after the first attempt should replay the first order or be rejected.
+6. Key normalization, whitespace-only/oversized keys, retention/expiry, stale reservation operational handling, malformed persisted result payloads, and explicit HTTP mapping of database/transient errors remain outside the verified coverage found here.
+
+### Updated assessment
+
+The concrete store has a sound PostgreSQL conflict-resolution pattern for ordinary concurrent reservations, and the repository contains meaningful integration tests for reservation contention, same-key replay, cart contention, and transaction rollback. The remaining blocker is **verification breadth and current CI evidence**, not a proven defect in the `ON CONFLICT` implementation itself. Do not claim all ambiguous-commit, stale-reservation, DbContext-recovery, or HTTP error-mapping paths are covered until they are tested and the relevant CI run is checked.
+
+**Decision boundary:** this remains a documentation-only review. No code, schema, migration, package, runtime setting, test, or PR state was changed.
