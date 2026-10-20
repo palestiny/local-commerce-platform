@@ -2,14 +2,12 @@
 
 ## Verification status update — 2026-10-20
 
+This note is the latest verification record for this document. Older sections below are retained as historical review notes; their point-in-time statements must not override this update.
 
-This status note supersedes older verification notes below where they describe the current idempotency test or current CI state. Older sections are retained as review history; their point-in-time statements should not be read as current results.
-
-- Current branch HEAD at this update: `e15f818b43424abb8d214fb8f9c1327789853c63`.
-- The PostgreSQL contention test now polls `pg_stat_activity` for the competing backend's lock wait (bounded to five seconds), instead of asserting contention after a fixed 100 ms delay.
-- GitHub Actions passed on this HEAD: [.NET build/test and migration/recovery smoke test](https://github.com/palestiny/local-commerce-platform/actions/runs/39431964868) and [customer-mobile TypeScript/Expo Doctor checks](https://github.com/palestiny/local-commerce-platform/actions/runs/39431964902). Duplicate runs also passed: [ .NET ](https://github.com/palestiny/local-commerce-platform/actions/runs/39431955592) and [mobile](https://github.com/palestiny/local-commerce-platform/actions/runs/39431955024).
-- These CI results verify the configured automated checks; they do **not** establish Android/iOS runtime behavior, live mobile-to-API integration, ambiguous-commit recovery, or every proposed failure-injection scenario.
-- Existing open product/security decisions remain open where identified below. This update changes documentation only; it does not authorize API/auth implementation, framework/package changes, database changes, or PR promotion/merge.
+- Current branch HEAD before this documentation change: `9178626f70ac50bb05e485967373c0b7e9019e0a`.
+- GitHub Actions passed on that HEAD: [.NET build/test and PostgreSQL migration/recovery smoke test](https://github.com/palestiny/local-commerce-platform/actions/runs/39441783274) and [customer-mobile TypeScript/Expo Doctor checks](https://github.com/palestiny/local-commerce-platform/actions/runs/39441783391).
+- These CI results verify configured automated checks only. They do **not** establish Android/iOS runtime behavior, live mobile-to-API integration, a physical PostgreSQL connection failure during COMMIT, or every possible failure-injection scenario.
+- This documentation update records the already-approved unified-account/product semantics and clarifies what remains a technical design question. It does not authorize API/auth implementation, framework/package changes, database changes, or PR promotion/merge.
 
 
 Status: **OWNER DECISIONS RECORDED — DESIGN REVIEW REQUIRED; IMPLEMENTATION NOT AUTHORIZED**
@@ -112,6 +110,30 @@ The infrastructure suite covers key length at and over the storage limit, same-k
 - **Implementation boundary:** these decisions clarify the design only. They do not authorize implementation, migrations, package/framework changes, or PR promotion/merge.
 
 **Decision status:** the above product directions are owner-approved. The exact customer verification method, data fields, disablement enforcement mechanism, and retention/anonymization policy still require detailed design. No domain model, schema, migration, package, or runtime code was changed by this review.
+
+## Unified account, customer profile, merchant business and disablement — owner-approved product rules
+
+These product rules clarify identity concepts and account lifecycle. They are not a database schema or implementation authorization.
+
+1. **One login account per person for the first version.** ASP.NET Core Identity owns the login/security principal. The account may be eligible for more than one platform role (for example CUSTOMER and MERCHANT); do not create a second login merely because the person shops and also operates a business. Roles describe broad capabilities, not ownership of a particular order, store or business.
+2. **Customer means the buyer/person; customer profile means commerce data.** A customer is the individual who buys goods or services through Baladna and owns customer-facing orders. The customer profile is the platform's commerce-side record for preferences and explicitly modeled contact/address data. The Identity account is credentials and security state. They are related concepts, not the same record.
+3. **Merchant is a business actor, not a Store.** A Merchant/business profile represents the trading business and may own multiple Stores. A person who operates a merchant business remains the same login account and may also be a customer. Merchant-owner/staff permissions must be scoped to the specific business/store relationship and verified server-side; a MERCHANT role alone does not grant access to every merchant or store.
+4. **Commerce records are operational history.** Orders, order items, order status/history and future payment/refund records are transactional records. They are not authentication credentials and must not be cascade-deleted just because a login account or editable profile is disabled or removed. Legacy orders without verified ownership stay unavailable through customer APIs.
+5. **Disable the login account = platform-wide login suspension.** A disabled/suspended Identity account must be prevented from obtaining new tokens and from refreshing existing sessions. Existing refresh tokens/sessions must be revoked or rejected promptly; API authorization must also enforce the approved revocation strategy rather than trusting an already-issued token indefinitely. Disablement is not account deletion, privacy erasure or an instruction to delete commerce history.
+6. **Business/store suspension is separate from account suspension.** Disabling a merchant business or Store blocks the affected business operations according to its status policy, but does not automatically disable the person's whole login or erase their customer profile/orders. Conversely, disabling the person's login blocks their access across roles while preserving business and commerce records. The precise business-status transition rules belong to the merchant/store lifecycle gate.
+7. **Provisioning remains a separate trusted workflow.** Creating a login account does not automatically create/claim a customer profile, merchant business, Store or historical order. Customer mapping and merchant membership become active only after the relevant verification, duplicate/conflict resolution and auditable server-side workflow succeeds. Contact verification alone is not proof of ownership of an existing commerce record.
+
+### Acceptance tests implied by these rules
+
+- One account can be both customer and an authorized merchant actor without duplicate login credentials.
+- A customer can only list/read their own verified customer orders; merchant access is restricted to businesses/stores for which the account has an active authorized membership.
+- A missing, disabled, duplicate or unverified mapping/membership fails closed.
+- Disabling an account blocks login and refresh and invalidates/rejects existing sessions according to the selected token-validation/revocation mechanism.
+- Suspending a merchant or Store blocks affected merchant operations without silently disabling unrelated customer capabilities.
+- Disabling/removing an account or profile does not cascade-delete orders, order history or financial/operational records.
+- Registration never auto-claims legacy orders or assigns merchant access based solely on client-supplied IDs, phone number or email address.
+
+**Decision boundary:** the product semantics above are recorded as owner-approved directions from the prior review. Token revocation mechanics, identity/profile/business membership schema, verification channels, retention/anonymization rules and merchant/store status transitions still need detailed design. No runtime code or schema was changed by this clarification.
 
 ## Native mobile OAuth/OIDC security profile — recommendation, not implementation approval
 
