@@ -54,6 +54,27 @@ This section records repository facts and upstream compatibility guidance. It is
 
 **Current result:** compatibility direction looks feasible from upstream support information, but the repository has not yet been upgraded or tested on .NET 10. The target-framework and package changes remain unauthorized until the implementation gate is separately approved.
 
+## Customer identity mapping — code review findings (proposal, not approved)
+
+### Verified from inspected files
+
+- The solution file currently lists Domain, Domain.Tests, Application, Application.Tests, Infrastructure, and Infrastructure.Tests; it does not yet include an API host or a dedicated customer-domain project.
+- The inspected domain `Order` aggregate has order/store/items/status behavior but no customer identity property.
+- The persisted Infrastructure `OrderEntity` separately contains nullable `Guid? CustomerId`; EF Core indexes this field. Therefore customer ownership currently exists as a persistence-level attribute, not as a demonstrated Customer aggregate relationship in the inspected domain model.
+- The order-creation command accepts `Guid CustomerId`, while the handler checks the cart's CustomerId matches it. The HTTP boundary must therefore populate this value from the authenticated server-side identity mapping, never directly from request JSON.
+- The repository's existing order schema intentionally allows null CustomerId for legacy rows. Do not backfill or expose those rows without independently verified ownership evidence.
+
+### Recommended mapping proposal for owner review
+
+1. Treat ASP.NET Core Identity's user ID as an authentication/account identifier, not as the commerce CustomerId.
+2. Add a dedicated persistence mapping between the Identity user and the internal commerce customer identity. Prefer an explicit customer/account link with a unique Identity user key and a unique internal CustomerId where the product rule is one login account per customer. If shared/family accounts or multiple login methods per customer are a requirement, that cardinality must be decided before enforcing both uniqueness constraints.
+3. Resolve the authenticated `sub`/Identity user ID to the internal CustomerId server-side on each authenticated request (or through a carefully designed trusted principal transformation). If no active mapping exists, fail closed; never fall back to a client-provided ID.
+4. Define provisioning explicitly: registration creates the authentication account; customer mapping is created atomically by a trusted server workflow, with duplicate/conflicting mapping rejected. Do not auto-claim existing unowned orders during registration.
+5. Account disablement blocks authentication/access immediately. Account deletion and customer-data retention need a separate policy; do not cascade-delete historical orders or financial/operational records merely because an Identity account is deleted.
+6. Keep the mapping unique and auditable, and test missing, duplicate, disabled, deleted, and cross-customer mapping scenarios.
+
+**Decision status:** proposal only. The one-account-to-one-customer cardinality, registration/provisioning workflow, and account deletion/retention policy remain owner decisions. No domain model, schema, migration, package, or runtime code was changed by this review.
+
 ## Decisions still open before implementation
 
 1. **Customer identity mapping and lifecycle:** define the internal customer record and unique mapping from the authenticated Identity/OpenIddict subject to that record; specify first-login provisioning, account deletion/disablement, and behavior when the mapping is absent. Recommended: use a server-controlled, unique mapping and never derive the internal customer ID from user-supplied input.
