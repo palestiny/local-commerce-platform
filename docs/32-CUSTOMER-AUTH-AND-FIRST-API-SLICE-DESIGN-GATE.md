@@ -1112,3 +1112,39 @@ This is a documentation-only dependency assessment; no package was installed and
 **Recommended design direction:** use revocable server-side refresh sessions with rotation/reuse detection, plus server-side account/session eligibility checks on sensitive customer endpoints. The maximum disablement/revocation latency, session persistence schema, and outage policy still require owner approval and deployment-specific verification. Do not implement these defaults without closing the gate.
 
 Official background: Microsoft documents that backend account disablement does not automatically invalidate an already-issued authentication cookie, and that periodic/server-side validation trades latency against database load ([ASP.NET Core cookie authentication](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie)). Its Identity API guidance similarly describes short-lived access tokens, longer-lived refresh tokens, and the security/performance trade-off of session revalidation ([Identity API authorization](https://learn.microsoft.com/en-us/aspnet/core/security/authentication/identity-api-authorization)).
+
+
+### Source-level auth boundary verification — 2026-10-20
+
+This subsection records a fresh read of the branch's constitution, mobile package manifest, and current auth screen. It is a repository inspection, not a runtime/device test.
+
+#### Evidence from the current branch
+
+- The constitution at `docs/00-PROJECT-CONSTITUTION.md` requires a Modular Monolith, explicit design decisions, resource-level authorization, and verified acceptance criteria. Its identity direction names ASP.NET Core Identity plus OpenIddict and .NET 10 as a target direction, while requiring a separate compatibility review before a framework/package upgrade.
+- `apps/customer-mobile/package.json` pins Expo `~57.0.16` and React Native `0.86.3`. Its current dependencies do **not** include `expo-auth-session`, `expo-crypto`, `expo-web-browser`, or `expo-secure-store`. Therefore, the auth libraries remain candidates only; no dependency adoption is implied by the docs.
+- `apps/customer-mobile/app/auth.tsx` is a UI prototype. Google, sign-in, and create-account actions call the same “not connected” alert; the screen explicitly says no credentials are sent and no account is created. This is the correct safe state until the server and session contract exist.
+
+#### Critical trust boundary: provider identity versus Baladna session
+
+The first implementation must not treat a Google access token as a Baladna API access token, nor accept a client-supplied customer ID as proof of ownership.
+
+1. The identity provider authenticates the person; its response is validated according to the selected provider/OIDC contract.
+2. The trusted backend validates the provider response and maps the stable provider subject to exactly one Baladna identity account. Email/phone values alone must not trigger silent account linking.
+3. The backend provisions or resolves the Baladna customer profile through a trusted, idempotent workflow; an incomplete or ambiguous mapping returns a safe pending/recovery state, not customer data.
+4. Baladna issues or establishes its own API session according to the selected OpenIddict/session design. The mobile app uses only that documented session for Baladna APIs.
+5. Every protected customer-order request derives the actor from the validated Baladna session and applies ownership in the server-side query. UI route guards and local storage are not authorization boundaries.
+
+#### Recommended next implementation gate (still not authorized)
+
+The next work item should be a **focused compatibility spike**, not a live login button:
+- identify the actual .NET SDK/runtime installed in CI and the target/deployment constraint;
+- pin a compatible stable package set for the new auth/API host without changing existing commerce project target frameworks in the same change;
+- prove clean restore/build and tests in CI;
+- add a documented identity-provider callback/redirect contract and a sequence diagram covering provider authentication, Baladna account mapping, customer provisioning, Baladna session issuance, refresh, logout, and disablement;
+- define the server-side session persistence boundary and migration/rollback strategy before adding session tables;
+- define exact error outcomes for duplicate provider-subject mapping, unverified contact, already-linked account, pending provisioning, provider outage, and session-store outage;
+- only after those proofs, implement the smallest server-side vertical slice with tests first; then connect the mobile client and verify Android/iOS development builds.
+
+The official Expo guidance confirms that `expo-auth-session` supports browser-based OAuth/OIDC flows, PKCE, and redirect handling, but also warns that Expo Go cannot validate OAuth/OIDC redirect behavior because its app scheme cannot be customized; use a development build for that proof ([Expo authentication guide](https://docs.expo.dev/guides/authentication/), [AuthSession reference](https://docs.expo.dev/versions/latest/sdk/auth-session/)). Current “latest” docs may describe a newer Expo SDK, so exact package versions must be checked against SDK 57 rather than copied from the latest page.
+
+**Status:** current screen remains intentionally non-functional for authentication. No auth package was installed, no credential was transmitted, and no provider or device flow was tested in this documentation-only step. The design gate remains **NOT READY FOR IMPLEMENTATION** until the open owner decisions and compatibility proof are closed.
