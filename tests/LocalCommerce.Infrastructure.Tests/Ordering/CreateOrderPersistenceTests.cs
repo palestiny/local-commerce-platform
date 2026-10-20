@@ -105,7 +105,10 @@ public sealed class CreateOrderPersistenceTests
     {
         var schema = "migration_test_" + Guid.NewGuid().ToString("N");
         await using var admin = CreateDb();
+        // Schema identifiers cannot be SQL parameters; the helper strictly validates the generated identifier.
+#pragma warning disable EF1003 // Validated SQL identifier; parameterization is not supported for identifiers.
         await admin.Database.ExecuteSqlRawAsync("CREATE SCHEMA " + QuoteGeneratedSchemaIdentifier(schema));
+#pragma warning restore EF1003
 
         try
         {
@@ -138,7 +141,10 @@ public sealed class CreateOrderPersistenceTests
         }
         finally
         {
+            // Schema identifiers cannot be SQL parameters; the helper strictly validates the generated identifier.
+#pragma warning disable EF1003 // Validated SQL identifier; parameterization is not supported for identifiers.
             await admin.Database.ExecuteSqlRawAsync("DROP SCHEMA IF EXISTS " + QuoteGeneratedSchemaIdentifier(schema) + " CASCADE");
+#pragma warning restore EF1003
         }
     }
 
