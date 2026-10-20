@@ -995,6 +995,28 @@ Before implementation, produce a compatibility table for:
 
 Do not upgrade the solution to .NET 10, mix EF Core major versions, or add auth packages as part of a documentation-only change. If the target is changed, treat it as a separate, focused compatibility work item with a full-solution build, all tests, PostgreSQL migration smoke tests, and rollback notes. A successful existing .NET 8 workflow does not establish .NET 10 compatibility.
 
+### Official-source compatibility findings — 2026-10-20
+
+This is a source-based compatibility assessment, not a successful restore/build against a proposed new package set.
+
+| Component | Verified evidence | Decision implication |
+|---|---|---|
+| .NET runtime lifecycle | Microsoft's release policy lists .NET 10 LTS supported until November 2028 and .NET 8 LTS until November 2026 ([official lifecycle](https://learn.microsoft.com/en-us/dotnet/core/releases-and-support)). | Prefer .NET 10 for the new API direction rather than building a new authentication host on a runtime approaching end of support. Existing projects remain net8.0 until a separately verified migration is approved. |
+| EF Core | EF Core 10 is LTS and requires the .NET 10 SDK/runtime; it will not run on earlier .NET versions ([official EF Core 10 notes](https://learn.microsoft.com/en-us/ef/core/what-is-new/ef-core-10.0/whatsnew)). | A net10.0 migration must move EF Core packages together to the EF Core 10 major line; do not mix EF Core 8 and EF Core 10 in the same provider/context stack. |
+| Npgsql EF Core provider | Npgsql publishes a 10.0 provider release aligned with EF Core 10 ([official Npgsql 10.0 release notes](https://www.npgsql.org/efcore/release-notes/10.0.html)). | The current provider 8.0.11 is the existing net8/EF8 baseline, not the target package for a net10/EF10 context. Validate the exact provider patch and PostgreSQL support matrix during the dedicated upgrade. |
+| OpenIddict ASP.NET Core integration | Official OpenIddict integration docs explicitly list ASP.NET Core 10 / .NET 10 as supported. The current docs show OpenIddict 7.x package references and EF Core integration ([ASP.NET Core support](https://documentation.openiddict.com/integrations/aspnet-core), [EF Core integration](https://documentation.openiddict.com/integrations/entity-framework-core)). | OpenIddict is technically viable in a .NET 10 design, but this does not establish that an arbitrary package combination is compatible. Select matching stable package versions, check advisories/release notes, then restore/build/test in CI. Avoid adopting 8.0 preview for the first production authentication slice. |
+| Native mobile OIDC client | Current app dependencies show Expo SDK 57 / React Native 0.86.3, but no native OIDC client or secure credential storage dependency is currently listed. | Still OPEN: choose a maintained library compatible with the actual Expo SDK and development-build/native-module requirements; prove redirect handling and platform-backed secure storage on Android and iOS before connecting real login. TypeScript/Expo Doctor alone cannot prove these behaviors. |
+
+### Recommended compatibility decision for owner review
+
+- **Target for the new API/auth host:** .NET 10 LTS.
+- **ORM/provider family for that host:** EF Core 10 + the matching stable Npgsql EF Core 10 provider.
+- **Protocol stack:** a currently supported stable OpenIddict release whose ASP.NET Core and EF Core integration assets match the chosen runtime and ORM major versions.
+- **Migration strategy:** keep the existing net8.0 commerce projects and current migrations unchanged in a focused design/compatibility branch until the owner approves a solution-wide or carefully isolated target-framework plan. Do not partially retarget projects or run two EF major versions through one shared context.
+- **Proof required before declaring the matrix closed:** exact package versions pinned; clean restore; full solution build/tests; PostgreSQL migration/recovery smoke test against a representative legacy schema; security tests for issuer/audience/signature/expiry, disablement and refresh revocation; Android and iOS callback and secure-storage smoke tests. Record exact run links and commit SHA.
+
+The official sources support the direction above, but do not decide the application's deployment topology, migration ownership, native client choice, or access-token revocation latency. Those remain OPEN.
+
 ### Proposed mobile authentication/session baseline
 
 These defaults are recommended for review, not yet owner-approved implementation settings:
