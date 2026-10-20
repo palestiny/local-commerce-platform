@@ -408,3 +408,12 @@ The concrete store has a sound PostgreSQL conflict-resolution pattern for ordina
 This is a deterministic test of the client-visible ambiguous-outcome recovery contract **after a successful commit**. It is not a physical network fault injected during PostgreSQL's COMMIT exchange; that infrastructure-level fault remains unsimulated. The implementation relies on the durable completed idempotency record to resolve the retry. Do not interpret this test as proving every database/network failure mode.
 
 The current commit's CI must pass before this addition is treated as verified. The PR remains open and Draft; no merge is authorized by this work.
+
+
+## Verification update — lost-response retry test
+
+**CI evidence for commit `46b88acc095c470803ab88ed354d82bace273814`: PASS.** Both .NET workflow runs passed, including the PostgreSQL migration/recovery smoke test, and both customer-mobile workflow runs passed, including TypeScript and Expo Doctor.
+
+The new test `Retry_after_committed_order_but_lost_response_replays_original_result` verifies recovery when the transaction has committed but the caller loses the response. It does **not** inject a real connection loss during the PostgreSQL COMMIT exchange. That lower-level ambiguous-commit scenario remains **NOT PROVEN** and is not a release-blocking claim for the current application-level retry contract; it must remain visible as a verification limitation.
+
+PR #22 remains open and Draft. No merge was performed.
