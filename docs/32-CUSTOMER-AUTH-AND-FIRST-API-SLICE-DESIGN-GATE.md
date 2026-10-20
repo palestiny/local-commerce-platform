@@ -135,6 +135,92 @@ These product rules clarify identity concepts and account lifecycle. They are no
 
 **Decision boundary:** the product semantics above are recorded as owner-approved directions from the prior review. Token revocation mechanics, identity/profile/business membership schema, verification channels, retention/anonymization rules and merchant/store status transitions still need detailed design. No runtime code or schema was changed by this clarification.
 
+
+## Detailed registration, verification, recovery and abuse-control proposal — pending owner approval
+
+This section advances the design but does not claim an implementation decision has been approved.
+
+### Recommended product behavior
+
+1. **Login identifiers:** support a verified email address or verified phone number as a login/recovery channel, subject to delivery-cost and operational review. Normalize identifiers consistently, enforce uniqueness only for verified identifiers, and do not treat either contact channel as proof that a person owns an existing customer profile, order, business or Store. A person may add a second verified channel later.
+2. **Registration is not commerce provisioning:** registration creates a disabled/unverified login state or equivalent pending state. Successful contact verification activates the login according to policy, but does not automatically link a customer profile or create merchant access. A separate trusted provisioning workflow confirms the intended customer/business and records an auditable mapping/membership.
+3. **Verification challenges:** use cryptographically unpredictable, single-use, purpose-bound, expiring challenges; store only protected/verifiable challenge material where feasible; enforce resend cooldowns and per-account/per-IP/device rate controls. Never put codes in URLs or logs. Responses should not reveal whether an identifier is already registered.
+4. **Recovery:** provide recovery only through a previously verified channel. Public responses must be indistinguishable for existing and non-existing accounts. Challenges expire, are single-use, and cannot be replayed; successful recovery invalidates outstanding recovery challenges and follows the chosen session/refresh-token revocation policy. Do not silently change an account identifier based only on possession of an unverified new contact.
+5. **Password and sign-in defenses:** use Identity's maintained password hashing and token primitives; set a documented password policy, breached-password protection where operationally available, and progressive rate limiting. Use lockout cautiously to avoid easy denial-of-service against a victim. MFA/passkeys can be a later security milestone unless risk assessment makes them mandatory.
+6. **Delivery provider:** keep SMS/email vendor selection open until a small cost/reliability comparison is recorded. The application must depend on a delivery abstraction, not a vendor SDK in the Domain/Application core. Test provider failure, resend throttling and delivery observability without logging secrets.
+7. **Audit:** record registration, verification success/failure, recovery, credential change, disable/enable, refresh-token replay/revocation and mapping changes with correlation IDs, timestamps and minimal personal data. Never log passwords, raw verification codes, access/refresh tokens, recovery tokens or full authorization headers.
+
+### Decisions still requiring explicit owner approval
+
+- Whether phone and email are both available at first launch or one is the initial required verified identifier.
+- The exact verification expiry, resend cooldown and rate-limit thresholds.
+- SMS/email delivery provider and cost budget.
+- Whether MFA/passkeys are in the first release or a later milestone.
+- Retention, anonymization and privacy-erasure rules for identity/profile data versus legally/operationally retained commerce history.
+
+### Acceptance tests
+
+- Identifier normalization and verified-identifier uniqueness are deterministic.
+- Registration/verification/recovery responses do not reveal whether an account exists.
+- Expired, replayed, wrong-purpose and superseded challenges are rejected.
+- Rate limits and resend cooldowns apply consistently; legitimate users are not permanently locked out by a single unauthenticated actor.
+- A verified email/phone cannot claim an existing customer, order, business or Store without the separate approved provisioning proof.
+- Disablement blocks login and refresh according to the selected revocation design; audit events contain no credentials or bearer tokens.
+
+## Customer Orders API — recommended HTTP contract for owner review
+
+The route shapes below remain proposals until the owner approves the wire contract and implementation is separately authorized.
+
+### Routes and transport
+
+- `GET /api/v1/customer/orders?limit={limit}&cursor={cursor}` — list the authenticated customer's orders.
+- `GET /api/v1/customer/orders/{orderId}` — retrieve a single order owned by the authenticated customer.
+- `POST /api/v1/customer/orders` — create an order from the authenticated customer's active cart; require the `Idempotency-Key` header.
+- The POST body contains only the cart identifier required by the existing use case. It must not accept CustomerId, prices, totals, order status, store ownership, or authoritative product snapshots.
+- Use cursor pagination with a bounded default and maximum limit. Order by creation timestamp descending plus a stable unique tie-breaker. Cursor contents must be opaque and validated; never accept arbitrary SQL/order expressions from clients.
+- Detail/list DTOs should contain only fields actually persisted and approved for customers: public order identifier/number, timestamps, status, item snapshot fields, and approved totals. Do not expose internal CustomerId, Identity subject, persistence entities, diagnostics or another customer's data. Confirm actual persisted timestamp and total fields before finalizing the DTO.
+
+### Recommended status and error mapping
+
+| Situation | HTTP response | Rule |
+|---|---:|---|
+| Missing/invalid access token | 401 | Standard authentication challenge; no sensitive detail |
+| Authenticated principal has no active customer mapping | 403 | Stable generic Problem Details code; do not return mapping internals |
+| Order does not exist or belongs to another customer | 404 | Same response shape and code to conceal existence |
+| Malformed JSON, invalid identifier/cursor, invalid limit | 400 | Stable validation errors; no stack traces |
+| Cart is not available to this customer or cannot be checked out | 409 or 404 per approved cart-disclosure policy | Pick one mapping and keep it stable; do not reveal another customer's cart |
+| Product/store/cart state makes checkout invalid | 409 | Stable application error code, not raw database details |
+| Missing/invalid Idempotency-Key | 400 | Explain header requirement without echoing secrets |
+| Same key reused for a different fingerprint | 409 | Stable code such as `idempotency_key_reused` |
+| First successful create or successful replay | 201 | Return the same recorded public order representation and Location for the original order |
+| Rate limit exceeded | 429 | Include Retry-After when known; never reveal account existence |
+| Unexpected server/dependency failure | 500 or 503 as appropriate | RFC 9457 Problem Details, trace/correlation ID, no SQL/stack/token data |
+
+All error responses should use RFC 9457 Problem Details with stable machine-readable codes. The table is a recommendation; exact application error names and cart-disclosure choices require review against existing typed application errors before coding. Do not map every database exception to a client error.
+
+### Security and idempotency invariants
+
+- Resolve the validated subject to one active customer mapping server-side. The client cannot select or override CustomerId.
+- Put ownership predicates directly into repository/database queries for list and detail. Test cross-customer IDs and ensure list counts/cursors cannot reveal other customers' records.
+- Treat a replay after the original order commits as the same logical result; return the original order identifier and representation. Same key plus a different cart/fingerprint is a conflict. Keep the current documented key bound of 256 .NET string characters, reject whitespace-only values, and compare the opaque key exactly.
+- Define idempotency-record retention and operational monitoring before release. Do not expire records while clients may reasonably retry an uncertain checkout; a retention change needs an explicit duplicate-order risk assessment.
+- Keep legacy orders with null/unverified CustomerId invisible. Any historical ownership backfill requires independent proof and an auditable process.
+- API authorization, request validation, error mapping, and idempotency behavior must be verified with PostgreSQL-backed integration tests, not only unit tests.
+
+### Required contract tests
+
+- 401 without a valid access token; fail closed for missing, inactive, ambiguous or disabled customer mapping.
+- Customer A cannot list or retrieve Customer B's orders even with a guessed identifier; not-found response is indistinguishable for nonexistent and not-owned IDs.
+- Body fields, headers or query parameters cannot override the resolved CustomerId.
+- Pagination is bounded, stable and isolated to one customer; invalid cursors fail safely.
+- DTO contract contains no internal identity fields or unapproved persistence fields.
+- Create-order validates cart ownership/state and derives prices from server-side product data.
+- Same-key retry/replay returns one original order; conflicting key reuse is deterministic; concurrent requests and persistence failures do not duplicate orders or partially consume the cart.
+- RFC 9457 responses contain stable codes and trace identifiers but no SQL, stack traces, secrets or bearer tokens.
+- All API/auth integration tests run against PostgreSQL, with migration/recovery smoke tests retained.
+
+**Decision boundary:** this is detailed design guidance, not authorization to add endpoints, packages, tables, migrations or mobile auth code. Before implementation, reconcile each recommendation with the current typed application errors and persisted OrderEntity fields, complete the .NET 10 dependency compatibility review, and obtain explicit approval for the remaining product choices.
+
 ## Native mobile OAuth/OIDC security profile — recommendation, not implementation approval
 
 ### Repository evidence
