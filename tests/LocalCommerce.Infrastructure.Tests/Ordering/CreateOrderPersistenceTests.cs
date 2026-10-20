@@ -60,6 +60,36 @@ public sealed class CreateOrderPersistenceTests
     }
 
     [Fact]
+    public async Task Idempotency_key_at_storage_limit_is_accepted()
+    {
+        await using var db=CreateDb(); await DatabaseInitializer.InitializeAsync(db); await ResetAsync(db);
+        var s=await SeedAsync(db);
+        var key=new string('k',256);
+
+        await Handler(db).HandleAsync(new CreateOrderCommand(s.customerId,s.cartId,key));
+
+        var record=await db.IdempotencyRecords.SingleAsync();
+        Assert.Equal(key,record.IdempotencyKey);
+        Assert.Equal(1,await db.Orders.CountAsync());
+    }
+
+    [Fact]
+    public async Task Idempotency_key_over_storage_limit_is_rejected_before_persistence()
+    {
+        await using var db=CreateDb(); await DatabaseInitializer.InitializeAsync(db); await ResetAsync(db);
+        var s=await SeedAsync(db);
+        var key=new string('k',257);
+
+        var error=await Assert.ThrowsAsync<CreateOrderRejectedException>(()=>
+            Handler(db).HandleAsync(new CreateOrderCommand(s.customerId,s.cartId,key)));
+
+        Assert.Equal(LocalCommerce.Application.Errors.ApplicationErrorCodes.RequestInvalid,error.Code);
+        Assert.Equal(0,await db.IdempotencyRecords.CountAsync());
+        Assert.Equal(0,await db.Orders.CountAsync());
+        Assert.True((await db.Carts.SingleAsync(x=>x.Id==s.cartId)).IsActive);
+    }
+
+    [Fact]
     public async Task Initializer_adds_customer_ownership_to_an_existing_legacy_schema()
     {
         var schema = "migration_test_" + Guid.NewGuid().ToString("N");

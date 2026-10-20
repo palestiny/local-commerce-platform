@@ -87,6 +87,7 @@ public sealed class CreateOrderRejectedException : ApplicationFailureException
 public sealed class CreateOrderHandler
 {
     private const string Operation = "CreateOrder";
+    private const int MaxIdempotencyKeyLength = 256;
 
     public CreateOrderHandler(
         ICartReader cartReader,
@@ -129,6 +130,11 @@ public sealed class CreateOrderHandler
 
         if (string.IsNullOrWhiteSpace(command.IdempotencyKey))
             throw new CreateOrderRejectedException("Idempotency key is required.", ApplicationErrorCodes.IdempotencyKeyRequired);
+
+        if (command.IdempotencyKey.Length > MaxIdempotencyKeyLength)
+            throw new CreateOrderRejectedException(
+                $"Idempotency key must not exceed {MaxIdempotencyKeyLength} characters.",
+                ApplicationErrorCodes.RequestInvalid);
 
         var fingerprint = BuildFingerprint(command);
 
