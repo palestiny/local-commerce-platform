@@ -549,3 +549,15 @@ This closes the CI-evidence gap for the application-level create-order idempoten
 **Still explicitly not proven:** a physical PostgreSQL/network connection failure during the COMMIT exchange; stale-reservation operational recovery; every possible failure boundary; and the eventual HTTP/API authorization and error-mapping contract. The request fingerprint remains customer + cart ID, so it models “checkout this cart once,” not a hash of immutable cart contents/prices. These are scoped limitations, not claims that all possible failure modes are covered.
 
 PR #22 remains open and Draft. No merge was performed.
+
+
+## Owner decision — email/phone identifiers and password login
+
+**Status: OWNER-APPROVED PRODUCT DIRECTION — detailed security design and implementation gate still required.**
+
+1. Support login using either an email address or a phone number, with a password. A user should not need to provide both identifiers to sign in.
+2. Verify email and phone independently. Verification of one channel must not mark the other verified.
+3. Provide secure account recovery using a verified channel, with rate limits, single-use purpose-bound expiring challenges, safe public responses, and abuse monitoring. Exact provider, expiry/attempt thresholds, and recovery policy remain open for detailed design.
+4. Do not automatically merge accounts because their email addresses or phone numbers match. Any future account-linking flow must prove control of the relevant identifiers and handle conflicts explicitly.
+5. One-time-code-only login is not part of the first approved login mechanism. OTP/passwordless login and MFA may be evaluated later as separate product/security decisions; do not infer approval for them from approval of email + phone.
+6. This direction does not authorize implementation, new packages, database/schema changes, migrations, token settings, or PR promotion/merge. Before implementation, detail password policy and storage, verification/recovery flows, rate limits, session/token revocation, lockout/abuse controls, and privacy-safe responses, then obtain approval at the implementation gate.
