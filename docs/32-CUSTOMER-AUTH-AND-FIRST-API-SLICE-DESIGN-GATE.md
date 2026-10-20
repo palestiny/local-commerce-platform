@@ -1,13 +1,20 @@
 # Customer Authentication and First API Slice — Design Gate
 
-## Verification status update — 2026-10-20
+## Latest verification status — 2026-10-20
 
-This note is the latest verification record for this document. Older sections below are retained as historical review notes; their point-in-time statements must not override this update.
+This is the current verification record for the document. Older status notes below are historical and must not override this section.
 
-- Current branch HEAD before this documentation change: `9178626f70ac50bb05e485967373c0b7e9019e0a`.
-- GitHub Actions passed on that HEAD: [.NET build/test and PostgreSQL migration/recovery smoke test](https://github.com/palestiny/local-commerce-platform/actions/runs/39441783274) and [customer-mobile TypeScript/Expo Doctor checks](https://github.com/palestiny/local-commerce-platform/actions/runs/39441783391).
-- These CI results verify configured automated checks only. They do **not** establish Android/iOS runtime behavior, live mobile-to-API integration, a physical PostgreSQL connection failure during COMMIT, or every possible failure-injection scenario.
-- This documentation update records the already-approved unified-account/product semantics and clarifies what remains a technical design question. It does not authorize API/auth implementation, framework/package changes, database changes, or PR promotion/merge.
+- Verified branch HEAD: `525a5991d9776483a0b2aa9035c517df493fcc28`.
+- **CI PASS on this exact HEAD:** [.NET PR workflow](https://github.com/palestiny/local-commerce-platform/actions/runs/39448222238), [customer-mobile PR workflow](https://github.com/palestiny/local-commerce-platform/actions/runs/39448223284), [.NET push workflow](https://github.com/palestiny/local-commerce-platform/actions/runs/39448210768), and [customer-mobile push workflow](https://github.com/palestiny/local-commerce-platform/actions/runs/39448210868).
+- The configured .NET workflow builds/tests the solution and runs its PostgreSQL 16 migration/backup-restore smoke check; the mobile workflow runs TypeScript checking and Expo Doctor. These results do **not** establish Android/iOS runtime behavior, live mobile-to-API integration, a physical PostgreSQL connection failure during COMMIT, or every failure-injection scenario.
+- PR #22 remains open and Draft. No API/auth implementation, framework/package change, database change, or PR promotion/merge is authorized by this documentation update.
+
+### Support-window implication
+
+- Microsoft's current release information lists .NET 10 SDK `10.0.402` / runtime `10.0.13` (released October 13, 2026), and .NET 8 servicing release `8.0.32` for the same October servicing cycle: https://dotnet.microsoft.com/en-us/download/dotnet/10.0 and https://devblogs.microsoft.com/dotnet/dotnet-and-dotnet-framework-october-2026-servicing-updates/
+- .NET 8 support ends in November 2026; .NET 10 LTS support runs through November 2028: https://learn.microsoft.com/en-us/dotnet/core/releases-and-support
+- This makes the .NET 10 upgrade time-sensitive, but does not justify skipping compatibility review. Before upgrading, verify current stable patch versions for every EF Core/Npgsql package and the full restore graph, review breaking changes, then build/test and run PostgreSQL migration/recovery checks on the dedicated upgrade change.
+
 
 
 Status: **OWNER DECISIONS RECORDED — DESIGN REVIEW REQUIRED; IMPLEMENTATION NOT AUTHORIZED**
@@ -46,7 +53,7 @@ This section records repository facts and upstream compatibility guidance. It is
 - `.github/workflows/dotnet.yml` installs `.NET 8.0.x`, restores `LocalCommercePlatform.sln`, runs the solution tests, and exercises PostgreSQL 16 migration and backup/restore behavior.
 - The repository has three production projects (Domain, Application, Infrastructure) and three corresponding test projects; all six target `net8.0`. The reviewed recursive tree contains no `global.json`, `Directory.Build.props`, `Directory.Packages.props`, or shared targets file, so framework/package versions are declared in individual project files.
 - The infrastructure and infrastructure-test projects currently use EF Core `8.0.31` and Npgsql EF provider `8.0.11`; the infrastructure test project also uses Test SDK `17.11.1`, xUnit `2.9.2`, xUnit runner `2.8.2`, and coverlet `6.0.2`. These are observed declarations, not a restore-time compatibility proof for .NET 10.
-- The official .NET download page lists SDK `10.0.402` and runtime `10.0.13` as the latest .NET 10 patch line on 2026-10-20: https://dotnet.microsoft.com/en-us/download/dotnet/10.0. Use the latest supported patch at the time of the actual upgrade rather than hard-coding this snapshot into long-lived policy.
+- The official .NET download page lists SDK `10.0.402` and runtime `10.0.13` as the latest .NET 10 patch line on 2026-10-20; Microsoft's October servicing note lists .NET 8 `8.0.32`: https://dotnet.microsoft.com/en-us/download/dotnet/10.0 and https://devblogs.microsoft.com/dotnet/dotnet-and-dotnet-framework-october-2026-servicing-updates/. Use the latest supported patch at actual upgrade time; do not hard-code this snapshot into long-lived policy.
 - No `LocalCommerce.Api` project or Identity/OpenIddict package configuration is present in the reviewed baseline.
 
 ### Upstream compatibility findings
