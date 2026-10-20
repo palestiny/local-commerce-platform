@@ -1186,3 +1186,33 @@ As of this review, Microsoft's official support policy lists .NET 8 support endi
 - Security tests cover issuer/audience/signature/expiry, account disablement, refresh rotation/reuse, logout, and session-store outage before auth is released.
 
 **Status:** concrete gap identified; no workflow, project target framework, package, or migration was changed in this documentation-only step. The auth design gate remains **NOT READY FOR IMPLEMENTATION**.
+
+
+## Framework strategy recommendation — repository-mapped (2026-10-20)
+
+### Decision recommendation (not yet an implementation authorization)
+
+**Recommend a dedicated, solution-wide .NET 10 LTS compatibility/upgrade change before adding the API/auth host**, rather than introducing a separate .NET 10 auth host alongside .NET 8 business projects.
+
+Evidence from the current integration branch:
+- `LocalCommercePlatform.sln` contains exactly three production projects (Domain, Application, Infrastructure) and three corresponding test projects; all six target `net8.0`.
+- Infrastructure is the only current production project with EF Core / PostgreSQL provider references, and its application-layer/domain references are project references within the same solution.
+- No HTTP API host or Identity/OpenIddict integration exists in this baseline. Therefore, an isolated auth host would be a new deployment and integration boundary introduced before there is an existing API host to isolate.
+- The CI workflow currently installs .NET 8 and runs the full solution plus PostgreSQL 16 migration/backup-restore smoke test.
+
+Trade-offs:
+- **Whole-solution .NET 10 upgrade (recommended):** one supported runtime line and a simpler dependency graph before the first API host is created; costs a controlled compatibility pass across all six projects and test dependencies.
+- **Separate .NET 10 auth host while business projects remain .NET 8:** can isolate future host dependencies, but adds a second runtime/build/test/deployment boundary and requires an explicit cross-targeting contract. Current repository structure does not demonstrate a benefit that offsets this complexity.
+- **Remain on .NET 8:** smallest immediate change, but poor default for a new auth/API host given the approaching end of .NET 8 support.
+
+### Proposed sequencing and safety gates
+
+1. **Upgrade-only change:** retarget all six existing projects to `net10.0`; update the CI SDK; align EF Core and Npgsql EF provider on compatible stable 10.x releases (at research time NuGet lists Npgsql EF provider 10.0.3 with EF Core 10.0.4+ dependency requirements). Verify the complete restore graph, not just direct package declarations. Do not add auth packages or API endpoints in this change.
+2. **Regression gate:** restore and build the complete solution; run all unit/integration tests; run PostgreSQL 16 migration smoke tests; test both a fresh database and an existing database with migrations 001 and 002; run backup/restore smoke test; review breaking changes, date/time mapping behavior, SQL generation, and migration compatibility. Record exact SDK/runtime/package versions in the PR.
+3. **Deployment gate:** confirm the actual deployment host/runtime and rollback path before release. A framework rollback is not considered safe if a database migration or data write is not backward-compatible. Do not run destructive production migrations as part of this planning step.
+4. **Auth/API change only after upgrade passes:** create the API host and evaluate Identity/OpenIddict package versions against the selected .NET 10 patch. Then test issuer/audience/signature/expiry, revocation/session checks, order ownership enforcement, and mobile redirect/PKCE behavior in a development build.
+5. **Rollback:** revert the upgrade code change only if no incompatible schema/data change has been released; otherwise require a forward-compatible remediation plan and explicit deployment approval.
+
+### Evidence boundary
+
+The recommendation is based on the checked-in solution, project files, workflow, and current upstream package metadata. It is not a claim that the .NET 10 upgrade has been implemented, restored, or tested. Keep the gate **DESIGN REVIEW REQUIRED; IMPLEMENTATION NOT AUTHORIZED** until the owner explicitly approves the upgrade work. Existing CI success on the current .NET 8 branch does not validate .NET 10 compatibility.
