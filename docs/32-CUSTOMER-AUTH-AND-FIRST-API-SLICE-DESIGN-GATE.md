@@ -752,3 +752,99 @@ For profile recovery, prefer proof of control of the already-existing account or
 
 **Owner review is still required before implementation.** This proposal does not authorize a support console, workflow worker, new schema, migration, API, or authentication code.
 
+
+
+## Customer provisioning persistence design — next review slice
+
+**Status: PROPOSED DESIGN — not owner-approved for implementation.** This section narrows the remaining persistence choices using the verified current repository boundary. It does not change application code or authorize schema, package, framework, API, or migration work.
+
+### Recommended first-release persistence shape
+
+Keep the authentication account in ASP.NET Core Identity and commerce customer ownership in the commerce persistence boundary. Do not make the Identity user ID double as the commerce `CustomerId`.
+
+| Record | Purpose | Minimum proposed fields / constraints |
+|---|---|---|
+| Commerce customer profile | Customer-facing commerce identity/profile | `CustomerId` (stable UUID primary key), profile fields only when needed, lifecycle status, created/updated timestamps |
+| Account/customer mapping | Trusted link from one Identity account to one commerce customer | Identity subject/user ID (unique), `CustomerId` (unique), status, created/activated/disabled timestamps, correlation ID; enforce one account ↔ one customer for the first release |
+| Provisioning operation | Durable retry and diagnosis of the account-to-profile workflow | stable operation ID, Identity subject when known, operation type, state, attempt count, created/updated/next-attempt timestamps, safe failure category, correlation ID; unique idempotency key scoped to operation type/account-registration intent |
+| Conflict/audit event | Trace conflict detection and authorized resolution without exposing secrets | event ID, operation ID, event type, actor type/ID where applicable, timestamp, reason/evidence category, previous/new state; no passwords, tokens, verification codes, or unnecessary raw personal evidence |
+
+This is a logical model, not final SQL. Exact names, field types, indexes, retention, and whether conflict events share the audit table remain open until the API host and persistence ownership are designed.
+
+### Mapping and database invariants
+
+1. An Identity subject can have at most one active customer mapping; for the initial one-person/one-customer model, enforce uniqueness on the subject across all mapping states unless a separately approved lifecycle requires historical mapping rows.
+2. A commerce `CustomerId` can be mapped to at most one Identity subject in the first release. Do not support shared family accounts or account merging implicitly.
+3. Mapping status is not inferred from account status. Customer API authorization requires both an enabled authenticated account and exactly one active mapping.
+4. Create the customer profile and pending mapping in one local commerce database transaction. Activate the mapping only after the workflow rechecks uniqueness, unresolved conflicts, and account eligibility.
+5. Do not add a foreign key from legacy `Orders.CustomerId` until the customer table, historical-data compatibility, and migration/backfill strategy are explicitly designed. Existing null/unverified ownership remains inaccessible.
+6. Database uniqueness constraints are the final concurrency guard. Application-level “check then insert” logic alone is insufficient.
+
+### Durable operation state and recovery
+
+Proposed states: `Pending`, `Running`, `RetryRequired`, `Conflict`, `Completed`, `Cancelled`.
+
+- `Pending → Running`: a worker or bounded application operation claims the durable work using concurrency-safe state transition/lease semantics.
+- `Running → Completed`: the profile and mapping exist exactly once, the mapping is active, and account eligibility has been rechecked.
+- `Running → RetryRequired`: a classified transient infrastructure failure occurred; retry with bounded exponential backoff and jitter.
+- `Pending/Running → Conflict`: candidate-profile ambiguity or a uniqueness conflict requires explicit resolution; do not retry it as a transient error.
+- `RetryRequired → Running`: retry the same operation ID and idempotency identity, never create a new logical operation.
+- `Pending/Running/RetryRequired → Cancelled`: only a defined administrative/system cancellation path; cancellation never deletes an already-created profile or rewrites orders.
+
+Persist attempt count, last safe failure category, last-attempt time, and next-attempt time. Avoid persisting exception text that may contain secrets or personal data. A recovery sweep should identify stale `Running` operations by lease/heartbeat expiry and return them to retryable processing safely; a process restart must not leave them permanently stuck.
+
+**Important boundary:** a durable table alone is not a complete background-processing mechanism. Before implementation, decide whether the first release uses a bounded, idempotent request-driven operation plus a recovery sweep, or a hosted worker. Do not add a broker or distributed infrastructure without evidence that a simpler hosted worker is insufficient.
+
+### Identity/commerce partial-failure matrix
+
+| Failure point | Required safe result | Retry behavior |
+|---|---|---|
+| Identity account creation fails | No customer mapping; no customer data access | Retry registration safely under the same logical request |
+| Identity account created, verification pending | Account remains pending per verification policy; no active customer mapping | Resume verification; provisioning must not grant commerce access |
+| Account is active but provisioning operation has not completed | No customer API access until an active mapping exists | Resume/reconcile by stable operation/correlation identity; do not duplicate profile |
+| Profile insert succeeds but mapping write fails | Local commerce transaction rolls back both writes | Retry the same operation |
+| Profile + pending mapping commit, then process crashes | Mapping remains inactive | Recovery finds the persisted operation and resumes activation idempotently |
+| Account is disabled before mapping activation | Mapping must not become active | Stop activation; mark operation blocked/cancelled according to the approved lifecycle |
+| Duplicate candidate profile or uniqueness conflict | No automatic link and no active mapping | Mark Conflict and route to the approved resolution path |
+| Activation commits but client loses response | One active mapping at most | Read/retry the same operation and return a safe status; do not create a second profile |
+| Two registration/provisioning attempts race | At most one profile/mapping pair for the logical operation and unique mapping constraints hold | One winner; other attempt reads the durable outcome or reports a privacy-safe pending/conflict result |
+
+The identity store and commerce store do not currently share a demonstrated transaction. Therefore, cross-store atomicity must not be claimed. Safety comes from inactive-by-default mappings, durable operation identity, local commerce transactions, uniqueness constraints, and retry/reconciliation.
+
+### Conflict and operational defaults recommended for owner review
+
+- **Unresolved profile conflicts:** remain blocked; no automatic second active profile/mapping to bypass a possible duplicate.
+- **Support in the first release:** recovery guidance only; no direct support override that marks contact verification, activates mappings, or claims old orders.
+- **Legacy-order claims:** out of scope for ordinary registration and support in the first release. Any later exception needs a separate evidence policy, narrow authorization, second-person review, and audit.
+- **Stuck provisioning:** alert for operations pending/retry-required beyond the proposed 15-minute initial threshold; treat this as a tunable operational target, not a service-level guarantee.
+- **Operations ownership:** name an accountable operational owner and define the review path before launch. If no authorized resolution path exists, keep the mapping inactive rather than editing production rows directly.
+
+These are recommendations only. The owner still needs to approve or amend the support scope, evidence categories, processing mechanism, and operational ownership before implementation.
+
+### Additional acceptance tests required by this persistence design
+
+1. Unique constraints reject a second mapping for the same Identity subject and a second subject for the same CustomerId.
+2. Concurrent provisioning requests for the same logical operation create one profile and one mapping.
+3. A failure between profile and mapping persistence rolls back both commerce writes.
+4. Crash after persisting a pending mapping is recovered without activating it twice or creating duplicates.
+5. An account disabled between operation start and activation never receives an active mapping.
+6. Stale-running recovery is concurrency-safe; two recovery workers cannot activate or provision twice.
+7. A conflict is durable, privacy-safe, and excluded from automatic transient retries.
+8. Registration responses do not reveal whether a candidate profile or legacy order exists.
+9. Legacy orders with null or unverified ownership remain excluded from customer list/detail responses.
+10. Retried completion after a lost response returns the same operation/profile outcome.
+11. Audit events record activation, disablement, conflict, and resolution with actor/time/reason category but no secrets.
+12. Tests verify that inactive, missing, disabled, or ambiguous mappings fail closed at the API authorization boundary once the API host exists.
+
+### Decisions required to close this part of the design gate
+
+| Decision | Recommended default | Current status |
+|---|---|---|
+| Persistence location for provisioning state | Commerce PostgreSQL, because profile/mapping writes are commerce-owned; keep Identity as separate account store | Open |
+| Processing mechanism for first release | Start with a small hosted worker/recovery loop only if deployment guarantees a single durable service process; otherwise choose a durable scheduler/queue after topology is known | Open |
+| Support intervention | Recovery guidance only; no ownership override | Open |
+| Legacy order reassignment | Not in first release | Open |
+| Stuck-operation alert target | 15 minutes as an initial operational threshold | Open |
+| Operational owner / response expectation | Must be named before launch; do not assume staffed support | Open |
+
+**Gate status remains: design review required; implementation not authorized.** The next design task is to resolve these decisions and then define the exact API contracts for registration, verification, provisioning status, recovery, and customer-order access. No authentication or database implementation should begin until the owner explicitly approves the implementation gate.
