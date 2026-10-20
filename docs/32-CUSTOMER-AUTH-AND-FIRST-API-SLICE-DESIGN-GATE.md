@@ -592,3 +592,21 @@ This decision supersedes the previous recommendation marked pending owner approv
 
 **Reference material reviewed:** Expo LocalAuthentication and authentication guidance (https://docs.expo.dev/versions/latest/sdk/local-authentication/ and https://docs.expo.dev/develop/authentication/); Google passkey guidance (https://developers.google.com/identity/passkeys).
 
+## Owner-approved customer provisioning and legacy-profile conflict policy
+
+Approved by the product owner on 2026-10-20. These are product/security rules only; they do not authorize API, identity, schema, migration, provider, package, or runtime implementation.
+
+1. **Trusted account/profile provisioning.** Registration creates the authentication account and customer commerce profile through a trusted server-side workflow. The account and profile are distinct records. The customer-to-account mapping remains inactive until the workflow has established which customer profile belongs to the authenticated person.
+2. **No contact-only ownership inference.** A matching email address or phone number is not, by itself, sufficient evidence to claim an existing customer profile, order, business, or Store. Verification of a contact channel proves control of that channel only; it does not prove ownership of historical commerce records.
+3. **No automatic legacy-order claiming.** Do not move, attach, or expose existing orders to a newly registered account merely because its verified email or phone matches legacy data. Legacy records without independently verified ownership remain inaccessible through customer APIs until a controlled resolution process establishes ownership.
+4. **Resolve possible duplicates before activation.** If registration finds a potentially matching existing customer profile or conflicting mapping, do not auto-link or silently create duplicate active mappings. Keep the mapping inactive, record a safe conflict/audit event, and route the case through an explicit verification and resolution process.
+5. **Server-authoritative access.** Customer APIs resolve the authenticated account to one active internal customer mapping on the server. Missing, inactive, ambiguous, or conflicting mappings fail closed. Never accept a client-supplied CustomerId as proof of ownership.
+6. **Unique and auditable links.** The eventual persistence design must prevent duplicate active account/customer mappings, audit creation/activation/deactivation and conflict resolution without logging credentials or tokens, and define transactional behavior for partial failures.
+7. **Preserve transactional history.** Resolving a mapping must not rewrite order history or delete commerce records as a side effect. Any exceptional legacy-record ownership correction must be separately authorized, evidenced, audited, and covered by tests.
+
+### Required follow-up design before implementation
+
+The detailed provisioning design must define: (a) the trusted evidence required to match an existing customer profile; (b) the user-facing path for duplicate/conflicting profiles and account recovery; (c) manual support escalation and audit access; (d) transactional/outbox or compensation behavior if account creation succeeds but profile/link creation fails; (e) the exact mapping states and activation conditions; and (f) privacy-safe error messages and abuse/rate limits. These are open design details, not silently decided here.
+
+**Decision status:** product-level rules approved. Detailed verification and conflict-resolution design remains open. No application code, database schema, migrations, or API behavior was changed by this decision record.
+
