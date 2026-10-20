@@ -222,3 +222,76 @@ Recommended minimum policy to design and test:
 - No database migration or schema changes for Identity/OpenIddict yet.
 - No API endpoint exposure beyond the future health/readiness slice.
 - No PR merge or promotion out of Draft.
+
+
+## Customer Orders API contract — repository review proposal
+
+**Review status: PARTIAL; no endpoint implementation or runtime test was performed.** This section separates verified application/persistence behavior from proposed HTTP behavior. The reviewed branch still has no ASP.NET Core API host, so route names, HTTP status mapping, authentication middleware, and wire DTOs are not implemented or verified.
+
+### Verified existing order-creation behavior
+
+Reviewed files:
+- `src/LocalCommerce.Application/Ordering/CreateOrder/CreateOrderApplication.cs`
+- `src/LocalCommerce.Domain/Ordering/Order.cs`
+- `src/LocalCommerce.Infrastructure/Ordering/CreateOrderPersistence.cs`
+- `src/LocalCommerce.Infrastructure/Persistence/CommerceDbContext.cs`
+- `src/LocalCommerce.Infrastructure/Persistence/Migrations/002_order_customer_ownership.sql`
+
+Findings from those files:
+1. The application command is `CreateOrderCommand(CustomerId, CartId, IdempotencyKey)`. CustomerId is an application input today, not authenticated identity. The future HTTP adapter must derive it from the validated principal and active server-side customer mapping; it must never trust a client-supplied CustomerId.
+2. The handler checks that the cart belongs to the supplied customer, is active and non-empty, validates positive quantities, validates active store/orderable products and variant consistency, and calculates item prices from current product snapshots rather than trusting client prices.
+3. The handler creates an order and consumes the cart inside the same unit-of-work transaction, and stores an idempotency completion result. The database model has a unique idempotency index on `(ScopeId, Operation, IdempotencyKey)`; order numbers are unique.
+4. The request fingerprint currently includes CustomerId and CartId. The idempotency lookup/reservation is scoped using customer ID and operation. A pre-read exists before the transaction, with a second reservation attempt inside the transaction.
+5. Orders have a nullable CustomerId for legacy compatibility. Migration `002_order_customer_ownership.sql` adds that nullable column and an index; it does not establish ownership for legacy rows.
+6. The current domain Order object contains order ID, store ID, items, and status, but not customer ownership. Customer ownership is stored by the infrastructure OrderEntity. This makes repository/application authorization boundaries especially important.
+
+### Proposed minimal customer-facing contract — pending owner approval
+
+Keep this first commerce API slice limited to customer order operations. Suggested route shape (not implemented):
+- `GET /api/v1/customer/orders` — only the authenticated customer's orders, paginated.
+- `GET /api/v1/customer/orders/{orderId}` — one order only if it is owned by the resolved customer.
+- `POST /api/v1/customer/orders` — create from an owned cart, with an `Idempotency-Key` request header.
+
+Do not add catalog, store-management, driver, admin, payment, refund, or general commerce endpoints to this slice.
+
+### Read access and response data
+
+1. Resolve customer identity once per request from the validated subject-to-customer mapping. Missing, disabled, or ambiguous mappings fail closed.
+2. Apply ownership filtering in the database query itself (resolved CustomerId AND requested order ID), not after loading an arbitrary order and not by role-only checks.
+3. For order detail, return the same not-found response for nonexistent and other-customer orders (404) to avoid leaking order existence. A missing authentication credential should be 401; an authenticated but unmapped/disabled customer should follow the explicitly approved authorization policy without exposing profile details.
+4. List endpoint must have stable ordering (e.g. CreatedAt descending plus ID tie-breaker), bounded page size, and an opaque/validated continuation strategy if cursor pagination is chosen. Do not return all historical orders by default.
+5. Expose only customer-required fields: public order identifier/number, created/updated timestamps, status, item snapshots (name/variant/quantity/unit price/line total), and any approved totals. Do not expose internal CustomerId, identity subject, other customers' details, internal failure diagnostics, or unrestricted persistence entities.
+6. Decide whether store details, delivery status, addresses, discounts, taxes, and totals are available in this slice only after checking existing data sources and privacy requirements. Do not fabricate fields not present in persisted data.
+7. Treat legacy orders with null CustomerId as invisible. No automatic claim by matching phone, email, address, or a client-supplied order number; any backfill needs verified evidence and an auditable process.
+
+### Create-order transport and validation
+
+1. Request body should identify the owned cart only; it must not accept CustomerId, prices, totals, order status, store ownership, or authoritative product snapshots from the client.
+2. Require an idempotency key with explicit length/character limits and a documented retention window. Avoid placing keys in URLs or logs.
+3. Return a stable created-order representation. A replay with the same customer, operation, key, and equivalent request should return the recorded result without creating another order or consuming the cart twice.
+4. Reusing the same key for a different request must return a stable conflict/error contract. Do not expose raw database uniqueness exceptions.
+5. A concurrent first-use race must be handled deliberately: the unique database index may reject one reservation attempt. After a conflict, re-read the idempotency record and validate its fingerprint/result; do not blindly retry order creation or convert every uniqueness violation into success. Confirm the exact transaction/isolation behavior with PostgreSQL integration tests.
+6. Confirm that the idempotency reservation, order write, cart consumption, and completion record commit or roll back atomically. Test injected failures before/after each persistence step and process interruption/retry scenarios.
+7. Decide stable HTTP status and RFC 9457 Problem Details mappings for invalid cart, unavailable product/store, empty cart, invalid/reused idempotency key, and unexpected failure. Keep application error codes stable and never return stack traces or SQL details.
+
+### Required verification before this contract can pass
+
+- Unauthenticated list/detail/create requests are rejected.
+- Customer A cannot list or retrieve Customer B's orders, even when IDs are guessed; detail responses conceal existence consistently.
+- Client-supplied CustomerId fields/headers/URLs cannot change the resolved customer.
+- Missing, inactive, duplicated, or unverified customer mappings fail closed.
+- Null-CustomerId legacy orders are not visible.
+- Pagination is bounded and stable; invalid cursors/page sizes fail safely.
+- Create-order price/quantity/store/cart tampering is rejected or ignored according to the approved DTO contract.
+- Repeated same-key requests create exactly one order and consume the cart at most once; a different request with the same key is rejected.
+- Concurrent duplicate requests and injected failures preserve atomicity and yield a deterministic replay result.
+- Database constraint conflicts are mapped to safe, stable API errors.
+- Tests run against PostgreSQL, alongside existing migration and backup/restore checks; unit tests alone are insufficient.
+
+### Review gaps and decisions still open
+
+- The reviewed files confirm the create-order application handler and infrastructure persistence, but I did not verify a complete existing customer-order list/detail query contract or a running HTTP authorization adapter on this branch. Treat those as unverified, not as proof that no related code exists elsewhere in the repository.
+- Approve the route shape, response DTO fields, pagination strategy, idempotency-key policy/retention, exact HTTP/error mapping, and behavior for inactive/unmapped customer accounts.
+- The handler's concurrent idempotency reservation behavior and PostgreSQL failure/retry cases require targeted integration tests before implementation approval.
+
+**Decision boundary:** this is documentation-only design review. No application code, API host, DTO, endpoint, database schema, migration, package, CI configuration, or PR state was changed by this review.
