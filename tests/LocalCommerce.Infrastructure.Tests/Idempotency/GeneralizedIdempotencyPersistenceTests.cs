@@ -128,11 +128,42 @@ public sealed class GeneralizedIdempotencyPersistenceTests
             scopeId, "CompleteDelivery", "race-key", "fingerprint", default);
         Assert.Null(firstResult);
 
+        var secondBackendPid = await db2.Database
+            .SqlQueryRaw<int>("SELECT pg_backend_pid() AS \"Value\"")
+            .SingleAsync();
+
         var secondTask = b.ReserveAsync(
             scopeId, "CompleteDelivery", "race-key", "fingerprint", default);
 
-        await Task.Delay(100);
-        Assert.False(secondTask.IsCompleted);
+        // Observe PostgreSQL's lock wait directly instead of assuming the
+        // second command has reached the unique-key conflict after a fixed delay.
+        var waitDeadline = DateTime.UtcNow.AddSeconds(5);
+        var secondIsWaitingOnLock = false;
+
+        while (DateTime.UtcNow < waitDeadline)
+        {
+            secondIsWaitingOnLock = await setup.Database
+                .SqlQueryRaw<bool>(
+                    """
+                    SELECT EXISTS (
+                        SELECT 1
+                        FROM pg_stat_activity
+                        WHERE pid = {0}
+                          AND wait_event_type = 'Lock'
+                    ) AS "Value"
+                    """,
+                    secondBackendPid)
+                .SingleAsync();
+
+            if (secondIsWaitingOnLock)
+                break;
+
+            await Task.Delay(25);
+        }
+
+        Assert.True(
+            secondIsWaitingOnLock,
+            "The second reservation did not enter a PostgreSQL lock wait within five seconds.");
 
         // The first reservation command has finished, so committing tx1 does
         // not race a still-running command on db1's connection.
