@@ -563,10 +563,16 @@ PR #22 remains open and Draft. No merge was performed.
 6. This direction does not authorize implementation, new packages, database/schema changes, migrations, token settings, or PR promotion/merge. Before implementation, detail password policy and storage, verification/recovery flows, rate limits, session/token revocation, lockout/abuse controls, and privacy-safe responses, then obtain approval at the implementation gate.
 
 
-## Owner decision clarification — both contact channels at first launch
+## Owner decision — account activation after verification of at least one contact channel
 
-The owner-approved direction is that **both email and phone are available from the first release**, and either verified identifier can be used with the account password. This supersedes older wording that left open whether both channels would be offered at launch. It does not decide whether users must verify both channels before account activation.
+**Status: OWNER-APPROVED PRODUCT POLICY — documentation only; implementation not authorized.**
 
-**Recommended next policy (pending owner approval):** require at least one verified channel before enabling sign-in; allow registration to begin with either email or phone; prompt the user to add the second channel without blocking initial use; and require the relevant channel to be verified before it can be used for login or recovery. Keep recovery responses privacy-safe and apply the same abuse controls regardless of channel. This balances lower signup friction against account-recovery resilience. Requiring both channels before activation improves contact completeness but increases signup abandonment and may exclude users who lack reliable access to one channel.
+1. **Activation threshold:** activate the account once at least one contact channel—email or phone—has been successfully verified.
+2. **Second channel:** users may add the other contact channel after activation and complete its verification later. Requiring both email and phone to be verified is **not** a prerequisite for initial account activation.
+3. **Independent verification:** email and phone verification states remain independent. Verifying one channel must never mark the other as verified.
+4. **Use of a channel:** an email address or phone number may be used for login or recovery only after that specific channel has been verified. The approved first-release login mechanism remains password-based; OTP-only/passwordless login is not approved by this decision.
+5. **Security boundaries:** account recovery must continue to use verified channels and retain purpose-bound, single-use, expiring challenges, rate limits, privacy-safe public responses, and abuse monitoring. Verification of a contact channel alone does not prove ownership of a commerce customer profile, existing order, or another account, and must not trigger automatic account merging or linking.
+6. **Trade-off accepted:** this reduces signup friction and avoids blocking users who cannot immediately access one channel, while allowing them to strengthen recovery options later. The product must clearly show which channels are verified and encourage verification of the second channel without falsely presenting it as complete.
+7. **Open detailed-design items:** exact verification and recovery flows, providers, challenge expiry/attempt thresholds, resend limits, password policy/storage, session and token revocation, lockout/abuse controls, privacy-safe responses, and retention remain to be designed and reviewed.
 
-**Implementation remains unauthorized** until the detailed security design and explicit implementation gate are approved.
+This decision supersedes the previous recommendation marked pending owner approval. **No authentication/API implementation, package/framework change, database/schema change, migration, runtime configuration, or PR promotion/merge is authorized by this decision.** The detailed security design and a separate explicit implementation gate are still required.
