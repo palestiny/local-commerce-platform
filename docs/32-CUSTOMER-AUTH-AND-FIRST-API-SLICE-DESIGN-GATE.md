@@ -417,3 +417,17 @@ The current commit's CI must pass before this addition is treated as verified. T
 The new test `Retry_after_committed_order_but_lost_response_replays_original_result` verifies recovery when the transaction has committed but the caller loses the response. It does **not** inject a real connection loss during the PostgreSQL COMMIT exchange. That lower-level ambiguous-commit scenario remains **NOT PROVEN** and is not a release-blocking claim for the current application-level retry contract; it must remain visible as a verification limitation.
 
 PR #22 remains open and Draft. No merge was performed.
+
+## Verification update — current branch head `075ef8cb11ea03caad1114917b2607d5ad4d8efc`
+
+**CI evidence: PASS on the current branch head.** The four GitHub Actions runs completed successfully:
+- .NET PR workflow: `39440858677` — build/test and PostgreSQL migration/recovery smoke test passed.
+- Customer-mobile PR workflow: `39440858723` — TypeScript check and Expo Doctor passed.
+- .NET push workflow: `39440848947` — build/test and PostgreSQL migration/recovery smoke test passed.
+- Customer-mobile push workflow: `39440848813` — TypeScript check and Expo Doctor passed.
+
+This closes the CI-evidence gap for the application-level create-order idempotency changes on this head. Covered scenarios include same-key concurrent convergence, sequential replay after cart consumption, simulated lost response after a successful commit, conflicting key reuse across carts, different keys racing on the same cart, and rollback after a persistence failure.
+
+**Still explicitly not proven:** a physical PostgreSQL/network connection failure during the COMMIT exchange; stale-reservation operational recovery; every possible failure boundary; and the eventual HTTP/API authorization and error-mapping contract. The request fingerprint remains customer + cart ID, so it models “checkout this cart once,” not a hash of immutable cart contents/prices. These are scoped limitations, not claims that all possible failure modes are covered.
+
+PR #22 remains open and Draft. No merge was performed.
