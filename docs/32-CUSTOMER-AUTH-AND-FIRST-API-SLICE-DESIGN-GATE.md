@@ -24,6 +24,36 @@ Move the customer app from demo-only UI toward a real API while keeping business
 | Target framework direction | .NET 10 LTS, subject to dependency compatibility review | Review EF Core, PostgreSQL provider, test infrastructure, CI images/actions, and all projects before changing target frameworks. This decision does not authorize a blind or partial upgrade. |
 | First API slice | Health endpoint first, then customer commerce-order API only | Do not include public catalog, broader local-service requests, merchant, driver, admin, payment, or other endpoints in this first slice. |
 
+## Initial .NET 10 compatibility inventory — research only
+
+This section records repository facts and upstream compatibility guidance. It is **not** evidence that an upgrade has been built or tested.
+
+### Repository facts observed
+
+- Domain, Application, Infrastructure and test projects currently target `net8.0`.
+- Infrastructure references `Microsoft.EntityFrameworkCore 8.0.31` and `Npgsql.EntityFrameworkCore.PostgreSQL 8.0.11`.
+- Infrastructure tests reference the same EF Core and Npgsql provider versions; test packages currently include `Microsoft.NET.Test.Sdk 17.11.1`, `xunit 2.9.2`, `xunit.runner.visualstudio 2.8.2`, and `coverlet.collector 6.0.2`.
+- `.github/workflows/dotnet.yml` installs `.NET 8.0.x`, restores `LocalCommercePlatform.sln`, runs the solution tests, and exercises PostgreSQL 16 migration and backup/restore behavior.
+- No `LocalCommerce.Api` project or Identity/OpenIddict package configuration is present in the reviewed baseline.
+
+### Upstream compatibility findings
+
+- .NET 10 is an active LTS release, with support scheduled through November 2028. The exact SDK patch should be selected from the current supported patch line: https://dotnet.microsoft.com/en-us/platform/support/policy
+- EF Core 10 targets .NET 10 and is an LTS release supported through November 10, 2028. EF Core 10 requires the .NET 10 SDK/runtime: https://learn.microsoft.com/en-us/ef/core/what-is-new/ef-core-10.0/whatsnew
+- Npgsql.EntityFrameworkCore.PostgreSQL 10.0 has been released with EF Core 10 support. The exact stable patch and dependency graph must be verified at restore time: https://www.npgsql.org/efcore/release-notes/10.0.html
+- OpenIddict documents support for ASP.NET Core 10.0 / .NET 10. Its current major branch is 7.x according to its support policy; select a compatible stable patch and verify package dependencies before adoption: https://documentation.openiddict.com/integrations/aspnet-core and https://openiddict.com/support
+- EF Core major upgrades can include breaking changes. Review the EF Core 9 and EF Core 10 breaking-change guides against this codebase before upgrading from EF Core 8: https://learn.microsoft.com/en-us/ef/core/what-is-new/ef-core-9.0/breaking-changes and https://learn.microsoft.com/en-us/ef/core/what-is-new/ef-core-10.0/breaking-changes
+
+### Recommended upgrade sequence — not executed
+
+1. Inventory every project file, package reference, SDK/tool requirement, GitHub Actions workflow, and test/runtime dependency in the solution.
+2. Review EF Core 9 and 10 breaking changes against current persistence code and tests; record any required code changes before implementation.
+3. In a dedicated upgrade change, align project target frameworks, EF Core packages, the Npgsql provider, and CI SDK to compatible stable .NET 10 / EF Core 10 / Npgsql 10 versions. Add Identity/OpenIddict packages only in the later API/auth implementation stage, after their detailed security profile is approved.
+4. Restore and build the entire solution with the .NET 10 SDK; run all tests and the existing PostgreSQL 16 migration and backup/restore smoke test. Verify fresh database initialization and upgrade from the legacy schema.
+5. Record actual command results and any remaining compatibility gaps. Do not call the upgrade complete based on package metadata alone.
+
+**Current result:** compatibility direction looks feasible from upstream support information, but the repository has not yet been upgraded or tested on .NET 10. The target-framework and package changes remain unauthorized until the implementation gate is separately approved.
+
 ## Decisions still open before implementation
 
 1. **Customer identity mapping and lifecycle:** define the internal customer record and unique mapping from the authenticated Identity/OpenIddict subject to that record; specify first-login provisioning, account deletion/disablement, and behavior when the mapping is absent. Recommended: use a server-controlled, unique mapping and never derive the internal customer ID from user-supplied input.
@@ -68,7 +98,7 @@ Move the customer app from demo-only UI toward a real API while keeping business
 
 ## Implementation sequence (not yet authorized)
 
-1. Finish a .NET 10 compatibility inventory and record upgrade sequencing/risks.
+1. Finish the .NET 10 compatibility inventory and record upgrade sequencing/risks.
 2. Close the remaining decisions above and update this gate.
 3. Obtain explicit owner approval to begin implementation.
 4. Build and test the API host/health slice.
