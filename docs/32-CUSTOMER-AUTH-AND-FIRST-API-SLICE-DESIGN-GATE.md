@@ -44,6 +44,9 @@ This section records repository facts and upstream compatibility guidance. It is
 - Infrastructure references `Microsoft.EntityFrameworkCore 8.0.31` and `Npgsql.EntityFrameworkCore.PostgreSQL 8.0.11`.
 - Infrastructure tests reference the same EF Core and Npgsql provider versions; test packages currently include `Microsoft.NET.Test.Sdk 17.11.1`, `xunit 2.9.2`, `xunit.runner.visualstudio 2.8.2`, and `coverlet.collector 6.0.2`.
 - `.github/workflows/dotnet.yml` installs `.NET 8.0.x`, restores `LocalCommercePlatform.sln`, runs the solution tests, and exercises PostgreSQL 16 migration and backup/restore behavior.
+- The repository has three production projects (Domain, Application, Infrastructure) and three corresponding test projects; all six target `net8.0`. The reviewed recursive tree contains no `global.json`, `Directory.Build.props`, `Directory.Packages.props`, or shared targets file, so framework/package versions are declared in individual project files.
+- The infrastructure and infrastructure-test projects currently use EF Core `8.0.31` and Npgsql EF provider `8.0.11`; the infrastructure test project also uses Test SDK `17.11.1`, xUnit `2.9.2`, xUnit runner `2.8.2`, and coverlet `6.0.2`. These are observed declarations, not a restore-time compatibility proof for .NET 10.
+- The official .NET download page lists SDK `10.0.402` and runtime `10.0.13` as the latest .NET 10 patch line on 2026-10-20: https://dotnet.microsoft.com/en-us/download/dotnet/10.0. Use the latest supported patch at the time of the actual upgrade rather than hard-coding this snapshot into long-lived policy.
 - No `LocalCommerce.Api` project or Identity/OpenIddict package configuration is present in the reviewed baseline.
 
 ### Upstream compatibility findings
