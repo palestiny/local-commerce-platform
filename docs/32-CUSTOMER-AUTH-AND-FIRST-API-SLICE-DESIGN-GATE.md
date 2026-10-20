@@ -1148,3 +1148,41 @@ The next work item should be a **focused compatibility spike**, not a live login
 The official Expo guidance confirms that `expo-auth-session` supports browser-based OAuth/OIDC flows, PKCE, and redirect handling, but also warns that Expo Go cannot validate OAuth/OIDC redirect behavior because its app scheme cannot be customized; use a development build for that proof ([Expo authentication guide](https://docs.expo.dev/guides/authentication/), [AuthSession reference](https://docs.expo.dev/versions/latest/sdk/auth-session/)). Current “latest” docs may describe a newer Expo SDK, so exact package versions must be checked against SDK 57 rather than copied from the latest page.
 
 **Status:** current screen remains intentionally non-functional for authentication. No auth package was installed, no credential was transmitted, and no provider or device flow was tested in this documentation-only step. The design gate remains **NOT READY FOR IMPLEMENTATION** until the open owner decisions and compatibility proof are closed.
+
+
+### CI/runtime compatibility gap — verified from repository workflow — 2026-10-20
+
+A fresh source check identified a concrete blocker that must be resolved before the proposed .NET 10 authentication host can be built in CI.
+
+#### Verified repository facts
+
+- `.github/workflows/dotnet.yml` explicitly installs `.NET 8.0.x` via `actions/setup-dotnet@v4`.
+- The same workflow restores and tests `LocalCommercePlatform.sln` without a .NET 10 SDK setup step.
+- `src/LocalCommerce.Infrastructure/LocalCommerce.Infrastructure.csproj` targets `net8.0` and pins `Microsoft.EntityFrameworkCore 8.0.31` plus `Npgsql.EntityFrameworkCore.PostgreSQL 8.0.11`.
+- No root `global.json` was found at the expected path during this source check. That is not proof no SDK pin exists elsewhere; the workflow itself is the direct evidence for the CI SDK configuration.
+- The repository currently does not have a verified .NET 10 auth host/package matrix. The existing green .NET workflow proves the current .NET 8 solution's configured checks, not that a new .NET 10 project can restore/build/test in CI.
+
+#### Why this is time-sensitive
+
+As of this review, Microsoft's official support policy lists .NET 8 support ending on **November 10, 2026**, while .NET 10 LTS is supported until **November 14, 2028** ([official .NET support policy](https://dotnet.microsoft.com/en-us/platform/support/policy)). This makes a documented target-framework decision and migration plan time-sensitive; it does not justify an unreviewed solution-wide upgrade.
+
+#### Options and recommendation
+
+| Option | Advantages | Risks / required proof |
+|---|---|---|
+| Retarget the whole solution and CI to .NET 10 + EF Core 10 + matching Npgsql provider in one focused migration | One consistent supported runtime/provider family; aligns with the constitution's target direction | Broad impact across existing projects, tests, SQL migrations, and deployment; requires full build/test and PostgreSQL migration/recovery proof |
+| Keep existing commerce projects on .NET 8 and introduce an isolated .NET 10 auth/API host with its own EF Core 10/Npgsql 10 persistence boundary | Limits immediate changes to the existing commerce code | Adds a project and explicit integration boundary; must prove no shared EF context/provider mixing, define deployment and transaction ownership, and verify all solution projects build under the CI SDK |
+| Keep the first auth host on .NET 8 temporarily | Smaller immediate package/runtime change | Very short remaining support window; requires an explicit time-bound exception and a committed upgrade date, so not recommended as the default for a new production auth host |
+
+**Recommendation:** do not choose an option by silently editing the workflow or project files. Prepare a focused runtime migration decision with project-by-project target frameworks, package versions, deployment runtime, migration ownership, rollback strategy, and test evidence. The owner must approve the scope before implementation. If the selected direction includes .NET 10, update CI SDK setup as part of that approved migration and verify the complete solution plus representative PostgreSQL upgrade/restore paths.
+
+#### CI acceptance evidence required for this gap
+
+- CI installs the intended SDK and records `dotnet --info`.
+- The complete solution restores, builds, and tests using the intended target-framework/package matrix.
+- Any mixed-framework boundary is explicit and does not share EF Core contexts or incompatible provider stacks.
+- PostgreSQL schema migration, backup/restore, and recovery are tested against a representative existing database.
+- Deployment environment confirms the selected runtime is installed and supported.
+- Security tests cover issuer/audience/signature/expiry, account disablement, refresh rotation/reuse, logout, and session-store outage before auth is released.
+
+**Status:** concrete gap identified; no workflow, project target framework, package, or migration was changed in this documentation-only step. The auth design gate remains **NOT READY FOR IMPLEMENTATION**.
