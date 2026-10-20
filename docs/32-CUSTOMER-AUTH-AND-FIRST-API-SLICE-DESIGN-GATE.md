@@ -711,3 +711,44 @@ Reviewed head before this note: `793a241ae98861eee567a2f4a9e0b3d7fcfec4a2`
 
 This is a recommended architecture based on the current repository evidence, **not an owner-approved implementation decision**. No code, schema, migration, package, or runtime configuration was changed as part of this review.
 
+## Conflict resolution and stuck-provisioning operations — proposed defaults
+
+**Status: PROPOSAL FOR OWNER REVIEW. These defaults are not approved implementation requirements yet.**
+
+The current repository confirms the commerce persistence boundary but does not yet define a customer-support console, an identity administration surface, or an operational provisioning queue. The first release should therefore prefer a small, safe process over a broad manual account-editing capability.
+
+### Proposed first-release conflict policy
+
+1. **Default for unresolved profile conflicts: remain blocked.** Keep the mapping inactive and customer commerce access unavailable until resolution. Do not auto-create a second active mapping to bypass the conflict.
+2. **Support-assisted account recovery may be in scope; manual ownership override should not be.** Support can guide a customer through recovery of an existing account using approved verified-channel recovery. Support must not be able to mark an account/contact as verified, activate a mapping, or claim an old order merely by editing a field.
+3. **Legacy-order claims should be out of scope for ordinary registration support.** If a legacy order has no independently established owner, keep it unclaimed. Any future claim workflow should be separately designed, narrowly permissioned, reviewed by a second authorized person for exceptional cases, and fully audited.
+4. **Do not collect excessive evidence.** Record an evidence category and review outcome; avoid retaining identity documents or sensitive attachments unless a separate retention/access policy and legal basis are established.
+5. **Privacy-safe customer messaging.** Public responses should not reveal whether a matching profile or order exists. The authenticated recovery path may provide next steps without disclosing unrelated account or order details.
+
+### Proposed evidence standard
+
+Evidence must be stronger than contact equality alone. A verified email/phone may establish control of that channel but not ownership of an old commerce profile or order.
+
+For profile recovery, prefer proof of control of the already-existing account or an established recovery mechanism. For a legacy order claim, do not accept only a matching name, email, phone, or order number as sufficient. Require a separately designed evidence policy before implementation; the initial safe default is **no legacy-order reassignment in the first release**.
+
+### Proposed operational handling for pending work
+
+- Persist a stable provisioning operation identifier, state, attempt count, timestamps, and a non-sensitive failure category.
+- Use bounded retry with backoff for transient infrastructure failures. Do not automatically retry unresolved conflicts as if they were transient.
+- Make retries idempotent and enforce database uniqueness; retries must resume the same logical operation.
+- Expose operational metrics for pending age, retry count, conflict count, and last failure category without exposing credentials, contact challenge codes, tokens, or unnecessary personal data.
+- Proposed initial alert threshold: provisioning still pending/retry-required after 15 minutes. This is a starting operational target, not a guarantee; tune it to the eventual hosting/queue model and support coverage.
+- Assign an operational owner before launch. If no staffed support/operations path exists, unresolved conflicts and stuck provisioning remain blocked and must not be resolved through direct database edits.
+
+### Proposed decision record for owner approval
+
+| Decision | Recommended default | Why |
+|---|---|---|
+| Support intervention in first release | Recovery guidance only; no direct mapping/ownership override | Limits privileged manual access and accidental cross-account exposure |
+| Legacy order ownership | No reassignment in first release | No existing evidence policy or ownership-verification flow is implemented |
+| Stuck workflow | Durable state, bounded retries, metrics/alerts, manual review without direct DB edits | Makes partial failures visible and prevents silent indefinite pending states |
+| Operational target | Alert after 15 minutes pending, then review against real service coverage | Gives a measurable initial threshold without promising immediate human resolution |
+| Conflict resolution | Inactive until approved, auditable resolution flow exists | Fails closed and prevents account/contact matches from becoming ownership proof |
+
+**Owner review is still required before implementation.** This proposal does not authorize a support console, workflow worker, new schema, migration, API, or authentication code.
+
