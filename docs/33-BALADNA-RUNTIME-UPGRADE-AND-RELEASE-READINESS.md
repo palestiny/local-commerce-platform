@@ -59,3 +59,36 @@ Obtain the factual deployment target and its runtime/backup/rollback details, th
 
 
 - Documentation commit `86ea218557a0b28523a319230a1c0ea927b2a2ba` has been verified on the integration branch. At the time of the post-write check, no PR-triggered workflow runs were returned for this new commit; the successful runs cited above belong to the preceding commit `700eef5...` only.
+
+
+## Post-merge revalidation — 2026-10-21
+
+This section supersedes earlier status statements in this document that describe PRs #23 and #24 as open/unmerged or state that the .NET 10 upgrade has not reached the integration branch.
+
+## Current verified GitHub state
+
+| Change | Current state | Evidence |
+|---|---|---|
+| Customer mobile + commerce integration, PR #22 | Open, Draft, not merged | Head `73f9953132659d23bba077f22e88c70747095607`; the current .NET and customer-mobile workflows both completed successfully after the runtime upgrade merge. |
+| .NET 10 foundation upgrade, PR #23 | Closed as superseded; not merged | Replaced by PR #26. |
+| Node 24-compatible Actions maintenance, PR #24 | Closed as superseded; not merged | Its workflow updates were included in PR #26. |
+| Module-boundary documentation, PR #25 | Merged | Merge commit `c11c33706a0589d60e46e8609525bbffa9ee6c91`. |
+| .NET 10 foundation upgrade, PR #26 | Merged | Merge commit `73f9953132659d23bba077f22e88c70747095607`. |
+| Post-merge .NET CI | Passed | [Run 39647068937](https://github.com/palestiny/local-commerce-platform/actions/runs/39647068937): restore, tests, and PostgreSQL migration/recovery smoke test all succeeded. |
+| Post-merge customer-mobile CI | Passed | [Run 39647068934](https://github.com/palestiny/local-commerce-platform/actions/runs/39647068934): dependency installation, TypeScript check, and Expo Doctor succeeded. |
+
+## What this evidence proves — and does not prove
+
+- The current integration head includes the .NET 10 upgrade and Node 24-compatible workflow actions.
+- The current head passed the configured .NET/PostgreSQL and customer-mobile CI workflows.
+- CI does not prove a physical Android/iOS runtime session, production hosting readiness, or a real deployment-environment backup/restore rehearsal.
+- The customer mobile app still uses illustrative demo data and has no live authenticated API connection.
+- The authentication/first-API design gate remains **NOT READY FOR IMPLEMENTATION**. No auth/API implementation is authorized by the runtime-upgrade merge.
+- PR #22 remains Draft. It targets `fix/replacement-delivery-store-consistency` and contains a broad integration change set (mobile app, HTML design references, and customer-order ownership persistence). Do not merge it merely because CI is green: review its target/base intent and the complete diff, and keep it unmerged until the intended branch integration and product/auth design gates are explicitly resolved.
+
+## Next safe action
+
+1. Perform a focused review of PR #22's customer-order ownership migration and initialization behavior against existing database states; preserve historical orders with unknown ownership as `CustomerId = NULL` and do not expose them as belonging to a customer.
+2. Confirm why PR #22 targets `fix/replacement-delivery-store-consistency` rather than the intended integration/release target before any merge decision.
+3. Resolve the remaining authentication design decisions and get explicit owner approval before implementing auth packages, API routes, credential handling, or auth schema changes.
+4. Keep production release blocked until the actual hosting/runtime, environment secrets/health checks, and operational backup/restore and rollback procedure are verified.
