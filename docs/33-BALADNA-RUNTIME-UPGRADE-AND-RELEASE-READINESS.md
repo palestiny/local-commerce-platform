@@ -7,7 +7,7 @@
 
 | Change | Current state | Evidence |
 |---|---|---|
-| Customer mobile + commerce integration, PR #22 | Open, Draft, not merged | Current head `0a18831c88f6a2c82eab3ffc2dc4053caa14eab5`; .NET run [39642785748](https://github.com/palestiny/local-commerce-platform/actions/runs/39642785748) and mobile run [39642785733](https://github.com/palestiny/local-commerce-platform/actions/runs/39642785733) completed successfully on this head. |
+| Customer mobile + commerce integration, PR #22 | Open, Draft, not merged | Current head `abdf6d3ae6f2f3da6f59c58c9def7a90e04d7e87`; .NET run [39643375901](https://github.com/palestiny/local-commerce-platform/actions/runs/39643375901) and mobile run [39643375872](https://github.com/palestiny/local-commerce-platform/actions/runs/39643375872) completed successfully on this head. |
 | .NET 10 foundation upgrade, PR #23 | Open, Draft, not merged | Head `edada1dc1636901a232001bc790e9a31f5df3e97`; workflow run [39617305844](https://github.com/palestiny/local-commerce-platform/actions/runs/39617305844) completed successfully. |
 | Node 24-compatible GitHub Actions maintenance, PR #24 | Open, Draft, not merged | Head `ebefd29f831c85825a017ae128af0183ad760f79`; workflow run [39616239263](https://github.com/palestiny/local-commerce-platform/actions/runs/39616239263) completed successfully, including checkout@v7, setup-dotnet@v6, tests and PostgreSQL recovery smoke test. PR #24 targets the .NET 10 upgrade branch. |
 
@@ -17,17 +17,22 @@ These are separate branches/PRs. A successful run on the .NET 10 upgrade candida
 
 - The .NET 10 candidate changes all six solution projects to `net10.0`, uses .NET SDK 10 in CI, and aligns EF Core/Npgsql EF provider packages to the 10.x family.
 - The latest reported .NET 10 candidate CI run completed successfully. The related maintenance run reports 141 passing tests, zero build warnings/errors, and a PostgreSQL 16 backup/drop/recreate/restore verification.
-- PR #22 current head `0a18831c88f6a2c82eab3ffc2dc4053caa14eab5` has successful .NET and customer-mobile CI runs (runs 39642785748 and 39642785733). The .NET job used `actions/checkout@v4` and .NET SDK 8, and the mobile job completed dependency installation, TypeScript checking, and Expo Doctor.
+- PR #22 current head `abdf6d3ae6f2f3da6f59c58c9def7a90e04d7e87` has successful .NET and customer-mobile CI runs (runs 39643375901 and 39643375872). The .NET job used `actions/checkout@v4` and .NET SDK 8, and the mobile job completed dependency installation, TypeScript checking, and Expo Doctor.
 - The reviewed integration branch has no ASP.NET Core API host or live authentication implementation. The customer mobile auth screen remains a prototype.
 - No PR in this sequence has been merged by this work; no production deployment has been performed.
 
 
 ## Additional branch/workflow evidence — 2026-10-21
 
-- The workflow on `integration/baladna-foundation-mobile` still uses `actions/checkout@v4`, `actions/setup-dotnet@v4`, and `.NET 8.0.x`. Its latest verified run on the current integration head passed, but this is evidence for the existing .NET 8 integration baseline, not the .NET 10 candidate.
+- The workflow on `integration/baladna-foundation-mobile` still uses `actions/checkout@v4`, `actions/setup-dotnet@v4`, and `.NET 8.0.x`. Its latest verified run on integration head `abdf6d3ae6f2f3da6f59c58c9def7a90e04d7e87` passed, but this is evidence for the existing .NET 8 integration baseline, not the .NET 10 candidate.
 - The workflow on `maintenance/node24-actions` uses `actions/checkout@v7`, `actions/setup-dotnet@v6`, and `.NET 10.0.x`; it also adds `upgrade/**` to the pull-request target filters. Those changes remain isolated to PR #24 and its base branch until the normal reviewed merge sequence.
-- PR #23 is based on integration commit `dcdf7319814792e39f7640bf376c63c8049f5251`, while integration has since advanced to `0a18831c88f6a2c82eab3ffc2dc4053caa14eab5`. Recheck the merge base/out-of-date status and review any resulting diff before promoting the upgrade; no automatic rebase was performed.
+- PR #23 is based on integration commit `dcdf7319814792e39f7640bf376c63c8049f5251`, while integration is now at `abdf6d3ae6f2f3da6f59c58c9def7a90e04d7e87`. GitHub compare reports the branches have diverged: the upgrade branch is 12 commits ahead and 2 commits behind integration, with merge base `dcdf7319814792e39f7640bf376c63c8049f5251`. The two integration-side commits must be reviewed against the upgrade diff before any update; no automatic rebase was performed.
 - The repository/workflow evidence reviewed so far does not identify a production hosting provider or deployment target. This is a bounded finding from the inspected workflow and documented changed-file set, not proof that no external hosting configuration exists. The real environment owner must supply the hosting/runtime, backup and rollback facts.
+
+## Latest verification and branch divergence — 2026-10-21 20:26 +03:00
+
+- Rechecked PR #22 head `abdf6d3ae6f2f3da6f59c58c9def7a90e04d7e87`: both current .NET run [39643375901](https://github.com/palestiny/local-commerce-platform/actions/runs/39643375901) and mobile run [39643375872](https://github.com/palestiny/local-commerce-platform/actions/runs/39643375872) completed successfully. The .NET job's test and migration/recovery smoke-test steps both succeeded; the mobile dependency install, TypeScript check, and Expo Doctor steps all succeeded.
+- Compare result for integration vs `upgrade/dotnet10-foundation`: `diverged`, upgrade is 12 commits ahead and 2 commits behind integration. Merge base remains `dcdf7319814792e39f7640bf376c63c8049f5251`. Do not merge or rebase blindly; review the two integration-only commits and check whether they affect the framework-upgrade changes.
 
 ## Release gates still open
 
