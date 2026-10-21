@@ -26,6 +26,17 @@ public sealed class CreateOrderPersistenceTests
             """);
     }
 
+    private static string QuoteGeneratedSchemaIdentifier(string schema)
+    {
+        if (string.IsNullOrWhiteSpace(schema) ||
+            schema.Any(character => !char.IsAsciiLetterOrDigit(character) && character != '_'))
+        {
+            throw new ArgumentException("Schema identifiers must contain only ASCII letters, digits, and underscores.", nameof(schema));
+        }
+
+        return $"\"{schema}\"";
+    }
+
     private static async Task<(Guid customerId, Guid cartId, Guid productId, Guid storeId)> SeedAsync(CommerceDbContext db)
     {
         var customerId=Guid.NewGuid(); var cartId=Guid.NewGuid(); var productId=Guid.NewGuid(); var storeId=Guid.NewGuid();
@@ -94,7 +105,10 @@ public sealed class CreateOrderPersistenceTests
     {
         var schema = "migration_test_" + Guid.NewGuid().ToString("N");
         await using var admin = CreateDb();
-        await admin.Database.ExecuteSqlRawAsync($"CREATE SCHEMA \"{schema}\"");
+        // Schema identifiers cannot be SQL parameters; the helper strictly validates the generated identifier.
+#pragma warning disable EF1003 // Validated SQL identifier; parameterization is not supported for identifiers.
+        await admin.Database.ExecuteSqlRawAsync("CREATE SCHEMA " + QuoteGeneratedSchemaIdentifier(schema));
+#pragma warning restore EF1003
 
         try
         {
@@ -127,7 +141,10 @@ public sealed class CreateOrderPersistenceTests
         }
         finally
         {
-            await admin.Database.ExecuteSqlRawAsync($"DROP SCHEMA IF EXISTS \"{schema}\" CASCADE");
+            // Schema identifiers cannot be SQL parameters; the helper strictly validates the generated identifier.
+#pragma warning disable EF1003 // Validated SQL identifier; parameterization is not supported for identifiers.
+            await admin.Database.ExecuteSqlRawAsync("DROP SCHEMA IF EXISTS " + QuoteGeneratedSchemaIdentifier(schema) + " CASCADE");
+#pragma warning restore EF1003
         }
     }
 
