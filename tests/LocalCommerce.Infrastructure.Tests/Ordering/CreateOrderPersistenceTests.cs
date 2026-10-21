@@ -126,6 +126,17 @@ public sealed class CreateOrderPersistenceTests
             legacySql = legacySql.Replace("\"CustomerId\" uuid NULL,", "", StringComparison.Ordinal);
             await legacyDb.Database.ExecuteSqlRawAsync(legacySql);
 
+            // Seed an existing order before applying the ownership migration. Its owner must remain unknown.
+            var legacyStoreId = Guid.NewGuid();
+            var legacyOrderId = Guid.NewGuid();
+            var legacyOrderNumber = "LEGACY-" + Guid.NewGuid().ToString("N");
+            var legacyTimestamp = DateTimeOffset.UtcNow;
+            await legacyDb.Database.ExecuteSqlInterpolatedAsync(
+                $"""INSERT INTO "Stores" ("Id", "IsActive") VALUES ({legacyStoreId}, TRUE)""");
+            await legacyDb.Database.ExecuteSqlInterpolatedAsync(
+                $"""INSERT INTO "Orders" ("Id", "StoreId", "OrderNumber", "Status", "CreatedAt", "UpdatedAt")
+                    VALUES ({legacyOrderId}, {legacyStoreId}, {legacyOrderNumber}, {"Pending"}, {legacyTimestamp}, {legacyTimestamp})""");
+
             await DatabaseInitializer.InitializeAsync(legacyDb);
 
             var exists = await legacyDb.Database.SqlQueryRaw<bool>("""
@@ -138,6 +149,16 @@ public sealed class CreateOrderPersistenceTests
                 """).SingleAsync();
 
             Assert.True(exists);
+
+            var preservedLegacyOrder = await legacyDb.Database.SqlQuery<Guid>(
+                $"""SELECT "Id" AS "Value" FROM "Orders" WHERE "Id" = {legacyOrderId}""")
+                .SingleAsync();
+            var legacyCustomerId = await legacyDb.Database.SqlQuery<Guid?>(
+                $"""SELECT "CustomerId" AS "Value" FROM "Orders" WHERE "Id" = {legacyOrderId}""")
+                .SingleAsync();
+
+            Assert.Equal(legacyOrderId, preservedLegacyOrder);
+            Assert.Null(legacyCustomerId);
         }
         finally
         {
