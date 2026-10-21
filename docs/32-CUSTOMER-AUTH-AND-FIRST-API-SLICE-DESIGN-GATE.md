@@ -1234,3 +1234,32 @@ This section supersedes earlier statements in this document that the current int
 - No ASP.NET Core API host, Identity/OpenIddict integration, token validation, registration/verification/recovery endpoints, or live authenticated mobile-to-API flow has been implemented by the runtime upgrade.
 - The authentication/first-API gate remains **NOT READY FOR IMPLEMENTATION** until the remaining identity/provider, verification, provisioning recovery, API contract, session persistence, abuse-control, and owner-approval requirements are closed.
 - Do not reinterpret the successful runtime-upgrade merge as approval to introduce auth packages, API routes, auth tables, secrets, or production deployment.
+
+
+## Replacement-delivery authorization source decision — 2026-10-21
+
+**Status: OWNER DECISION REQUIRED — no production authorization source selected.**
+
+The owner has approved the *policy* for replacement delivery (Option B): Dispatch/Admin may create replacements; a Merchant may do so only for an Order belonging to that Merchant's Store. That policy decision does not identify the trusted data source used to prove the actor's role or Store membership.
+
+### Options
+
+1. **Provider claims only.** Resolve role and Store scope entirely from signed identity-provider claims. This requires a reliable, promptly updated Store-membership claim model and a defined revocation/refresh strategy. A client-provided StoreId is never evidence.
+2. **Authenticated subject + server-side authorization records.** Resolve the authenticated subject to the internal Person, then query authoritative role grants and Merchant-to-Store membership from server-controlled persistence/policy services. Dispatch/Admin grants are explicit and auditable. Revocation is checked at command time.
+3. **Configuration or allow-all adapter.** Suitable only as an isolated test fixture; not a production source and must fail closed if accidentally selected in production.
+
+**Recommended for review (not adopted): Option 2.** It matches the project boundary that identity identifies a Person while role, membership, and resource scope are contextual. The identity provider supplies a stable authenticated subject; the application authorization port obtains current role and Store scope from trusted server-side sources. Do not add tables, packages, or a production adapter until the owner accepts the source-of-truth model and the persistence owner/migration is designed.
+
+### Required acceptance tests before HTTP exposure
+
+- Dispatch/Admin with an authorized operational grant: allowed.
+- Merchant with current membership in the Order's Store: allowed.
+- Merchant with no membership or membership in a different Store: denied.
+- Customer, Driver, unknown actor, missing internal Person mapping, and unavailable authorization source: denied (fail closed).
+- Client-supplied StoreId never widens authorization; locked Order.StoreId remains authoritative.
+- Authorization is checked before idempotency replay; a revoked actor cannot replay a previously completed command.
+- Denied commands persist no Delivery mutation and no completed idempotency result.
+
+### Current evidence boundary
+
+PR #14 adds the authorization port and unit tests, but PostgreSQL integration tests use an allow-all test adapter for transaction/concurrency coverage. There is no verified production role-grant / Merchant-to-Store source in the inspected persistence schema. Therefore PR #14 stays Draft, and replacement-delivery HTTP exposure stays blocked. This section records options and a recommendation only; it does not approve implementation.
