@@ -109,3 +109,20 @@ This section supersedes earlier status statements in this document that describe
 - No mobile source was deleted. PR #22 remains the single current integration candidate for the mobile tree.
 - The exact PR #22 head `183eb619aee316b69800c7d33679634d94f45836` passed both configured workflows: [.NET/PostgreSQL run 39648916922](https://github.com/palestiny/local-commerce-platform/actions/runs/39648916922) and [customer-mobile run 39648916783](https://github.com/palestiny/local-commerce-platform/actions/runs/39648916783).
 - PR #22 remains Draft and unmerged. Green CI verifies repository tests and static/mobile dependency checks; it does not close the replacement-delivery authorization blocker, authenticate the mobile app, or prove a physical-device runtime session.
+
+
+## Integration-head verification and stack review — 2026-10-21
+
+### Latest verified integration head before this documentation update
+
+- PR #22 head `db963a7a82ecae22273e64368d02e49fd9a419f6` passed [.NET/PostgreSQL CI run 39649983524](https://github.com/palestiny/local-commerce-platform/actions/runs/39649983524) and [customer-mobile CI run 39649983477](https://github.com/palestiny/local-commerce-platform/actions/runs/39649983477). Duplicate push/PR-triggered runs also passed: [dotnet 39649975603](https://github.com/palestiny/local-commerce-platform/actions/runs/39649975603) and [mobile 39649975555](https://github.com/palestiny/local-commerce-platform/actions/runs/39649975555).
+- These results verify that exact head, not this new documentation commit. The new commit must pass both workflows before it can be called green.
+- PR #20 and #21 remain closed as superseded; their changed mobile files were compared against PR #22 and matched by Git blob SHA.
+
+### Stacked PR review
+
+- PR #1 remains Draft. Its current head `c11c33706a0589d60e46e8609525bbffa9ee6c91` has a successful .NET workflow ([run 39646589329](https://github.com/palestiny/local-commerce-platform/actions/runs/39646589329)); this is CI evidence, not approval to merge.
+- PR #14 remains Draft and GitHub reports `mergeable: false`. The owner-approved replacement-delivery role policy exists, but a production trusted actor-role / Merchant-to-Store membership source is still missing. See the decision gate in `docs/32-CUSTOMER-AUTH-AND-FIRST-API-SLICE-DESIGN-GATE.md`.
+- PR #22 remains Draft and unmerged. Do not merge the stack solely because CI passes. First resolve PR #14's base/merge conflict and trusted authorization source; preserve the chain #22 → #14 → #1.
+- The PR #1 comparison reports substantial commit-history divergence from `main`, while the current `main` tree contains only the README and the core project-planning documents. This is a history/topology warning, not proof of a content conflict; verify the intended merge-base/history strategy before merging the foundation stack.
+- No authentication provider, production authorization source, API endpoint, or deployment decision was selected by this review.
