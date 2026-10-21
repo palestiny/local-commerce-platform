@@ -89,7 +89,7 @@ This section supersedes earlier status statements in this document that describe
 ## Next safe action
 
 1. Perform a focused review of PR #22's customer-order ownership migration and initialization behavior against existing database states; preserve historical orders with unknown ownership as `CustomerId = NULL` and do not expose them as belonging to a customer.
-2. Confirm why PR #22 targets `fix/replacement-delivery-store-consistency` rather than the intended integration/release target before any merge decision.
+2. Preserve the verified stacked-PR relationship: PR #22's base SHA is PR #14's head (`fde2ece976a02dc7e984173cf9b835a273e0cc84`), and PR #14 targets `feature/foundation-domain-architecture`; PR #1 then targets `main`. Do not retarget these PRs independently. Review and merge only in dependency order after each Draft gate is cleared.
 3. Resolve the remaining authentication design decisions and get explicit owner approval before implementing auth packages, API routes, credential handling, or auth schema changes.
 4. Keep production release blocked until the actual hosting/runtime, environment secrets/health checks, and operational backup/restore and rollback procedure are verified.
 
