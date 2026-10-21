@@ -92,3 +92,11 @@ This section supersedes earlier status statements in this document that describe
 2. Confirm why PR #22 targets `fix/replacement-delivery-store-consistency` rather than the intended integration/release target before any merge decision.
 3. Resolve the remaining authentication design decisions and get explicit owner approval before implementing auth packages, API routes, credential handling, or auth schema changes.
 4. Keep production release blocked until the actual hosting/runtime, environment secrets/health checks, and operational backup/restore and rollback procedure are verified.
+
+
+## Customer-order ownership migration test follow-up — 2026-10-21
+
+- Added a regression assertion to the legacy-schema integration test: create a pre-existing order before the additive ownership migration, run the initializer, and verify the row still exists with `CustomerId = NULL`. This protects the rule that historical ownership must never be inferred.
+- The first CI attempt caught a C# interpolated-string syntax error in this new test. The test source was corrected and re-run.
+- The corrected source/test commit `88602500b971519847b9ef9140b1ebbd7854e0e0` passed .NET restore, the complete configured test suite, and the PostgreSQL migration/recovery smoke test in [run 39648554968](https://github.com/palestiny/local-commerce-platform/actions/runs/39648554968). The customer-mobile workflow also passed in [run 39648554927](https://github.com/palestiny/local-commerce-platform/actions/runs/39648554927).
+- These green runs apply to commit `88602500b971519847b9ef9140b1ebbd7854e0e0`. Any later commit still needs its own CI result checked before claiming that exact head is green.
