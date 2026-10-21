@@ -100,3 +100,12 @@ This section supersedes earlier status statements in this document that describe
 - The first CI attempt caught a C# interpolated-string syntax error in this new test. The test source was corrected and re-run.
 - The corrected source/test commit `88602500b971519847b9ef9140b1ebbd7854e0e0` passed .NET restore, the complete configured test suite, and the PostgreSQL migration/recovery smoke test in [run 39648554968](https://github.com/palestiny/local-commerce-platform/actions/runs/39648554968). The customer-mobile workflow also passed in [run 39648554927](https://github.com/palestiny/local-commerce-platform/actions/runs/39648554927).
 - These green runs apply to commit `88602500b971519847b9ef9140b1ebbd7854e0e0`. Any later commit still needs its own CI result checked before claiming that exact head is green.
+
+
+## Customer-mobile PR deduplication — 2026-10-21
+
+- Closed PR #20 (`feature/customer-mobile-foundation`) and PR #21 (`fix/customer-mobile-sdk57-stability`) as superseded by PR #22. Neither was merged.
+- This was verified by comparing the changed-file lists and Git blob SHAs, not by title alone: all files changed by PR #21 are present in PR #22 with matching blob SHAs; the PR #20-only foundation files (`.gitignore`, `README.md`, `app.json`, `expo-env.d.ts`, and theme tokens) also match exactly.
+- No mobile source was deleted. PR #22 remains the single current integration candidate for the mobile tree.
+- The exact PR #22 head `183eb619aee316b69800c7d33679634d94f45836` passed both configured workflows: [.NET/PostgreSQL run 39648916922](https://github.com/palestiny/local-commerce-platform/actions/runs/39648916922) and [customer-mobile run 39648916783](https://github.com/palestiny/local-commerce-platform/actions/runs/39648916783).
+- PR #22 remains Draft and unmerged. Green CI verifies repository tests and static/mobile dependency checks; it does not close the replacement-delivery authorization blocker, authenticate the mobile app, or prove a physical-device runtime session.
