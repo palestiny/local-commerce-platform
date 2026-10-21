@@ -1216,3 +1216,21 @@ Trade-offs:
 ### Evidence boundary
 
 The recommendation is based on the checked-in solution, project files, workflow, and current upstream package metadata. It is not a claim that the .NET 10 upgrade has been implemented, restored, or tested. Keep the gate **DESIGN REVIEW REQUIRED; IMPLEMENTATION NOT AUTHORIZED** until the owner explicitly approves the upgrade work. Existing CI success on the current .NET 8 branch does not validate .NET 10 compatibility.
+
+
+## Runtime-upgrade status recheck — 2026-10-21
+
+This section supersedes earlier statements in this document that the current integration branch still targets .NET 8 or that the .NET 10 upgrade has not been implemented.
+
+### Verified current baseline
+- The current integration branch includes the .NET 10 upgrade merged through PR #26, merge commit `73f9953132659d23bba077f22e88c70747095607`.
+- All six existing production/test projects target `net10.0`.
+- The infrastructure project and infrastructure test project use EF Core `10.0.13` and Npgsql EF Core provider `10.0.3`.
+- The post-merge .NET build/test and PostgreSQL migration/recovery smoke test passed in [CI run 39647068937](https://github.com/palestiny/local-commerce-platform/actions/runs/39647068937).
+- The post-merge customer-mobile dependency, TypeScript, and Expo Doctor checks passed in [CI run 39647068934](https://github.com/palestiny/local-commerce-platform/actions/runs/39647068934).
+
+### What remains unapproved/unverified
+- This closes the repository-level runtime-upgrade CI gap only. It does not prove the eventual hosting environment has the required .NET 10 runtime.
+- No ASP.NET Core API host, Identity/OpenIddict integration, token validation, registration/verification/recovery endpoints, or live authenticated mobile-to-API flow has been implemented by the runtime upgrade.
+- The authentication/first-API gate remains **NOT READY FOR IMPLEMENTATION** until the remaining identity/provider, verification, provisioning recovery, API contract, session persistence, abuse-control, and owner-approval requirements are closed.
+- Do not reinterpret the successful runtime-upgrade merge as approval to introduce auth packages, API routes, auth tables, secrets, or production deployment.
