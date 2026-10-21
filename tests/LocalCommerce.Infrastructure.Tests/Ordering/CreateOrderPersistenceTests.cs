@@ -130,11 +130,12 @@ public sealed class CreateOrderPersistenceTests
             var legacyStoreId = Guid.NewGuid();
             var legacyOrderId = Guid.NewGuid();
             var legacyOrderNumber = "LEGACY-" + Guid.NewGuid().ToString("N");
+            var legacyStatus = "Pending";
             var legacyTimestamp = DateTimeOffset.UtcNow;
             await legacyDb.Database.ExecuteSqlInterpolatedAsync(
-                $"INSERT INTO \\"Stores\\" (\\"Id\\", \\"IsActive\\") VALUES ({legacyStoreId}, TRUE)");
+                $"INSERT INTO \"Stores\" (\"Id\", \"IsActive\") VALUES ({legacyStoreId}, TRUE)");
             await legacyDb.Database.ExecuteSqlInterpolatedAsync(
-                $"INSERT INTO \\"Orders\\" (\\"Id\\", \\"StoreId\\", \\"OrderNumber\\", \\"Status\\", \\"CreatedAt\\", \\"UpdatedAt\\") VALUES ({legacyOrderId}, {legacyStoreId}, {legacyOrderNumber}, {\\"Pending\\"}, {legacyTimestamp}, {legacyTimestamp})");
+                $"INSERT INTO \"Orders\" (\"Id\", \"StoreId\", \"OrderNumber\", \"Status\", \"CreatedAt\", \"UpdatedAt\") VALUES ({legacyOrderId}, {legacyStoreId}, {legacyOrderNumber}, {legacyStatus}, {legacyTimestamp}, {legacyTimestamp})");
 
             await DatabaseInitializer.InitializeAsync(legacyDb);
 
@@ -150,10 +151,10 @@ public sealed class CreateOrderPersistenceTests
             Assert.True(exists);
 
             var preservedLegacyOrder = await legacyDb.Database.SqlQuery<Guid>(
-                $"SELECT \\"Id\\" AS \\"Value\\" FROM \\"Orders\\" WHERE \\"Id\\" = {legacyOrderId}")
+                $"SELECT \"Id\" AS \"Value\" FROM \"Orders\" WHERE \"Id\" = {legacyOrderId}")
                 .SingleAsync();
             var legacyCustomerId = await legacyDb.Database.SqlQuery<Guid?>(
-                $"SELECT \\"CustomerId\\" AS \\"Value\\" FROM \\"Orders\\" WHERE \\"Id\\" = {legacyOrderId}")
+                $"SELECT \"CustomerId\" AS \"Value\" FROM \"Orders\" WHERE \"Id\" = {legacyOrderId}")
                 .SingleAsync();
 
             Assert.Equal(legacyOrderId, preservedLegacyOrder);
