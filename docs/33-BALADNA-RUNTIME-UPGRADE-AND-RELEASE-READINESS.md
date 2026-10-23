@@ -3,6 +3,21 @@
 **Last checked:** 2026-10-21  
 **Purpose:** Keep runtime-upgrade evidence separate from deployment approval and authentication design approval.
 
+## Current verification snapshot — 2026-10-23
+
+This snapshot supersedes the older status table immediately below; that table is retained as history, not current status.
+
+- **PR #22:** open, Draft, not merged. The latest code-bearing integration head checked before today's status-document updates was `6d2817f0995164bd38f6f3a4dc3d8bedead590f4`. PR #22 targets `fix/replacement-delivery-store-consistency` at `fde2ece976a02dc7e984173cf9b835a273e0cc84`, the head of PR #14.
+- **PR #23:** closed without merge; superseded by PR #26.
+- **PR #26:** merged 2026-10-21 at `73f9953132659d23bba077f22e88c70747095607`. .NET 10 is present on the integration branch.
+- **Latest fully verified code-bearing integration head:** `6d2817f0995164bd38f6f3a4dc3d8bedead590f4`. [.NET/PostgreSQL CI](https://github.com/palestiny/local-commerce-platform/actions/runs/39655709219) and [customer-mobile CI](https://github.com/palestiny/local-commerce-platform/actions/runs/39655709255) passed on 2026-10-21. .NET reported 141 tests passed, zero build warnings/errors, and a successful PostgreSQL 16 migration/backup/restore smoke test. Mobile TypeScript and Expo Doctor passed.
+- **Current packages:** `net10.0`, EF Core `10.0.13`, Npgsql EF Core provider `10.0.3`; those versions restored and passed the configured CI suite on the verified code-bearing head.
+- **Outstanding CI maintenance:** `.github/workflows/customer-mobile.yml` still uses `actions/checkout@v4` and `actions/setup-node@v4`. The latest mobile log confirms Node.js 20 action-runtime deprecation plus `DEP0040` (`punycode`) and `DEP0169` (`url.parse()`) warnings. Identify the source of the Node dependency warnings before changing app dependencies. The .NET workflow uses `actions/checkout@v7` and `actions/setup-dotnet@v6`.
+- **Stack blocker:** PR #14 remains open/Draft and GitHub reports it as not mergeable; PR #22 is also Draft. Its mergeability flag does not remove the stacked-PR dependency or resolve the trusted replacement-delivery authorization source.
+- **Authentication/release:** no API host or live authentication flow is implemented; the auth/first-API design gate remains not ready for implementation. The CI suite does not prove production hosting/runtime, physical-device behavior, production backup/restore, or rollback readiness.
+
+Today's status-document commits are documentation-only. Their own CI must be checked against the final resulting head before claiming that final head is green.
+
 ## Current GitHub state
 
 | Change | Current state | Evidence |
