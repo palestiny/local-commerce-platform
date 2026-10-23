@@ -1,3 +1,5 @@
+# Customer Authentication and First API Slice — Design Gate
+
 ## Latest verification status — 2026-10-23
 
 This snapshot supersedes the older status summary below. Historical design research and owner decisions remain relevant, but historical framework/CI descriptions must not be read as current runtime status.
@@ -7,10 +9,11 @@ This snapshot supersedes the older status summary below. Historical design resea
 - **PR #22:** open, Draft, not merged. Current head: `6d2817f0995164bd38f6f3a4dc3d8bedead590f4`; base: `fix/replacement-delivery-store-consistency` at `fde2ece976a02dc7e984173cf9b835a273e0cc84`. GitHub currently reports the PR as mergeable, but its base is the head of PR #14; that stacked dependency remains open/Draft and GitHub reports PR #14 as not mergeable. Do not treat PR #22's metadata alone as permission to merge the stack.
 - **PR #23:** closed, not merged; superseded by PR #26.
 - **PR #26:** merged on 2026-10-21 with merge commit `73f9953132659d23bba077f22e88c70747095607`. The integration branch is now on .NET 10; do not repeat the historical statement below that the framework upgrade has not been executed.
-- **Current integration head CI:** the latest runs found for head `6d2817f0995164bd38f6f3a4dc3d8bedead590f4` completed on 2026-10-21 and both passed: [.NET/PostgreSQL run 39655709219](https://github.com/palestiny/local-commerce-platform/actions/runs/39655709219) and [customer-mobile run 39655709255](https://github.com/palestiny/local-commerce-platform/actions/runs/39655709255). No newer runs for this head were present in the repository's latest Actions listing at this check.
+- **Latest code-bearing integration-head CI (before the status-document-only updates on 2026-10-23):** the latest runs found for head `6d2817f0995164bd38f6f3a4dc3d8bedead590f4` completed on 2026-10-21 and both passed: [.NET/PostgreSQL run 39655709219](https://github.com/palestiny/local-commerce-platform/actions/runs/39655709219) and [customer-mobile run 39655709255](https://github.com/palestiny/local-commerce-platform/actions/runs/39655709255). No newer runs for this head were present in the repository's latest Actions listing at this check.
 - The .NET run reports 25 Domain tests, 83 Application tests, and 33 Infrastructure tests passed (141 total), zero build warnings/errors, and a successful PostgreSQL 16 migration/backup/restore smoke test.
 - The mobile run passed dependency installation, TypeScript checking, and Expo Doctor. Its log still emits Node.js 20 action-runtime deprecation warnings for `actions/checkout@v4` and `actions/setup-node@v4`, plus Node `DEP0040` (`punycode`) and `DEP0169` (`url.parse()`) deprecations. The current `.github/workflows/customer-mobile.yml` still declares those v4 actions. The .NET workflow already uses `actions/checkout@v7` and `actions/setup-dotnet@v6`.
 - Infrastructure currently targets `net10.0`, references EF Core `10.0.13` and Npgsql EF Core provider `10.0.3`. These versions restored and passed the configured tests on the verified head.
+- The status-document-only updates made on 2026-10-23 trigger their own GitHub Actions runs. Check the actual final PR #22 head before claiming that those documentation commits have passed CI; the earlier green runs above apply only to the explicitly named code-bearing head.
 
 ### Authentication/API gate — unchanged
 
