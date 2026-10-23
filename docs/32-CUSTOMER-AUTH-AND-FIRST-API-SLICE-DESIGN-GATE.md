@@ -1,13 +1,29 @@
-# Customer Authentication and First API Slice — Design Gate
+## Latest verification status — 2026-10-23
 
-## Latest verification status — 2026-10-20
+This snapshot supersedes the older status summary below. Historical design research and owner decisions remain relevant, but historical framework/CI descriptions must not be read as current runtime status.
 
-This is the current verification record for the document. Older status notes below are historical and must not override this section.
+### Current GitHub state verified on 2026-10-23
 
-- **Latest fully confirmed CI evidence for the staged sign-in/biometrics decision:** commit `6ff09aaa440f04c0b4325c70d67e61456ae711a5` passed all four configured GitHub Actions runs on October 20, 2026: [.NET PR workflow](https://github.com/palestiny/local-commerce-platform/actions/runs/39456972099), [customer-mobile PR workflow](https://github.com/palestiny/local-commerce-platform/actions/runs/39456972072), [.NET push workflow](https://github.com/palestiny/local-commerce-platform/actions/runs/39456960199), and [customer-mobile push workflow](https://github.com/palestiny/local-commerce-platform/actions/runs/39456960302). This is the last fully verified commit, not a claim that every later documentation-only commit has passed.
-- **Current-head rule:** check the GitHub Actions runs for the actual current branch head before reporting its CI status. A documentation-only update can trigger new runs; until they complete, mark current-head CI as pending. Passing these workflows does not establish biometric behavior on physical devices, live mobile-to-API authentication, or authorize authentication implementation.
-- The configured .NET workflow builds/tests the solution and runs its PostgreSQL 16 migration/backup-restore smoke check; the mobile workflow runs TypeScript checking and Expo Doctor. These results do **not** establish Android/iOS runtime behavior, live mobile-to-API integration, a physical PostgreSQL connection failure during COMMIT, or every failure-injection scenario.
-- PR #22 remains open and Draft. No API/auth implementation, framework/package change, database change, or PR promotion/merge is authorized by this documentation update.
+- **PR #22:** open, Draft, not merged. Current head: `6d2817f0995164bd38f6f3a4dc3d8bedead590f4`; base: `fix/replacement-delivery-store-consistency` at `fde2ece976a02dc7e984173cf9b835a273e0cc84`. GitHub currently reports the PR as mergeable, but its base is the head of PR #14; that stacked dependency remains open/Draft and GitHub reports PR #14 as not mergeable. Do not treat PR #22's metadata alone as permission to merge the stack.
+- **PR #23:** closed, not merged; superseded by PR #26.
+- **PR #26:** merged on 2026-10-21 with merge commit `73f9953132659d23bba077f22e88c70747095607`. The integration branch is now on .NET 10; do not repeat the historical statement below that the framework upgrade has not been executed.
+- **Current integration head CI:** the latest runs found for head `6d2817f0995164bd38f6f3a4dc3d8bedead590f4` completed on 2026-10-21 and both passed: [.NET/PostgreSQL run 39655709219](https://github.com/palestiny/local-commerce-platform/actions/runs/39655709219) and [customer-mobile run 39655709255](https://github.com/palestiny/local-commerce-platform/actions/runs/39655709255). No newer runs for this head were present in the repository's latest Actions listing at this check.
+- The .NET run reports 25 Domain tests, 83 Application tests, and 33 Infrastructure tests passed (141 total), zero build warnings/errors, and a successful PostgreSQL 16 migration/backup/restore smoke test.
+- The mobile run passed dependency installation, TypeScript checking, and Expo Doctor. Its log still emits Node.js 20 action-runtime deprecation warnings for `actions/checkout@v4` and `actions/setup-node@v4`, plus Node `DEP0040` (`punycode`) and `DEP0169` (`url.parse()`) deprecations. The current `.github/workflows/customer-mobile.yml` still declares those v4 actions. The .NET workflow already uses `actions/checkout@v7` and `actions/setup-dotnet@v6`.
+- Infrastructure currently targets `net10.0`, references EF Core `10.0.13` and Npgsql EF Core provider `10.0.3`. These versions restored and passed the configured tests on the verified head.
+
+### Authentication/API gate — unchanged
+
+- The current integration tree still has no ASP.NET Core API host or implemented Identity/OpenIddict authentication flow; the mobile sign-in remains a prototype.
+- The customer authentication and first API slice remains **NOT READY FOR IMPLEMENTATION**. Passing framework and static/mobile CI does not authorize auth/API/schema changes, establish live mobile-to-API authentication, or prove Android/iOS behavior on physical devices.
+- Preserve the approved rules: resolve customer ownership server-side; keep ambiguous mappings inactive; never assign historical orders based only on matching email/phone; fail closed when no single active mapping exists.
+- No production hosting target, live environment runtime, production backup/restore rehearsal, or rollback procedure has been proven by these CI runs.
+
+### Next safe actions
+
+1. Fix the mobile workflow's outdated Actions versions in a narrowly scoped maintenance change and rerun CI; identify the dependency responsible for `punycode`/`url.parse()` warnings before changing application dependencies.
+2. Resolve PR #14's trusted replacement-delivery authorization source and mergeability blocker before promoting the stacked PR #22.
+3. Continue the auth/API design review only; implementation remains gated on explicit owner approval and closure of the remaining design decisions.
 
 ### Support-window implication
 
