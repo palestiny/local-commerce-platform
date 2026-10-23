@@ -291,6 +291,7 @@ public sealed class CreateOrderHandlerTests
 
             public Task AddAsync(
                 LocalCommerce.Domain.Ordering.Order order,
+                Guid customerId,
                 string orderNumber,
                 CancellationToken cancellationToken)
             {

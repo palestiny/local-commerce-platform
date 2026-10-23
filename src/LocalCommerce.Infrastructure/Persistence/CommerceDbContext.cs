@@ -25,6 +25,7 @@ public sealed class CommerceDbContext : DbContext
             e.ToTable("Orders");
             e.HasKey(x => x.Id);
             e.Property(x => x.OrderNumber).HasMaxLength(64).IsRequired();
+            e.HasIndex(x => x.CustomerId).HasDatabaseName("IX_Orders_CustomerId");
             e.HasIndex(x => x.OrderNumber).IsUnique();
             e.Property(x => x.Status).HasConversion<string>().HasMaxLength(64).IsRequired();
             e.Property(x => x.CreatedAt).IsRequired();
@@ -127,6 +128,7 @@ public sealed class CommerceDbContext : DbContext
 public sealed class OrderEntity
 {
     public Guid Id { get; set; }
+    public Guid? CustomerId { get; set; }
     public Guid StoreId { get; set; }
     public string OrderNumber { get; set; } = null!;
     public OrderStatus Status { get; set; }

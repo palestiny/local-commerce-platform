@@ -1,0 +1,1830 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>شاشة الاتصال — معاينة احترافية</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'IBM Plex Sans Arabic', sans-serif; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --primary: #0F766E;
+    --primary-dark: #115E59;
+    --primary-light: #CCFBF1;
+    --primary-soft: #F0FDFA;
+    --accent: #F59E0B;
+    --accent-dark: #D97706;
+    --accent-light: #FEF3C7;
+    --danger: #EF4444;
+    --danger-light: #FEF2F2;
+    --success: #10B981;
+    --success-dark: #059669;
+    --success-light: #ECFDF5;
+    --purple: #8B5CF6;
+    --purple-light: #EDE9FE;
+    --blue: #2563EB;
+    --blue-light: #DBEAFE;
+    --pink: #EC4899;
+    --pink-light: #FCE7F3;
+    --whatsapp: #25D366;
+    --telegram: #0088CC;
+    --facebook: #1877F2;
+    --instagram: #E4405F;
+    --dark: #0F172A;
+    --gray-700: #374151;
+    --gray-600: #4B5563;
+    --gray-500: #6B7280;
+    --gray-400: #9CA3AF;
+    --gray-300: #D1D5DB;
+    --gray-200: #E5E7EB;
+    --gray-100: #F3F4F6;
+    --bg: #F8FAFC;
+    --white: #FFFFFF;
+
+    --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.07);
+    --shadow-lg: 0 10px 30px rgba(15, 23, 42, 0.09);
+    --shadow-xl: 0 20px 40px rgba(15, 23, 42, 0.14);
+    --shadow-primary: 0 8px 24px rgba(15, 118, 110, 0.32);
+    --shadow-whatsapp: 0 8px 24px rgba(37, 211, 102, 0.32);
+    --shadow-danger: 0 8px 24px rgba(239, 68, 68, 0.32);
+
+    --r-sm: 10px;
+    --r-md: 14px;
+    --r-lg: 18px;
+    --r-xl: 24px;
+    --r-full: 999px;
+  }
+
+  body {
+    background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+    min-height: 100vh;
+    padding: 50px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+  }
+
+  .page-header { text-align: center; color: #fff; max-width: 900px; }
+  .page-header h1 {
+    font-size: 30px; font-weight: 700; margin-bottom: 8px;
+    background: linear-gradient(135deg, #fff, #94A3B8);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .page-header p { color: #94A3B8; font-size: 14px; }
+
+  .screens-container {
+    display: flex; gap: 40px; flex-wrap: wrap; justify-content: center;
+  }
+  .screen-wrapper {
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+  }
+  .screen-badge {
+    background: rgba(15, 118, 110, 0.15);
+    color: #5EEAD4;
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid rgba(94, 234, 212, 0.25);
+  }
+
+  .phone {
+    width: 375px;
+    height: 812px;
+    background: var(--bg);
+    border-radius: 44px;
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+      0 0 0 10px #0A0F1E,
+      0 0 0 12px #1E293B,
+      0 30px 60px rgba(0, 0, 0, 0.5),
+      0 0 80px rgba(15, 118, 110, 0.15);
+  }
+  .phone::before {
+    content: '';
+    position: absolute;
+    top: 10px; left: 50%;
+    transform: translateX(-50%);
+    width: 110px; height: 28px;
+    background: #0A0F1E;
+    border-radius: 999px;
+    z-index: 999;
+  }
+
+  .status-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 48px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 28px;
+    font-size: 13px; font-weight: 600;
+    z-index: 100;
+    pointer-events: none;
+    color: var(--dark);
+  }
+  .status-bar.light { color: #fff; }
+  .status-bar .time { margin-top: 4px; }
+  .status-bar .status-icons { display: flex; gap: 5px; margin-top: 4px; align-items: center; }
+  .status-bar svg { width: 15px; height: 15px; }
+
+  .screen {
+    width: 100%; height: 100%;
+    overflow-y: auto; overflow-x: hidden;
+    scrollbar-width: none;
+    padding-top: 48px;
+    padding-bottom: 30px;
+  }
+  .screen::-webkit-scrollbar { display: none; }
+
+  /* ══════════ APP BAR ══════════ */
+  .app-bar {
+    padding: 8px 20px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .back-btn {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .back-btn:hover { background: var(--gray-100); }
+  .back-btn svg {
+    width: 18px; height: 18px;
+    stroke: var(--gray-700);
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .app-title-wrap {
+    flex: 1;
+    text-align: center;
+  }
+  .app-title {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--dark);
+    letter-spacing: -0.3px;
+    margin-bottom: 2px;
+  }
+  .app-subtitle {
+    font-size: 11px;
+    color: var(--gray-500);
+    font-weight: 600;
+  }
+  .header-icon-btn {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .header-icon-btn:hover { background: var(--gray-100); }
+  .header-icon-btn svg {
+    width: 18px; height: 18px;
+    stroke: var(--gray-700);
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* ══════════ PROVIDER HERO ══════════ */
+  .provider-hero {
+    margin: 0 20px 16px;
+    padding: 18px;
+    background: linear-gradient(135deg, var(--white), #F8FAFC);
+    border-radius: var(--r-lg);
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .provider-hero::before {
+    content: '';
+    position: absolute;
+    top: -50px; right: -40px;
+    width: 140px;
+    height: 140px;
+    background: radial-gradient(circle, rgba(15,118,110,0.08), transparent 70%);
+    border-radius: 50%;
+  }
+
+  .provider-avatar {
+    width: 66px;
+    height: 66px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, #F59E0B, #EA580C);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    font-weight: 800;
+    flex-shrink: 0;
+    box-shadow: 0 8px 20px rgba(245,158,11,0.35);
+    position: relative;
+    z-index: 1;
+  }
+  .provider-avatar .online-dot {
+    position: absolute;
+    bottom: -3px;
+    left: -3px;
+    width: 18px;
+    height: 18px;
+    background: var(--success);
+    border-radius: 50%;
+    border: 3px solid var(--white);
+    box-shadow: 0 0 0 3px rgba(16,185,129,0.2);
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.7; }
+  }
+
+  .provider-info { flex: 1; min-width: 0; position: relative; z-index: 1; }
+  .provider-name {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 4px;
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .provider-name .verified-mini {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: var(--primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .provider-name .verified-mini svg {
+    width: 8px;
+    height: 8px;
+    stroke: #fff;
+    stroke-width: 3.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .provider-category {
+    font-size: 11px;
+    color: var(--gray-500);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .provider-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    background: var(--success-light);
+    border-radius: var(--r-full);
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--success-dark);
+  }
+  .provider-status::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    background: var(--success);
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px rgba(16,185,129,0.3);
+    animation: pulse 1.5s infinite;
+  }
+
+  /* ══════════ QUICK ACTIONS ══════════ */
+  .section-header {
+    padding: 4px 20px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .section-title {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    letter-spacing: -0.2px;
+  }
+  .section-title::before {
+    content: '';
+    width: 3px;
+    height: 14px;
+    background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+    border-radius: 4px;
+  }
+  .section-link {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    padding: 5px 8px;
+    border-radius: 8px;
+    transition: background 0.2s;
+  }
+  .section-link:hover { background: var(--primary-soft); }
+  .section-link svg {
+    width: 11px;
+    height: 11px;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .quick-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    padding: 0 20px 16px;
+  }
+  .quick-action {
+    padding: 14px 8px;
+    background: var(--white);
+    border-radius: var(--r-md);
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-xs);
+    cursor: pointer;
+    transition: all 0.25s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .quick-action:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: transparent;
+  }
+  .quick-action-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: transform 0.25s;
+  }
+  .quick-action:hover .quick-action-icon { transform: scale(1.08); }
+  .quick-action-icon svg {
+    width: 22px;
+    height: 22px;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .quick-action-icon.call {
+    background: linear-gradient(135deg, var(--primary-light), #99F6E4);
+  }
+  .quick-action-icon.call svg { stroke: var(--primary); }
+  .quick-action-icon.whatsapp {
+    background: linear-gradient(135deg, #D1FAE5, #A7F3D0);
+  }
+  .quick-action-icon.whatsapp svg { stroke: var(--success-dark); }
+  .quick-action-icon.message {
+    background: linear-gradient(135deg, var(--blue-light), #BFDBFE);
+  }
+  .quick-action-icon.message svg { stroke: var(--blue); }
+  .quick-action-icon.email {
+    background: linear-gradient(135deg, var(--accent-light), #FDE68A);
+  }
+  .quick-action-icon.email svg { stroke: var(--accent-dark); }
+  .quick-action-icon.location {
+    background: linear-gradient(135deg, var(--purple-light), #DDD6FE);
+  }
+  .quick-action-icon.location svg { stroke: var(--purple); }
+  .quick-action-icon.emergency {
+    background: linear-gradient(135deg, var(--danger-light), #FECACA);
+  }
+  .quick-action-icon.emergency svg { stroke: var(--danger); }
+
+  .quick-action-icon .pulse-ring {
+    position: absolute;
+    inset: -4px;
+    border-radius: 18px;
+    border: 2px solid currentColor;
+    opacity: 0;
+    animation: ringPulse 2s infinite;
+  }
+  @keyframes ringPulse {
+    0% { transform: scale(0.95); opacity: 0.6; }
+    100% { transform: scale(1.15); opacity: 0; }
+  }
+
+  .quick-action-label {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--dark);
+    letter-spacing: -0.2px;
+  }
+  .quick-action-desc {
+    font-size: 9.5px;
+    color: var(--gray-500);
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  /* ══════════ CONTACT CARDS ══════════ */
+  .contact-cards {
+    padding: 0 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .contact-card {
+    padding: 14px;
+    background: var(--white);
+    border-radius: var(--r-md);
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-xs);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.25s;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .contact-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: transparent;
+  }
+  .contact-card.primary {
+    border-color: var(--primary-light);
+    background: linear-gradient(90deg, var(--primary-soft), var(--white));
+  }
+  .contact-card.primary::before {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 16px;
+    bottom: 16px;
+    width: 3px;
+    background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+    border-radius: 3px 0 0 3px;
+  }
+
+  .contact-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .contact-icon svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .contact-icon.teal {
+    background: var(--primary-soft);
+  }
+  .contact-icon.teal svg { stroke: var(--primary); }
+  .contact-icon.whatsapp {
+    background: linear-gradient(135deg, #D1FAE5, #A7F3D0);
+  }
+  .contact-icon.whatsapp svg { stroke: var(--success-dark); fill: var(--success-dark); }
+  .contact-icon.blue {
+    background: var(--blue-light);
+  }
+  .contact-icon.blue svg { stroke: var(--blue); }
+  .contact-icon.orange {
+    background: var(--accent-light);
+  }
+  .contact-icon.orange svg { stroke: var(--accent-dark); }
+  .contact-icon.purple {
+    background: var(--purple-light);
+  }
+  .contact-icon.purple svg { stroke: var(--purple); }
+
+  .contact-info { flex: 1; min-width: 0; }
+  .contact-label {
+    font-size: 10px;
+    color: var(--gray-500);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .contact-label .badge-primary {
+    padding: 1px 5px;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 4px;
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  .contact-label .badge-whatsapp {
+    padding: 1px 5px;
+    background: var(--whatsapp);
+    color: #fff;
+    border-radius: 4px;
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .contact-value {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 2px;
+    letter-spacing: -0.3px;
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+  }
+  .contact-value.phone {
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.5px;
+  }
+  .contact-desc {
+    font-size: 10.5px;
+    color: var(--gray-500);
+    font-weight: 600;
+  }
+
+  .contact-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .contact-action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: var(--gray-100);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .contact-action-btn:hover {
+    background: var(--primary);
+  }
+  .contact-action-btn:hover svg { stroke: #fff; }
+  .contact-action-btn svg {
+    width: 14px;
+    height: 14px;
+    stroke: var(--gray-600);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: stroke 0.2s;
+  }
+
+  /* ══════════ WORKING HOURS ══════════ */
+  .hours-card {
+    margin: 0 20px 16px;
+    background: var(--white);
+    border-radius: var(--r-md);
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-xs);
+    overflow: hidden;
+  }
+
+  .hours-header {
+    padding: 12px 14px;
+    background: linear-gradient(135deg, var(--primary-soft), var(--primary-light));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .hours-header-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .hours-header-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .hours-header-icon svg {
+    width: 15px;
+    height: 15px;
+    stroke: var(--primary);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .hours-header-text {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--primary-dark);
+    letter-spacing: -0.2px;
+  }
+  .hours-status-badge {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    background: var(--white);
+    border-radius: var(--r-full);
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--success-dark);
+    box-shadow: var(--shadow-xs);
+  }
+  .hours-status-badge::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    background: var(--success);
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+  }
+
+  .hours-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--gray-100);
+    font-size: 12px;
+    transition: all 0.2s;
+  }
+  .hours-row:last-child { border-bottom: none; }
+  .hours-row:hover { background: var(--gray-100); }
+  .hours-row.today {
+    background: linear-gradient(90deg, var(--primary-soft), transparent);
+    position: relative;
+  }
+  .hours-row.today::before {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--primary);
+  }
+  .hours-day {
+    font-weight: 700;
+    color: var(--gray-700);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .hours-day .today-tag {
+    font-size: 9px;
+    background: var(--primary);
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 800;
+  }
+  .hours-row.today .hours-day {
+    color: var(--primary-dark);
+    font-weight: 800;
+  }
+  .hours-time {
+    color: var(--gray-500);
+    font-weight: 600;
+    font-family: 'Courier New', monospace;
+    font-size: 11.5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .hours-row.today .hours-time {
+    color: var(--primary);
+    font-weight: 800;
+  }
+  .hours-time.closed {
+    color: var(--danger);
+    font-weight: 800;
+  }
+  .hours-time .live-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--success);
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px rgba(16,185,129,0.2);
+    animation: pulse 1.5s infinite;
+  }
+
+  /* ══════════ MULTIPLE LOCATIONS ══════════ */
+  .locations-list {
+    padding: 0 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .location-card {
+    padding: 12px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-md);
+    cursor: pointer;
+    transition: all 0.25s;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .location-card:hover {
+    border-color: var(--primary-light);
+    background: var(--primary-soft);
+  }
+  .location-card.active {
+    border-color: var(--primary);
+    background: linear-gradient(90deg, var(--primary-soft), var(--white));
+    box-shadow: 0 0 0 3px rgba(15,118,110,0.08);
+  }
+  .location-radio {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--gray-300);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+    background: var(--white);
+  }
+  .location-card.active .location-radio {
+    border-color: var(--primary);
+    background: var(--primary);
+  }
+  .location-card.active .location-radio::after {
+    content: '';
+    width: 7px;
+    height: 7px;
+    background: #fff;
+    border-radius: 50%;
+  }
+  .location-thumb {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--purple-light), #DDD6FE);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .location-thumb svg {
+    width: 20px;
+    height: 20px;
+    stroke: var(--purple);
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .location-info { flex: 1; min-width: 0; }
+  .location-name {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 3px;
+    letter-spacing: -0.2px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .location-name .main-badge {
+    padding: 1px 6px;
+    background: var(--accent-light);
+    color: var(--accent-dark);
+    border-radius: 4px;
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+  }
+  .location-address {
+    font-size: 10.5px;
+    color: var(--gray-500);
+    font-weight: 600;
+    line-height: 1.4;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .location-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    color: var(--gray-500);
+    font-weight: 600;
+  }
+  .location-meta .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .location-meta svg {
+    width: 10px;
+    height: 10px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .location-meta .sep {
+    width: 3px;
+    height: 3px;
+    background: var(--gray-300);
+    border-radius: 50%;
+  }
+
+  /* ══════════ SOCIAL MEDIA ══════════ */
+  .social-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    padding: 0 20px 16px;
+  }
+  .social-btn {
+    aspect-ratio: 1;
+    border-radius: var(--r-md);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    cursor: pointer;
+    transition: all 0.25s;
+    text-decoration: none;
+    border: 1px solid var(--gray-100);
+    background: var(--white);
+    position: relative;
+    overflow: hidden;
+  }
+  .social-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: transparent;
+  }
+  .social-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .social-icon svg {
+    width: 18px;
+    height: 18px;
+    fill: #fff;
+    stroke: none;
+  }
+  .social-icon.facebook { background: var(--facebook); }
+  .social-icon.instagram {
+    background: linear-gradient(45deg, #F58529, #DD2A7B, #8134AF);
+  }
+  .social-icon.whatsapp { background: var(--whatsapp); }
+  .social-icon.telegram { background: var(--telegram); }
+
+  .social-name {
+    font-size: 9.5px;
+    font-weight: 800;
+    color: var(--gray-700);
+    letter-spacing: -0.1px;
+  }
+
+  /* ══════════ EMERGENCY CARD ══════════ */
+  .emergency-card {
+    margin: 0 20px 16px;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--danger), #991B1B);
+    border-radius: var(--r-md);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.25s;
+    box-shadow: var(--shadow-danger);
+    position: relative;
+    overflow: hidden;
+  }
+  .emergency-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(239,68,68,0.4);
+  }
+  .emergency-card::before {
+    content: '';
+    position: absolute;
+    top: -30px; right: -20px;
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, rgba(255,255,255,0.2), transparent 70%);
+    border-radius: 50%;
+  }
+  .emergency-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .emergency-icon svg {
+    width: 20px;
+    height: 20px;
+    stroke: #fff;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .emergency-content { flex: 1; position: relative; z-index: 1; }
+  .emergency-title {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 3px;
+    letter-spacing: -0.2px;
+  }
+  .emergency-desc {
+    font-size: 10.5px;
+    color: rgba(255,255,255,0.85);
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  .emergency-arrow {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .emergency-arrow svg {
+    width: 13px;
+    height: 13px;
+    stroke: #fff;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ══════════ RECENT CONTACTS ══════════ */
+  .recent-list {
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .recent-item {
+    padding: 10px 12px;
+    background: var(--white);
+    border-radius: var(--r-md);
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-xs);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+  .recent-item:hover {
+    transform: translateX(-3px);
+    box-shadow: var(--shadow-sm);
+    border-color: var(--primary-light);
+  }
+  .recent-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: var(--gray-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .recent-icon svg {
+    width: 15px;
+    height: 15px;
+    stroke: var(--gray-600);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .recent-icon.call { background: var(--primary-soft); }
+  .recent-icon.call svg { stroke: var(--primary); }
+  .recent-icon.whatsapp { background: linear-gradient(135deg, #D1FAE5, #A7F3D0); }
+  .recent-icon.whatsapp svg { stroke: var(--success-dark); }
+
+  .recent-info { flex: 1; min-width: 0; }
+  .recent-title {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 2px;
+  }
+  .recent-desc {
+    font-size: 10px;
+    color: var(--gray-500);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .recent-desc svg {
+    width: 9px;
+    height: 9px;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .recent-time {
+    font-size: 9.5px;
+    color: var(--gray-400);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .recent-arrow {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--gray-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .recent-item:hover .recent-arrow {
+    background: var(--primary);
+  }
+  .recent-arrow svg {
+    width: 11px;
+    height: 11px;
+    stroke: var(--gray-500);
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: stroke 0.2s;
+  }
+  .recent-item:hover .recent-arrow svg { stroke: #fff; }
+
+  /* ══════════ STICKY CTA ══════════ */
+  .sticky-cta {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 12px 20px 20px;
+    background: linear-gradient(180deg, rgba(248,250,252,0) 0%, var(--bg) 30%, var(--bg) 100%);
+    z-index: 50;
+  }
+  .sticky-cta-inner {
+    background: var(--white);
+    border-radius: var(--r-lg);
+    padding: 8px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    box-shadow: 0 8px 28px rgba(15,23,42,0.14), 0 2px 8px rgba(15,23,42,0.06);
+    border: 1px solid var(--gray-100);
+  }
+  .sticky-btn-whatsapp {
+    flex: 1;
+    padding: 13px;
+    background: linear-gradient(135deg, var(--whatsapp), #1EA957);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    box-shadow: var(--shadow-whatsapp);
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+    letter-spacing: -0.2px;
+  }
+  .sticky-btn-whatsapp::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    bottom: 0;
+    width: 50px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+    animation: shine 3s infinite;
+  }
+  @keyframes shine {
+    0% { transform: translateX(-100%); }
+    60% { transform: translateX(500%); }
+    100% { transform: translateX(500%); }
+  }
+  .sticky-btn-whatsapp:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(37,211,102,0.45);
+  }
+  .sticky-btn-whatsapp svg {
+    width: 16px;
+    height: 16px;
+    stroke: #fff;
+    stroke-width: 2.2;
+    fill: #fff;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    position: relative;
+    z-index: 1;
+  }
+  .sticky-btn-whatsapp span { position: relative; z-index: 1; }
+
+  .sticky-btn-call {
+    flex: 1;
+    padding: 13px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    box-shadow: var(--shadow-primary);
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+    letter-spacing: -0.2px;
+  }
+  .sticky-btn-call::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    bottom: 0;
+    width: 50px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+    animation: shine 3s infinite 0.5s;
+  }
+  .sticky-btn-call:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(15,118,110,0.4);
+  }
+  .sticky-btn-call svg {
+    width: 16px;
+    height: 16px;
+    stroke: #fff;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    position: relative;
+    z-index: 1;
+  }
+  .sticky-btn-call span { position: relative; z-index: 1; }
+
+  /* Copy Toast */
+  .copy-toast {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    padding: 12px 18px;
+    background: var(--dark);
+    color: #fff;
+    border-radius: var(--r-lg);
+    font-size: 12.5px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s;
+    white-space: nowrap;
+  }
+  .copy-toast.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  .copy-toast svg {
+    width: 16px;
+    height: 16px;
+    stroke: var(--success);
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>شاشة الاتصال — Contact Screen</h1>
+  <p>6 Quick Actions · فروع متعددة · ساعات العمل · طوارئ</p>
+</div>
+
+<div class="screens-container">
+  <div class="screen-wrapper">
+    <div class="phone">
+      <div class="status-bar">
+        <div class="time">9:41</div>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h3v-9H2v9zm5 0h3V9H7v13zm5 0h3V5h-3v17zm5 0h3V2h-3v20z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21l-12-18h24z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm5 4v8h1c.6 0 1-.4 1-1V9c0-.6-.4-1-1-1h-1z"/></svg>
+        </div>
+      </div>
+
+      <div class="screen">
+
+        <!-- App Bar -->
+        <div class="app-bar">
+          <div class="back-btn">
+            <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+          <div class="app-title-wrap">
+            <div class="app-title">تواصل معنا</div>
+            <div class="app-subtitle">كل طرق التواصل في مكان واحد</div>
+          </div>
+          <button class="header-icon-btn">
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="1"/>
+              <circle cx="19" cy="12" r="1"/>
+              <circle cx="5" cy="12" r="1"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Provider Hero -->
+        <div class="provider-hero">
+          <div class="provider-avatar">
+            ر
+            <div class="online-dot"></div>
+          </div>
+          <div class="provider-info">
+            <div class="provider-name">
+              متجر ريماس
+              <div class="verified-mini"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+            </div>
+            <div class="provider-category">إلكترونيات وساعات ذكية</div>
+            <div class="provider-status">متاح الآن للرد</div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="section-header">
+          <div class="section-title">طرق التواصل السريع</div>
+        </div>
+
+        <div class="quick-actions-grid">
+          <div class="quick-action">
+            <div class="quick-action-icon call">
+              <svg viewBox="0 0 24 24">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+              <div class="pulse-ring" style="color: var(--primary);"></div>
+            </div>
+            <div class="quick-action-label">اتصال</div>
+            <div class="quick-action-desc">هاتف مباشر</div>
+          </div>
+
+          <div class="quick-action">
+            <div class="quick-action-icon whatsapp">
+              <svg viewBox="0 0 24 24">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+              </svg>
+            </div>
+            <div class="quick-action-label">واتساب</div>
+            <div class="quick-action-desc">محادثة فورية</div>
+          </div>
+
+          <div class="quick-action">
+            <div class="quick-action-icon message">
+              <svg viewBox="0 0 24 24">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+            </div>
+            <div class="quick-action-label">محادثة</div>
+            <div class="quick-action-desc">داخل التطبيق</div>
+          </div>
+
+          <div class="quick-action">
+            <div class="quick-action-icon email">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+            </div>
+            <div class="quick-action-label">إيميل</div>
+            <div class="quick-action-desc">للطلبات الرسمية</div>
+          </div>
+
+          <div class="quick-action">
+            <div class="quick-action-icon location">
+              <svg viewBox="0 0 24 24">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+            </div>
+            <div class="quick-action-label">الموقع</div>
+            <div class="quick-action-desc">عرض الخريطة</div>
+          </div>
+
+          <div class="quick-action">
+            <div class="quick-action-icon emergency">
+              <svg viewBox="0 0 24 24">
+                <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+            </div>
+            <div class="quick-action-label">طوارئ</div>
+            <div class="quick-action-desc">خط ساخن</div>
+          </div>
+        </div>
+
+        <!-- Contact Cards -->
+        <div class="section-header">
+          <div class="section-title">بيانات التواصل</div>
+        </div>
+
+        <div class="contact-cards">
+
+          <!-- Phone Card -->
+          <div class="contact-card primary">
+            <div class="contact-icon teal">
+              <svg viewBox="0 0 24 24">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+            </div>
+            <div class="contact-info">
+              <div class="contact-label">
+                رقم الهاتف
+                <span class="badge-primary">الأساسي</span>
+              </div>
+              <div class="contact-value phone">+20 100 123 4567</div>
+              <div class="contact-desc">متاح من 9 صباحاً - 11 مساءً</div>
+            </div>
+            <div class="contact-actions">
+              <button class="contact-action-btn" onclick="showToast()">
+                <svg viewBox="0 0 24 24">
+                  <rect x="9" y="9" width="13" height="13" rx="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- WhatsApp Card -->
+          <div class="contact-card">
+            <div class="contact-icon whatsapp">
+              <svg viewBox="0 0 24 24">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+              </svg>
+            </div>
+            <div class="contact-info">
+              <div class="contact-label">
+                واتساب
+                <span class="badge-whatsapp">سريع</span>
+              </div>
+              <div class="contact-value phone">+20 100 123 4567</div>
+              <div class="contact-desc">رد فوري خلال دقائق</div>
+            </div>
+            <div class="contact-actions">
+              <button class="contact-action-btn" onclick="showToast()">
+                <svg viewBox="0 0 24 24">
+                  <rect x="9" y="9" width="13" height="13" rx="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Email Card -->
+          <div class="contact-card">
+            <div class="contact-icon blue">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+            </div>
+            <div class="contact-info">
+              <div class="contact-label">البريد الإلكتروني</div>
+              <div class="contact-value">contact@remas.com</div>
+              <div class="contact-desc">للطلبات الرسمية والاستفسارات</div>
+            </div>
+            <div class="contact-actions">
+              <button class="contact-action-btn" onclick="showToast()">
+                <svg viewBox="0 0 24 24">
+                  <rect x="9" y="9" width="13" height="13" rx="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Website Card -->
+          <div class="contact-card">
+            <div class="contact-icon purple">
+              <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="2" y1="12" x2="22" y2="12"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              </svg>
+            </div>
+            <div class="contact-info">
+              <div class="contact-label">الموقع الإلكتروني</div>
+              <div class="contact-value">www.remas-store.com</div>
+              <div class="contact-desc">تصفح المنتجات أونلاين</div>
+            </div>
+            <div class="contact-actions">
+              <button class="contact-action-btn">
+                <svg viewBox="0 0 24 24">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                  <polyline points="15 3 21 3 21 9"/>
+                  <line x1="10" y1="14" x2="21" y2="3"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Working Hours -->
+        <div class="section-header">
+          <div class="section-title">ساعات العمل</div>
+          <div class="section-link">
+            تقويم
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </div>
+        </div>
+
+        <div class="hours-card">
+          <div class="hours-header">
+            <div class="hours-header-info">
+              <div class="hours-header-icon">
+                <svg viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+              </div>
+              <div class="hours-header-text">مفتوح الآن</div>
+            </div>
+            <div class="hours-status-badge">يغلق 11 مساءً</div>
+          </div>
+
+          <div class="hours-row">
+            <div class="hours-day">السبت</div>
+            <div class="hours-time">10:00 ص - 11:00 م</div>
+          </div>
+          <div class="hours-row">
+            <div class="hours-day">الأحد</div>
+            <div class="hours-time">10:00 ص - 11:00 م</div>
+          </div>
+          <div class="hours-row">
+            <div class="hours-day">الاثنين</div>
+            <div class="hours-time">10:00 ص - 11:00 م</div>
+          </div>
+          <div class="hours-row today">
+            <div class="hours-day">الثلاثاء <span class="today-tag">اليوم</span></div>
+            <div class="hours-time">
+              <span class="live-dot"></span>
+              10:00 ص - 11:00 م
+            </div>
+          </div>
+          <div class="hours-row">
+            <div class="hours-day">الأربعاء</div>
+            <div class="hours-time">10:00 ص - 11:00 م</div>
+          </div>
+          <div class="hours-row">
+            <div class="hours-day">الخميس</div>
+            <div class="hours-time">10:00 ص - 11:00 م</div>
+          </div>
+          <div class="hours-row">
+            <div class="hours-day">الجمعة</div>
+            <div class="hours-time closed">مغلق</div>
+          </div>
+        </div>
+
+        <!-- Multiple Locations -->
+        <div class="section-header">
+          <div class="section-title">الفروع</div>
+          <div class="section-link">
+            على الخريطة
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </div>
+        </div>
+
+        <div class="locations-list">
+          <div class="location-card active">
+            <div class="location-radio"></div>
+            <div class="location-thumb">
+              <svg viewBox="0 0 24 24">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+            </div>
+            <div class="location-info">
+              <div class="location-name">
+                الفرع الرئيسي
+                <span class="main-badge">الرئيسي</span>
+              </div>
+              <div class="location-address">دكرنس — شارع المستشفى — برج رضا سامي</div>
+              <div class="location-meta">
+                <span class="meta-item">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  10 ص - 11 م
+                </span>
+                <span class="sep"></span>
+                <span class="meta-item">0.8 كم</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="location-card">
+            <div class="location-radio"></div>
+            <div class="location-thumb">
+              <svg viewBox="0 0 24 24">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+            </div>
+            <div class="location-info">
+              <div class="location-name">فرع المنصورة</div>
+              <div class="location-address">المنصورة — شارع الجمهورية — أمام المحكمة</div>
+              <div class="location-meta">
+                <span class="meta-item">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  10 ص - 10 م
+                </span>
+                <span class="sep"></span>
+                <span class="meta-item">28 كم</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="location-card">
+            <div class="location-radio"></div>
+            <div class="location-thumb">
+              <svg viewBox="0 0 24 24">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+            </div>
+            <div class="location-info">
+              <div class="location-name">فرع طلخا</div>
+              <div class="location-address">طلخا — شارع البحر — برج النيل</div>
+              <div class="location-meta">
+                <span class="meta-item">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  10 ص - 10 م
+                </span>
+                <span class="sep"></span>
+                <span class="meta-item">15 كم</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Social Media -->
+        <div class="section-header">
+          <div class="section-title">تابعنا على</div>
+        </div>
+
+        <div class="social-grid">
+          <div class="social-btn">
+            <div class="social-icon facebook">
+              <svg viewBox="0 0 24 24">
+                <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+              </svg>
+            </div>
+            <div class="social-name">Facebook</div>
+          </div>
+
+          <div class="social-btn">
+            <div class="social-icon instagram">
+              <svg viewBox="0 0 24 24">
+                <rect x="2" y="2" width="20" height="20" rx="5" fill="none" stroke="white" stroke-width="2"/>
+                <circle cx="12" cy="12" r="4" fill="none" stroke="white" stroke-width="2"/>
+                <circle cx="18" cy="6" r="1" fill="white"/>
+              </svg>
+            </div>
+            <div class="social-name">Instagram</div>
+          </div>
+
+          <div class="social-btn">
+            <div class="social-icon whatsapp">
+              <svg viewBox="0 0 24 24">
+                <path d="M17.5 14.4l-1.5-.7c-.5-.3-1-.2-1.4.2l-.7.7c-1.4-.9-2.7-2.2-3.6-3.6l.7-.7c.3-.3.4-.9.2-1.3L10.6 7.4c-.4-.7-1.3-1-2-.6-1.5.9-2.4 2.6-1.7 4.1 1.4 3 3.7 5.4 6.7 6.7 1.5.7 3.2-.1 4.1-1.6.3-.7.2-1.5-.5-1.9zM12 2C6.5 2 2 6.5 2 12c0 1.7.4 3.3 1.2 4.8L2 22l5.3-1.4c1.4.8 3 1.2 4.7 1.2 5.5 0 10-4.5 10-10S17.5 2 12 2z"/>
+              </svg>
+            </div>
+            <div class="social-name">WhatsApp</div>
+          </div>
+
+          <div class="social-btn">
+            <div class="social-icon telegram">
+              <svg viewBox="0 0 24 24">
+                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/>
+              </svg>
+            </div>
+            <div class="social-name">Telegram</div>
+          </div>
+        </div>
+
+        <!-- Emergency Card -->
+        <div class="emergency-card">
+          <div class="emergency-icon">
+            <svg viewBox="0 0 24 24">
+              <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </div>
+          <div class="emergency-content">
+            <div class="emergency-title">🚨 خط الطوارئ</div>
+            <div class="emergency-desc">لحالات الشكاوى أو مشاكل الطلبات العاجلة</div>
+          </div>
+          <div class="emergency-arrow">
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </div>
+        </div>
+
+        <!-- Recent Contacts -->
+        <div class="section-header">
+          <div class="section-title">آخر اتصالات</div>
+        </div>
+
+        <div class="recent-list">
+          <div class="recent-item">
+            <div class="recent-icon call">
+              <svg viewBox="0 0 24 24">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+            </div>
+            <div class="recent-info">
+              <div class="recent-title">مكالمة صوتية</div>
+              <div class="recent-desc">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                2 دقيقة · صادرة
+              </div>
+            </div>
+            <div class="recent-time">اليوم 3:42م</div>
+            <div class="recent-arrow">
+              <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            </div>
+          </div>
+
+          <div class="recent-item">
+            <div class="recent-icon whatsapp">
+              <svg viewBox="0 0 24 24">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+              </svg>
+            </div>
+            <div class="recent-info">
+              <div class="recent-title">محادثة واتساب</div>
+              <div class="recent-desc">
+                <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                استفسار عن ساعة T800
+              </div>
+            </div>
+            <div class="recent-time">أمس 5:30م</div>
+            <div class="recent-arrow">
+              <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            </div>
+          </div>
+
+          <div class="recent-item">
+            <div class="recent-icon call">
+              <svg viewBox="0 0 24 24">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+            </div>
+            <div class="recent-info">
+              <div class="recent-title">مكالمة واردة</div>
+              <div class="recent-desc">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                45 ثانية · واردة
+              </div>
+            </div>
+            <div class="recent-time">منذ 3 أيام</div>
+            <div class="recent-arrow">
+              <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Sticky CTA -->
+      <div class="sticky-cta">
+        <div class="sticky-cta-inner">
+          <button class="sticky-btn-whatsapp">
+            <svg viewBox="0 0 24 24">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+            </svg>
+            <span>واتساب</span>
+          </button>
+          <button class="sticky-btn-call">
+            <svg viewBox="0 0 24 24">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+            <span>اتصال</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+    <div class="screen-badge">شاشة الاتصال</div>
+  </div>
+</div>
+
+<!-- Copy Toast -->
+<div class="copy-toast" id="copyToast">
+  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+  تم النسخ بنجاح!
+</div>
+
+<script>
+  function showToast() {
+    const toast = document.getElementById('copyToast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
+  }
+</script>
+
+</body>
+</html>

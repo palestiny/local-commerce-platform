@@ -1,0 +1,1679 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>البحث والفلترة — معاينة احترافية</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'IBM Plex Sans Arabic', sans-serif; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --primary: #0F766E;
+    --primary-dark: #115E59;
+    --primary-light: #CCFBF1;
+    --primary-soft: #F0FDFA;
+    --accent: #F59E0B;
+    --accent-dark: #D97706;
+    --accent-light: #FEF3C7;
+    --danger: #EF4444;
+    --danger-light: #FEF2F2;
+    --success: #10B981;
+    --success-light: #ECFDF5;
+    --purple: #8B5CF6;
+    --purple-light: #EDE9FE;
+    --blue: #2563EB;
+    --blue-light: #DBEAFE;
+    --dark: #0F172A;
+    --gray-700: #374151;
+    --gray-600: #4B5563;
+    --gray-500: #6B7280;
+    --gray-400: #9CA3AF;
+    --gray-300: #D1D5DB;
+    --gray-200: #E5E7EB;
+    --gray-100: #F3F4F6;
+    --bg: #F8FAFC;
+    --white: #FFFFFF;
+
+    --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.07);
+    --shadow-lg: 0 10px 30px rgba(15, 23, 42, 0.09);
+    --shadow-xl: 0 20px 40px rgba(15, 23, 42, 0.14);
+    --shadow-primary: 0 8px 24px rgba(15, 118, 110, 0.32);
+
+    --r-sm: 10px;
+    --r-md: 14px;
+    --r-lg: 18px;
+    --r-xl: 24px;
+    --r-full: 999px;
+  }
+
+  body {
+    background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+    min-height: 100vh;
+    padding: 50px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+  }
+
+  .page-header { text-align: center; color: #fff; max-width: 900px; }
+  .page-header h1 {
+    font-size: 30px; font-weight: 700; margin-bottom: 8px;
+    background: linear-gradient(135deg, #fff, #94A3B8);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .page-header p { color: #94A3B8; font-size: 14px; }
+
+  .screens-container {
+    display: flex; gap: 40px; flex-wrap: wrap; justify-content: center;
+  }
+  .screen-wrapper {
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+  }
+  .screen-badge {
+    background: rgba(15, 118, 110, 0.15);
+    color: #5EEAD4;
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid rgba(94, 234, 212, 0.25);
+  }
+
+  .phone {
+    width: 375px;
+    height: 812px;
+    background: var(--bg);
+    border-radius: 44px;
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+      0 0 0 10px #0A0F1E,
+      0 0 0 12px #1E293B,
+      0 30px 60px rgba(0, 0, 0, 0.5),
+      0 0 80px rgba(15, 118, 110, 0.15);
+  }
+  .phone::before {
+    content: '';
+    position: absolute;
+    top: 10px; left: 50%;
+    transform: translateX(-50%);
+    width: 110px; height: 28px;
+    background: #0A0F1E;
+    border-radius: 999px;
+    z-index: 999;
+  }
+
+  .status-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 48px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 28px;
+    font-size: 13px; font-weight: 600;
+    z-index: 100;
+    pointer-events: none;
+    color: var(--dark);
+  }
+  .status-bar .time { margin-top: 4px; }
+  .status-bar .status-icons { display: flex; gap: 5px; margin-top: 4px; align-items: center; }
+  .status-bar svg { width: 15px; height: 15px; }
+
+  .screen {
+    width: 100%; height: 100%;
+    overflow-y: auto; overflow-x: hidden;
+    scrollbar-width: none;
+    padding-top: 48px;
+    padding-bottom: 20px;
+  }
+  .screen::-webkit-scrollbar { display: none; }
+
+  /* ══════════ SEARCH HEADER ══════════ */
+  .search-header {
+    padding: 8px 20px 0;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 20;
+    padding-bottom: 12px;
+  }
+  .search-input-wrap {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .back-btn {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .back-btn:hover { background: var(--gray-100); }
+  .back-btn svg {
+    width: 18px; height: 18px;
+    stroke: var(--gray-700);
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  .search-input {
+    flex: 1;
+    background: var(--white);
+    border-radius: 14px;
+    padding: 4px 4px 4px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: var(--shadow-sm);
+    border: 1.5px solid var(--primary);
+    position: relative;
+    cursor: text;
+  }
+  .search-input svg.search-icon {
+    width: 17px; height: 17px;
+    stroke: var(--primary);
+    stroke-width: 2.2;
+    fill: none;
+    flex-shrink: 0;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .search-input input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--dark);
+    background: transparent;
+    padding: 10px 0;
+    min-width: 0;
+  }
+  .search-input input::placeholder {
+    color: var(--gray-400);
+    font-weight: 500;
+  }
+  .clear-btn {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--gray-100);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .clear-btn:hover { background: var(--gray-200); }
+  .clear-btn svg {
+    width: 14px; height: 14px;
+    stroke: var(--gray-600);
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* Quick Filter Chips */
+  .quick-filters {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 4px 0;
+  }
+  .quick-filters::-webkit-scrollbar { display: none; }
+  .quick-chip {
+    flex-shrink: 0;
+    padding: 8px 14px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-full);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-700);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+  }
+  .quick-chip:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  .quick-chip.active {
+    background: var(--dark);
+    border-color: var(--dark);
+    color: #fff;
+  }
+  .quick-chip svg {
+    width: 13px; height: 13px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* Active Filters */
+  .active-filters {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: 4px 0 8px;
+  }
+  .active-filters::-webkit-scrollbar { display: none; }
+  .active-tag {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    background: var(--primary-soft);
+    border: 1px solid var(--primary-light);
+    border-radius: var(--r-full);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--primary);
+  }
+  .active-tag .remove {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--primary);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+  .active-tag .remove svg {
+    width: 8px; height: 8px;
+    stroke: #fff;
+    stroke-width: 3;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .clear-all {
+    font-size: 11px;
+    color: var(--danger);
+    font-weight: 700;
+    padding: 5px 10px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  /* ══════════ RESULTS HEADER ══════════ */
+  .results-header {
+    padding: 8px 20px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .results-count {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gray-600);
+  }
+  .results-count strong {
+    color: var(--dark);
+    font-weight: 700;
+  }
+  .sort-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 12px;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--r-md);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--gray-700);
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: var(--shadow-xs);
+  }
+  .sort-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  .sort-btn svg {
+    width: 13px; height: 13px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* ══════════ RESULT CARDS ══════════ */
+  .results-list {
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .result-card {
+    background: var(--white);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+  }
+  .result-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+    border-color: transparent;
+  }
+
+  .result-image {
+    height: 140px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .result-image::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0.05) 0%, transparent 40%, rgba(0,0,0,0.4) 100%);
+  }
+  .result-image svg {
+    width: 46px; height: 46px;
+    stroke: rgba(255,255,255,0.95);
+    stroke-width: 1.5;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
+  }
+  .result-image.bg-1 { background: linear-gradient(135deg, #0F766E, #14B8A6); }
+  .result-image.bg-2 { background: linear-gradient(135deg, #F59E0B, #EA580C); }
+  .result-image.bg-3 { background: linear-gradient(135deg, #8B5CF6, #6D28D9); }
+  .result-image.bg-4 { background: linear-gradient(135deg, #3B82F6, #1D4ED8); }
+
+  /* Badges on image */
+  .result-badges {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    z-index: 3;
+  }
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 9px;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(10px);
+    border-radius: var(--r-full);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--success);
+  }
+  .status-badge::before {
+    content: '';
+    width: 5px; height: 5px;
+    background: var(--success);
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px rgba(16,185,129,0.25);
+  }
+  .status-badge.closed { color: var(--danger); }
+  .status-badge.closed::before {
+    background: var(--danger);
+    box-shadow: 0 0 0 2px rgba(239,68,68,0.25);
+  }
+
+  .fav-btn {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(10px);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+  }
+  .fav-btn:hover { transform: scale(1.1); }
+  .fav-btn svg {
+    width: 15px; height: 15px;
+    stroke: var(--gray-700);
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .fav-btn.active svg {
+    stroke: var(--danger);
+    fill: var(--danger);
+  }
+
+  /* Featured ribbon */
+  .featured-ribbon {
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    padding: 4px 10px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    color: #fff;
+    border-radius: var(--r-full);
+    font-size: 9px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    z-index: 3;
+    box-shadow: 0 3px 10px rgba(245,158,11,0.4);
+  }
+  .featured-ribbon svg {
+    width: 9px; height: 9px;
+    fill: #fff; stroke: none;
+  }
+
+  /* Distance badge (bottom-left) */
+  .distance-badge {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    padding: 4px 9px;
+    background: rgba(15,23,42,0.75);
+    backdrop-filter: blur(8px);
+    border-radius: var(--r-full);
+    font-size: 10px;
+    font-weight: 700;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    z-index: 3;
+  }
+  .distance-badge svg {
+    width: 10px; height: 10px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* Result body */
+  .result-body { padding: 12px 14px 14px; }
+  .result-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 6px;
+    letter-spacing: -0.2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .result-name .verified-dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .result-name .verified-dot svg {
+    width: 8px; height: 8px;
+    stroke: #fff;
+    stroke-width: 3.5;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  .result-tags {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .result-tag {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--gray-600);
+    background: var(--gray-100);
+    padding: 3px 8px;
+    border-radius: 5px;
+  }
+  .result-tag.primary {
+    color: var(--primary);
+    background: var(--primary-soft);
+  }
+
+  .result-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--gray-500);
+    font-weight: 500;
+  }
+  .result-meta .rating {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    color: var(--dark);
+    font-weight: 700;
+  }
+  .result-meta .rating svg {
+    width: 11px; height: 11px;
+    fill: var(--accent);
+    stroke: none;
+  }
+  .result-meta .sep {
+    width: 3px; height: 3px;
+    background: var(--gray-300);
+    border-radius: 50%;
+  }
+
+  .result-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--gray-100);
+  }
+  .action-btn {
+    flex: 1;
+    padding: 8px;
+    border-radius: 10px;
+    background: var(--gray-100);
+    border: none;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--gray-700);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    transition: all 0.2s;
+  }
+  .action-btn:hover {
+    background: var(--primary);
+    color: #fff;
+  }
+  .action-btn:hover svg { stroke: #fff; }
+  .action-btn svg {
+    width: 13px; height: 13px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+    transition: stroke 0.2s;
+  }
+
+  /* ══════════ EMPTY STATE ══════════ */
+  .empty-state {
+    padding: 60px 40px;
+    text-align: center;
+  }
+  .empty-icon {
+    width: 90px; height: 90px;
+    background: linear-gradient(135deg, var(--primary-soft), var(--primary-light));
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .empty-icon svg {
+    width: 40px; height: 40px;
+    stroke: var(--primary);
+    stroke-width: 1.8;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .empty-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 8px;
+  }
+  .empty-text {
+    font-size: 13px;
+    color: var(--gray-500);
+    line-height: 1.7;
+    font-weight: 500;
+  }
+
+  /* ══════════ FILTER BOTTOM SHEET ══════════ */
+  .overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(15,23,42,0.5);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .filter-sheet {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--bg);
+    border-radius: 28px 28px 0 0;
+    z-index: 101;
+    max-height: 88%;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+    box-shadow: 0 -20px 60px rgba(15,23,42,0.2);
+  }
+  .filter-sheet.open { transform: translateY(0); }
+
+  .sheet-handle {
+    width: 40px;
+    height: 4px;
+    background: var(--gray-300);
+    border-radius: 2px;
+    margin: 10px auto 0;
+    flex-shrink: 0;
+  }
+
+  .sheet-header {
+    padding: 16px 20px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .sheet-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--dark);
+    letter-spacing: -0.3px;
+  }
+  .sheet-close {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .sheet-close:hover { background: var(--gray-100); }
+  .sheet-close svg {
+    width: 15px; height: 15px;
+    stroke: var(--gray-700);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  .sheet-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 20px 20px;
+    scrollbar-width: none;
+  }
+  .sheet-body::-webkit-scrollbar { display: none; }
+
+  .filter-group {
+    margin-bottom: 22px;
+  }
+  .filter-group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .filter-group-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .filter-group-title svg {
+    width: 14px; height: 14px;
+    stroke: var(--primary);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .filter-group-value {
+    font-size: 11px;
+    color: var(--primary);
+    font-weight: 700;
+  }
+
+  .filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+  .filter-chip {
+    padding: 8px 14px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-full);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-700);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .filter-chip:hover {
+    border-color: var(--primary-light);
+    background: var(--primary-soft);
+  }
+  .filter-chip.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(15,118,110,0.25);
+  }
+  .filter-chip.active svg { stroke: #fff; }
+  .filter-chip svg {
+    width: 12px; height: 12px;
+    stroke: var(--gray-500);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* Rating Filter */
+  .rating-filter {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .rating-pill {
+    padding: 8px 14px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-full);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--gray-700);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s;
+  }
+  .rating-pill svg {
+    width: 12px; height: 12px;
+    fill: var(--accent);
+    stroke: none;
+  }
+  .rating-pill:hover { border-color: var(--accent); }
+  .rating-pill.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(245,158,11,0.3);
+  }
+  .rating-pill.active svg { fill: #fff; }
+
+  /* Range Slider */
+  .range-container {
+    background: var(--white);
+    border-radius: var(--r-md);
+    padding: 16px;
+    border: 1px solid var(--gray-100);
+  }
+  .range-values {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .range-value-box {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .range-value-label {
+    font-size: 10px;
+    color: var(--gray-500);
+    font-weight: 600;
+  }
+  .range-value-num {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--primary-dark);
+  }
+  .range-value-num .currency {
+    font-size: 10px;
+    color: var(--gray-500);
+    font-weight: 600;
+  }
+
+  .slider-wrap {
+    position: relative;
+    height: 4px;
+    background: var(--gray-200);
+    border-radius: 4px;
+    margin: 12px 0 8px;
+  }
+  .slider-track {
+    position: absolute;
+    top: 0;
+    right: 20%;
+    left: 10%;
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+    border-radius: 4px;
+  }
+  .slider-thumb {
+    position: absolute;
+    top: 50%;
+    transform: translate(50%, -50%);
+    width: 20px; height: 20px;
+    background: var(--white);
+    border: 3px solid var(--primary);
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(15,118,110,0.3);
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .slider-thumb:hover { transform: translate(50%, -50%) scale(1.15); }
+  .slider-thumb.left { right: 10%; }
+  .slider-thumb.right { right: 80%; }
+
+  .range-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--gray-500);
+    font-weight: 600;
+  }
+
+  /* Sheet Footer */
+  .sheet-footer {
+    padding: 14px 20px 22px;
+    background: var(--white);
+    border-top: 1px solid var(--gray-100);
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .reset-btn {
+    padding: 13px 20px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: 14px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--gray-700);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .reset-btn:hover {
+    border-color: var(--danger);
+    color: var(--danger);
+  }
+  .reset-btn svg {
+    width: 14px; height: 14px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  .apply-btn {
+    flex: 1;
+    padding: 13px 20px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border: none;
+    border-radius: 14px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: var(--shadow-primary);
+    transition: all 0.25s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+  }
+  .apply-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(15,118,110,0.4);
+  }
+  .apply-btn svg {
+    width: 15px; height: 15px;
+    stroke: #fff;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* Sort Bottom Sheet */
+  .sort-sheet {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--bg);
+    border-radius: 28px 28px 0 0;
+    z-index: 102;
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+    box-shadow: 0 -20px 60px rgba(15,23,42,0.2);
+  }
+  .sort-sheet.open { transform: translateY(0); }
+  .sort-list {
+    padding: 8px 20px 24px;
+  }
+  .sort-item {
+    padding: 14px;
+    background: var(--white);
+    border-radius: var(--r-md);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: all 0.2s;
+  }
+  .sort-item:hover { background: var(--primary-soft); }
+  .sort-item.active {
+    border-color: var(--primary);
+    background: var(--primary-soft);
+  }
+  .sort-item-radio {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--gray-300);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .sort-item.active .sort-item-radio {
+    border-color: var(--primary);
+    background: var(--primary);
+  }
+  .sort-item.active .sort-item-radio::after {
+    content: '';
+    width: 7px; height: 7px;
+    background: #fff;
+    border-radius: 50%;
+  }
+  .sort-item-content { flex: 1; }
+  .sort-item-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 2px;
+  }
+  .sort-item-desc {
+    font-size: 11px;
+    color: var(--gray-500);
+    font-weight: 500;
+  }
+  .sort-item-icon {
+    width: 32px; height: 32px;
+    border-radius: 9px;
+    background: var(--gray-100);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .sort-item.active .sort-item-icon {
+    background: var(--primary);
+  }
+  .sort-item-icon svg {
+    width: 15px; height: 15px;
+    stroke: var(--gray-600);
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+    transition: stroke 0.2s;
+  }
+  .sort-item.active .sort-item-icon svg { stroke: #fff; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>البحث والفلترة — تجربة تسوّق متقدمة</h1>
+  <p>شاشة تفاعلية كاملة · جاهزة للتنفيذ</p>
+</div>
+
+<div class="screens-container">
+
+  <!-- ═══════════ SCREEN 1: SEARCH RESULTS ═══════════ -->
+  <div class="screen-wrapper">
+    <div class="phone">
+      <div class="status-bar">
+        <div class="time">9:41</div>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h3v-9H2v9zm5 0h3V9H7v13zm5 0h3V5h-3v17zm5 0h3V2h-3v20z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21l-12-18h24z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm5 4v8h1c.6 0 1-.4 1-1V9c0-.6-.4-1-1-1h-1z"/></svg>
+        </div>
+      </div>
+
+      <div class="screen">
+        <!-- Search Header -->
+        <div class="search-header">
+          <div class="search-input-wrap">
+            <div class="back-btn">
+              <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            <div class="search-input">
+              <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" value="عيادة أسنان" placeholder="ابحث عن مطعم، دكتور، محل...">
+              <div class="clear-btn">
+                <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Filters -->
+          <div class="quick-filters">
+            <div class="quick-chip">
+              <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
+              فلترة
+            </div>
+            <div class="quick-chip active">
+              <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              الأقرب ليك
+            </div>
+            <div class="quick-chip">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              مفتوح الآن
+            </div>
+            <div class="quick-chip">
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              الأعلى تقييماً
+            </div>
+          </div>
+
+          <!-- Active Filters -->
+          <div class="active-filters">
+            <div class="active-tag">
+              أسنان
+              <div class="remove"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+            </div>
+            <div class="active-tag">
+              مفتوح الآن
+              <div class="remove"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+            </div>
+            <div class="active-tag">
+              ⭐ 4+
+              <div class="remove"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+            </div>
+            <div class="clear-all">مسح الكل</div>
+          </div>
+        </div>
+
+        <!-- Results Header -->
+        <div class="results-header">
+          <div class="results-count"><strong>24</strong> نتيجة</div>
+          <div class="sort-btn">
+            <svg viewBox="0 0 24 24"><path d="M3 6h18M6 12h12M10 18h4"/></svg>
+            الأقرب
+          </div>
+        </div>
+
+        <!-- Results -->
+        <div class="results-list">
+
+          <div class="result-card">
+            <div class="result-image bg-1">
+              <svg viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+              <div class="result-badges">
+                <div class="featured-ribbon">
+                  <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  مميز
+                </div>
+                <div class="fav-btn active">
+                  <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                </div>
+              </div>
+              <div class="distance-badge">
+                <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                1.2 كم
+              </div>
+            </div>
+            <div class="result-body">
+              <div class="result-name">
+                عيادة د. أحمد للأسنان
+                <div class="verified-dot"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+              </div>
+              <div class="result-tags">
+                <div class="result-tag primary">🦷 أسنان</div>
+                <div class="result-tag">تجميل</div>
+                <div class="result-tag">تقويم</div>
+              </div>
+              <div class="result-meta">
+                <span class="rating">
+                  <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  4.9 (127)
+                </span>
+                <span class="sep"></span>
+                <span>مدينة نصر</span>
+                <span class="sep"></span>
+                <span style="color: var(--success); font-weight: 700;">مفتوح حتى 10م</span>
+              </div>
+              <div class="result-actions">
+                <button class="action-btn">
+                  <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                  اتصال
+                </button>
+                <button class="action-btn">
+                  <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  حجز
+                </button>
+                <button class="action-btn">
+                  <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  الاتجاهات
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="result-card">
+            <div class="result-image bg-2">
+              <svg viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+              <div class="result-badges">
+                <div></div>
+                <div class="fav-btn">
+                  <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                </div>
+              </div>
+              <div class="distance-badge">
+                <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                2.1 كم
+              </div>
+            </div>
+            <div class="result-body">
+              <div class="result-name">
+                مركز سمايل للأسنان
+              </div>
+              <div class="result-tags">
+                <div class="result-tag primary">🦷 أسنان</div>
+                <div class="result-tag">تجميل</div>
+              </div>
+              <div class="result-meta">
+                <span class="rating">
+                  <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  4.7 (89)
+                </span>
+                <span class="sep"></span>
+                <span>مصر الجديدة</span>
+                <span class="sep"></span>
+                <span style="color: var(--success); font-weight: 700;">مفتوح حتى 9م</span>
+              </div>
+              <div class="result-actions">
+                <button class="action-btn">
+                  <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                  اتصال
+                </button>
+                <button class="action-btn">
+                  <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  حجز
+                </button>
+                <button class="action-btn">
+                  <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  الاتجاهات
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="result-card">
+            <div class="result-image bg-3">
+              <svg viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+              <div class="result-badges">
+                <div></div>
+                <div class="fav-btn">
+                  <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                </div>
+              </div>
+              <div class="distance-badge">
+                <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                3.5 كم
+              </div>
+            </div>
+            <div class="result-body">
+              <div class="result-name">
+                عيادة النور للأسنان
+              </div>
+              <div class="result-tags">
+                <div class="result-tag primary">🦷 أسنان</div>
+                <div class="result-tag">تقويم</div>
+                <div class="result-tag">أطفال</div>
+              </div>
+              <div class="result-meta">
+                <span class="rating">
+                  <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  4.8 (156)
+                </span>
+                <span class="sep"></span>
+                <span>المعادي</span>
+                <span class="sep"></span>
+                <span style="color: var(--danger); font-weight: 700;">مغلق</span>
+              </div>
+              <div class="result-actions">
+                <button class="action-btn">
+                  <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                  اتصال
+                </button>
+                <button class="action-btn">
+                  <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  حجز
+                </button>
+                <button class="action-btn">
+                  <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  الاتجاهات
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    <div class="screen-badge">1 · نتائج البحث</div>
+  </div>
+
+  <!-- ═══════════ SCREEN 2: FILTER SHEET OPEN ═══════════ -->
+  <div class="screen-wrapper">
+    <div class="phone">
+      <div class="status-bar">
+        <div class="time">9:41</div>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h3v-9H2v9zm5 0h3V9H7v13zm5 0h3V5h-3v17zm5 0h3V2h-3v20z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21l-12-18h24z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm5 4v8h1c.6 0 1-.4 1-1V9c0-.6-.4-1-1-1h-1z"/></svg>
+        </div>
+      </div>
+
+      <div class="screen" style="overflow: hidden;">
+        <div class="search-header">
+          <div class="search-input-wrap">
+            <div class="back-btn">
+              <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            <div class="search-input">
+              <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" value="عيادة أسنان">
+              <div class="clear-btn">
+                <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="results-header">
+          <div class="results-count"><strong>24</strong> نتيجة</div>
+        </div>
+      </div>
+
+      <!-- Overlay -->
+      <div class="overlay open"></div>
+
+      <!-- Filter Sheet -->
+      <div class="filter-sheet open">
+        <div class="sheet-handle"></div>
+
+        <div class="sheet-header">
+          <div class="sheet-title">تصفية وترتيب</div>
+          <div class="sheet-close">
+            <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </div>
+        </div>
+
+        <div class="sheet-body">
+
+          <!-- Category -->
+          <div class="filter-group">
+            <div class="filter-group-header">
+              <div class="filter-group-title">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+                القطاع
+              </div>
+              <div class="filter-group-value">طبي</div>
+            </div>
+            <div class="filter-chips">
+              <div class="filter-chip active">الكل</div>
+              <div class="filter-chip">طبي</div>
+              <div class="filter-chip">مطاعم</div>
+              <div class="filter-chip">تجاري</div>
+              <div class="filter-chip">رياضة</div>
+              <div class="filter-chip">تعليم</div>
+            </div>
+          </div>
+
+          <!-- Specialization -->
+          <div class="filter-group">
+            <div class="filter-group-header">
+              <div class="filter-group-title">
+                <svg viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                التخصص
+              </div>
+              <div class="filter-group-value">أسنان</div>
+            </div>
+            <div class="filter-chips">
+              <div class="filter-chip active">أسنان</div>
+              <div class="filter-chip">عيون</div>
+              <div class="filter-chip">قلب</div>
+              <div class="filter-chip">عظام</div>
+              <div class="filter-chip">أطفال</div>
+              <div class="filter-chip">جلدية</div>
+              <div class="filter-chip">باطنة</div>
+            </div>
+          </div>
+
+          <!-- Sort -->
+          <div class="filter-group">
+            <div class="filter-group-header">
+              <div class="filter-group-title">
+                <svg viewBox="0 0 24 24"><path d="M3 6h18M6 12h12M10 18h4"/></svg>
+                الترتيب
+              </div>
+            </div>
+            <div class="filter-chips">
+              <div class="filter-chip active">
+                <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                الأقرب
+              </div>
+              <div class="filter-chip">
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                الأعلى تقييماً
+              </div>
+              <div class="filter-chip">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                الأحدث
+              </div>
+              <div class="filter-chip">
+                <svg viewBox="0 0 24 24"><path d="M7 13l5 5 5-5M7 6l5 5 5-5"/></svg>
+                الأكثر شعبية
+              </div>
+            </div>
+          </div>
+
+          <!-- Rating -->
+          <div class="filter-group">
+            <div class="filter-group-header">
+              <div class="filter-group-title">
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                التقييم
+              </div>
+            </div>
+            <div class="rating-filter">
+              <div class="rating-pill">
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                4.5+
+              </div>
+              <div class="rating-pill active">
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                4.0+
+              </div>
+              <div class="rating-pill">
+                <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                3.0+
+              </div>
+            </div>
+          </div>
+
+          <!-- Status -->
+          <div class="filter-group">
+            <div class="filter-group-header">
+              <div class="filter-group-title">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                الحالة
+              </div>
+            </div>
+            <div class="filter-chips">
+              <div class="filter-chip">الكل</div>
+              <div class="filter-chip active">مفتوح الآن</div>
+              <div class="filter-chip">مفتوح 24 ساعة</div>
+            </div>
+          </div>
+
+          <!-- Price Range -->
+          <div class="filter-group">
+            <div class="filter-group-header">
+              <div class="filter-group-title">
+                <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                نطاق السعر
+              </div>
+            </div>
+            <div class="range-container">
+              <div class="range-values">
+                <div class="range-value-box">
+                  <div class="range-value-label">من</div>
+                  <div class="range-value-num">50 <span class="currency">ج.م</span></div>
+                </div>
+                <div class="range-value-box" style="text-align: left;">
+                  <div class="range-value-label">إلى</div>
+                  <div class="range-value-num">500 <span class="currency">ج.م</span></div>
+                </div>
+              </div>
+              <div class="slider-wrap">
+                <div class="slider-track"></div>
+                <div class="slider-thumb left"></div>
+                <div class="slider-thumb right"></div>
+              </div>
+              <div class="range-labels">
+                <span>0</span>
+                <span>1000+</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Distance -->
+          <div class="filter-group">
+            <div class="filter-group-header">
+              <div class="filter-group-title">
+                <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                المسافة
+              </div>
+            </div>
+            <div class="filter-chips">
+              <div class="filter-chip">أقل من 1 كم</div>
+              <div class="filter-chip active">أقل من 5 كم</div>
+              <div class="filter-chip">أقل من 10 كم</div>
+              <div class="filter-chip">أي مسافة</div>
+            </div>
+          </div>
+
+          <!-- Amenities -->
+          <div class="filter-group">
+            <div class="filter-group-header">
+              <div class="filter-group-title">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                المرافق
+              </div>
+            </div>
+            <div class="filter-chips">
+              <div class="filter-chip active">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                حجز أونلاين
+              </div>
+              <div class="filter-chip">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                واي فاي
+              </div>
+              <div class="filter-chip active">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                موقف سيارات
+              </div>
+              <div class="filter-chip">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                دفع إلكتروني
+              </div>
+              <div class="filter-chip">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                بدون موعد
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="sheet-footer">
+          <button class="reset-btn">
+            <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+            إعادة
+          </button>
+          <button class="apply-btn">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            عرض 24 نتيجة
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="screen-badge">2 · الفلترة المتقدمة</div>
+  </div>
+
+  <!-- ═══════════ SCREEN 3: SORT SHEET ═══════════ -->
+  <div class="screen-wrapper">
+    <div class="phone">
+      <div class="status-bar">
+        <div class="time">9:41</div>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h3v-9H2v9zm5 0h3V9H7v13zm5 0h3V5h-3v17zm5 0h3V2h-3v20z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21l-12-18h24z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm5 4v8h1c.6 0 1-.4 1-1V9c0-.6-.4-1-1-1h-1z"/></svg>
+        </div>
+      </div>
+
+      <div class="screen" style="overflow: hidden;">
+        <div class="search-header">
+          <div class="search-input-wrap">
+            <div class="back-btn">
+              <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            <div class="search-input">
+              <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" value="عيادة أسنان">
+            </div>
+          </div>
+        </div>
+
+        <div class="results-header">
+          <div class="results-count"><strong>24</strong> نتيجة</div>
+        </div>
+      </div>
+
+      <div class="overlay open"></div>
+
+      <!-- Sort Sheet -->
+      <div class="sort-sheet open">
+        <div class="sheet-handle"></div>
+
+        <div class="sheet-header">
+          <div class="sheet-title">ترتيب النتائج</div>
+          <div class="sheet-close">
+            <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </div>
+        </div>
+
+        <div class="sort-list">
+          <div class="sort-item active">
+            <div class="sort-item-radio"></div>
+            <div class="sort-item-content">
+              <div class="sort-item-name">الأقرب ليك</div>
+              <div class="sort-item-desc">الأنشطة الأقرب لموقعك الحالي</div>
+            </div>
+            <div class="sort-item-icon">
+              <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </div>
+          </div>
+
+          <div class="sort-item">
+            <div class="sort-item-radio"></div>
+            <div class="sort-item-content">
+              <div class="sort-item-name">الأعلى تقييماً</div>
+              <div class="sort-item-desc">الأنشطة الحاصلة على أعلى التقييمات</div>
+            </div>
+            <div class="sort-item-icon">
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+          </div>
+
+          <div class="sort-item">
+            <div class="sort-item-radio"></div>
+            <div class="sort-item-content">
+              <div class="sort-item-name">الأكثر شعبية</div>
+              <div class="sort-item-desc">الأكثر مشاهدة وتفاعلاً</div>
+            </div>
+            <div class="sort-item-icon">
+              <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            </div>
+          </div>
+
+          <div class="sort-item">
+            <div class="sort-item-radio"></div>
+            <div class="sort-item-content">
+              <div class="sort-item-name">الأحدث</div>
+              <div class="sort-item-desc">الأنشطة المضافة حديثاً</div>
+            </div>
+            <div class="sort-item-icon">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+          </div>
+
+          <div class="sort-item">
+            <div class="sort-item-radio"></div>
+            <div class="sort-item-content">
+              <div class="sort-item-name">الأقل سعراً</div>
+              <div class="sort-item-desc">ترتيب تصاعدي حسب السعر</div>
+            </div>
+            <div class="sort-item-icon">
+              <svg viewBox="0 0 24 24"><path d="M7 13l5 5 5-5M7 6l5 5 5-5"/></svg>
+            </div>
+          </div>
+
+          <div class="sort-item">
+            <div class="sort-item-radio"></div>
+            <div class="sort-item-content">
+              <div class="sort-item-name">الأعلى سعراً</div>
+              <div class="sort-item-desc">ترتيب تنازلي حسب السعر</div>
+            </div>
+            <div class="sort-item-icon">
+              <svg viewBox="0 0 24 24"><path d="M17 11l-5-5-5 5M17 18l-5-5-5 5"/></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-badge">3 · ترتيب النتائج</div>
+  </div>
+
+</div>
+
+</body>
+</html>

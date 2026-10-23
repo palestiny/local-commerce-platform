@@ -26,6 +26,17 @@ public sealed class CreateOrderPersistenceTests
             """);
     }
 
+    private static string QuoteGeneratedSchemaIdentifier(string schema)
+    {
+        if (string.IsNullOrWhiteSpace(schema) ||
+            schema.Any(character => !char.IsAsciiLetterOrDigit(character) && character != '_'))
+        {
+            throw new ArgumentException("Schema identifiers must contain only ASCII letters, digits, and underscores.", nameof(schema));
+        }
+
+        return $"\"{schema}\"";
+    }
+
     private static async Task<(Guid customerId, Guid cartId, Guid productId, Guid storeId)> SeedAsync(CommerceDbContext db)
     {
         var customerId=Guid.NewGuid(); var cartId=Guid.NewGuid(); var productId=Guid.NewGuid(); var storeId=Guid.NewGuid();
@@ -37,9 +48,9 @@ public sealed class CreateOrderPersistenceTests
         return(customerId,cartId,productId,storeId);
     }
 
-    private static CreateOrderHandler Handler(CommerceDbContext db, ICartCheckout? checkout=null, IOrderWriter? writer=null, IOrderNumberGenerator? generator=null)
+    private static CreateOrderHandler Handler(CommerceDbContext db, ICartCheckout? checkout=null, IOrderWriter? writer=null, IOrderNumberGenerator? generator=null, ICreateOrderUnitOfWork? unitOfWork=null)
         => new(new EfCartReader(db),checkout??new EfCartCheckout(db),new EfStoreReader(db),new EfProductReader(db),
-            writer??new EfOrderWriter(db),new EfGeneralizedIdempotencyStore(db),new EfCreateOrderUnitOfWork(db),
+            writer??new EfOrderWriter(db),new EfGeneralizedIdempotencyStore(db),unitOfWork??new EfCreateOrderUnitOfWork(db),
             generator??new SequentialOrderNumberGenerator());
 
     [Fact]
@@ -52,10 +63,110 @@ public sealed class CreateOrderPersistenceTests
         var order=await db.Orders.Include(x=>x.Items).SingleAsync(x=>x.Id==result.OrderId);
         var cart=await db.Carts.AsNoTracking().SingleAsync(x=>x.Id==s.cartId);
 
+        Assert.Equal(s.customerId, order.CustomerId);
         Assert.Equal("Milk",order.Items.Single().ProductName);
         Assert.Equal(12.50m,order.Items.Single().UnitPrice);
         Assert.Equal(2,order.Items.Single().Quantity);
         Assert.False(cart.IsActive);
+    }
+
+    [Fact]
+    public async Task Idempotency_key_at_storage_limit_is_accepted()
+    {
+        await using var db=CreateDb(); await DatabaseInitializer.InitializeAsync(db); await ResetAsync(db);
+        var s=await SeedAsync(db);
+        var key=new string('k',256);
+
+        await Handler(db).HandleAsync(new CreateOrderCommand(s.customerId,s.cartId,key));
+
+        var record=await db.IdempotencyRecords.SingleAsync();
+        Assert.Equal(key,record.IdempotencyKey);
+        Assert.Equal(1,await db.Orders.CountAsync());
+    }
+
+    [Fact]
+    public async Task Idempotency_key_over_storage_limit_is_rejected_before_persistence()
+    {
+        await using var db=CreateDb(); await DatabaseInitializer.InitializeAsync(db); await ResetAsync(db);
+        var s=await SeedAsync(db);
+        var key=new string('k',257);
+
+        var error=await Assert.ThrowsAsync<CreateOrderRejectedException>(()=>
+            Handler(db).HandleAsync(new CreateOrderCommand(s.customerId,s.cartId,key)));
+
+        Assert.Equal(LocalCommerce.Application.Errors.ApplicationErrorCodes.RequestInvalid,error.Code);
+        Assert.Equal(0,await db.IdempotencyRecords.CountAsync());
+        Assert.Equal(0,await db.Orders.CountAsync());
+        Assert.True((await db.Carts.SingleAsync(x=>x.Id==s.cartId)).IsActive);
+    }
+
+    [Fact]
+    public async Task Initializer_adds_customer_ownership_to_an_existing_legacy_schema()
+    {
+        var schema = "migration_test_" + Guid.NewGuid().ToString("N");
+        await using var admin = CreateDb();
+        // Schema identifiers cannot be SQL parameters; the helper strictly validates the generated identifier.
+#pragma warning disable EF1003 // Validated SQL identifier; parameterization is not supported for identifiers.
+        await admin.Database.ExecuteSqlRawAsync("CREATE SCHEMA " + QuoteGeneratedSchemaIdentifier(schema));
+#pragma warning restore EF1003
+
+        try
+        {
+            var options = new DbContextOptionsBuilder<CommerceDbContext>()
+                .UseNpgsql($"{ConnectionString};Search Path={schema}")
+                .Options;
+            await using var legacyDb = new CommerceDbContext(options);
+
+            var assembly = typeof(DatabaseInitializer).Assembly;
+            await using var stream = assembly.GetManifestResourceStream(
+                "LocalCommerce.Infrastructure.Persistence.Migrations.001_initial.sql")
+                ?? throw new InvalidOperationException("Initial SQL migration resource is missing.");
+            using var reader = new StreamReader(stream);
+            var legacySql = await reader.ReadToEndAsync();
+            legacySql = legacySql.Replace("\"CustomerId\" uuid NULL,", "", StringComparison.Ordinal);
+            await legacyDb.Database.ExecuteSqlRawAsync(legacySql);
+
+            // Seed an existing order before applying the ownership migration. Its owner must remain unknown.
+            var legacyStoreId = Guid.NewGuid();
+            var legacyOrderId = Guid.NewGuid();
+            var legacyOrderNumber = "LEGACY-" + Guid.NewGuid().ToString("N");
+            var legacyStatus = "Pending";
+            var legacyTimestamp = DateTimeOffset.UtcNow;
+            await legacyDb.Database.ExecuteSqlInterpolatedAsync(
+                $"INSERT INTO \"Stores\" (\"Id\", \"IsActive\") VALUES ({legacyStoreId}, TRUE)");
+            await legacyDb.Database.ExecuteSqlInterpolatedAsync(
+                $"INSERT INTO \"Orders\" (\"Id\", \"StoreId\", \"OrderNumber\", \"Status\", \"CreatedAt\", \"UpdatedAt\") VALUES ({legacyOrderId}, {legacyStoreId}, {legacyOrderNumber}, {legacyStatus}, {legacyTimestamp}, {legacyTimestamp})");
+
+            await DatabaseInitializer.InitializeAsync(legacyDb);
+
+            var exists = await legacyDb.Database.SqlQueryRaw<bool>("""
+                SELECT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_schema = current_schema()
+                      AND table_name = 'Orders'
+                      AND column_name = 'CustomerId'
+                ) AS "Value"
+                """).SingleAsync();
+
+            Assert.True(exists);
+
+            var preservedLegacyOrder = await legacyDb.Database.SqlQuery<Guid>(
+                $"SELECT \"Id\" AS \"Value\" FROM \"Orders\" WHERE \"Id\" = {legacyOrderId}")
+                .SingleAsync();
+            var legacyCustomerId = await legacyDb.Database.SqlQuery<Guid?>(
+                $"SELECT \"CustomerId\" AS \"Value\" FROM \"Orders\" WHERE \"Id\" = {legacyOrderId}")
+                .SingleAsync();
+
+            Assert.Equal(legacyOrderId, preservedLegacyOrder);
+            Assert.Null(legacyCustomerId);
+        }
+        finally
+        {
+            // Schema identifiers cannot be SQL parameters; the helper strictly validates the generated identifier.
+#pragma warning disable EF1003 // Validated SQL identifier; parameterization is not supported for identifiers.
+            await admin.Database.ExecuteSqlRawAsync("DROP SCHEMA IF EXISTS " + QuoteGeneratedSchemaIdentifier(schema) + " CASCADE");
+#pragma warning restore EF1003
+        }
     }
 
     [Fact]
@@ -71,6 +182,58 @@ public sealed class CreateOrderPersistenceTests
         Assert.Equal(results[0].OrderId,results[1].OrderId);
         await using var verify=CreateDb();
         Assert.Equal(1,await verify.Orders.CountAsync());
+    }
+
+    [Fact]
+    public async Task Sequential_retry_with_same_key_returns_original_order_after_cart_consumed()
+    {
+        await using var seedDb = CreateDb();
+        await DatabaseInitializer.InitializeAsync(seedDb);
+        await ResetAsync(seedDb);
+        var s = await SeedAsync(seedDb);
+        var command = new CreateOrderCommand(s.customerId, s.cartId, "replay-key");
+
+        CreateOrderResult first;
+        await using (var firstDb = CreateDb())
+            first = await Handler(firstDb).HandleAsync(command);
+
+        await using (var retryDb = CreateDb())
+        {
+            var replay = await Handler(retryDb).HandleAsync(command);
+            Assert.Equal(first, replay);
+        }
+
+        await using var verifyDb = CreateDb();
+        Assert.Equal(1, await verifyDb.Orders.CountAsync());
+        Assert.Equal(1, await verifyDb.IdempotencyRecords.CountAsync());
+        Assert.False((await verifyDb.Carts.SingleAsync(x => x.Id == s.cartId)).IsActive);
+    }
+
+    [Fact]
+    public async Task Retry_after_committed_order_but_lost_response_replays_original_result()
+    {
+        await using var seedDb = CreateDb();
+        await DatabaseInitializer.InitializeAsync(seedDb);
+        await ResetAsync(seedDb);
+        var s = await SeedAsync(seedDb);
+        var command = new CreateOrderCommand(s.customerId, s.cartId, "lost-response-key");
+
+        await using (var firstDb = CreateDb())
+        {
+            var unitOfWork = new CommitThenLoseResponseUnitOfWork(new EfCreateOrderUnitOfWork(firstDb));
+            await Assert.ThrowsAsync<IOException>(() =>
+                Handler(firstDb, unitOfWork: unitOfWork).HandleAsync(command));
+        }
+
+        await using (var retryDb = CreateDb())
+        {
+            var replay = await Handler(retryDb).HandleAsync(command);
+            await using var verifyDb = CreateDb();
+            var persisted = await verifyDb.Orders.SingleAsync();
+            Assert.Equal(persisted.Id, replay.OrderId);
+            Assert.Equal(1, await verifyDb.IdempotencyRecords.CountAsync());
+            Assert.False((await verifyDb.Carts.SingleAsync(x => x.Id == s.cartId)).IsActive);
+        }
     }
 
     [Fact]
@@ -126,6 +289,15 @@ public sealed class CreateOrderPersistenceTests
         try { return (true,await task); } catch(CreateOrderRejectedException) { return (false,null); }
     }
 
+    private sealed class CommitThenLoseResponseUnitOfWork(ICreateOrderUnitOfWork inner) : ICreateOrderUnitOfWork
+    {
+        public async Task ExecuteAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken)
+        {
+            await inner.ExecuteAsync(operation, cancellationToken);
+            throw new IOException("Simulated lost response after the database transaction committed.");
+        }
+    }
+
     private sealed class ThrowingCartCheckout : ICartCheckout
     {
         public Task ConsumeAsync(Guid cartId,CancellationToken cancellationToken)
@@ -134,9 +306,9 @@ public sealed class CreateOrderPersistenceTests
 
     private sealed class SaveThenFailOrderWriter(CommerceDbContext db) : IOrderWriter
     {
-        public async Task AddAsync(Order order,string orderNumber,CancellationToken ct)
+        public async Task AddAsync(Order order,Guid customerId,string orderNumber,CancellationToken ct)
         {
-            await new EfOrderWriter(db).AddAsync(order,orderNumber,ct);
+            await new EfOrderWriter(db).AddAsync(order,customerId,orderNumber,ct);
             await db.SaveChangesAsync(ct);
         }
     }

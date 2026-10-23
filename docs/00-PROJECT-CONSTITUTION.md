@@ -127,3 +127,24 @@ Any amendment records:
 - risks
 - impact/migration
 - verification plan
+
+## 17. Identity and Account Lifecycle
+
+- Use ASP.NET Core Identity for account management and OpenIddict for OAuth 2.0 / OpenID Connect protocol endpoints and token issuance. Identity alone is not treated as a complete authorization server.
+- The target direction is .NET 10 LTS, but a framework/package upgrade requires a separate compatibility review and a green full-solution verification; no partial or blind upgrade.
+- The first authenticated API slice is limited to the safe health endpoint and customer commerce-order operations. Merchant, driver, admin, payment, public catalog, and broader service-request APIs are outside this slice unless separately approved.
+- Use one login/security account per person for the first version. A person may act as both customer and merchant without creating a second login. Roles describe broad capabilities and never replace resource-ownership checks.
+- A Customer is the buyer/person who owns customer-facing orders; a customer profile is commerce-side profile data; an Identity account is authentication/security state. These concepts must remain separate and explicitly linked by a trusted server-side workflow.
+- A Merchant is a business actor and is distinct from a Store; a Merchant may own multiple Stores. Merchant access must be scoped to an active, verified business/store membership. A MERCHANT role alone does not authorize access to every business or Store.
+- Creating a login does not automatically create or claim a customer profile, merchant business, Store, or historical order. Contact verification alone is not proof of ownership of existing commerce records.
+- Disabling a login account suspends platform access across roles, including new authentication and refresh operations; the chosen revocation/validation mechanism must prevent continued use of existing sessions promptly.
+- Suspending a Merchant or Store is separate from suspending the person's login. It blocks the affected business operations without automatically disabling unrelated customer capabilities.
+- Disablement is not deletion or privacy erasure. Do not cascade-delete orders, order history, payment/refund records, or other operational/financial history when an account/profile is disabled or removed. Retention, anonymization and erasure rules require a separately documented policy.
+- Never expose legacy orders without verified customer ownership, and never accept a client-supplied CustomerId as proof of identity. Missing, inactive, ambiguous or unverified mappings fail closed.
+- The detailed security profile, provisioning/verification process, Identity/OpenIddict persistence and migration ownership, recovery/abuse controls, token lifetimes/revocation, and retention/anonymization rules remain subject to the authentication design gate. See [Customer Authentication and First API Slice — Design Gate](32-CUSTOMER-AUTH-AND-FIRST-API-SLICE-DESIGN-GATE.md). This section records product/architecture constraints; it does not by itself authorize implementation.
+
+## 18. Decision Records
+
+- Preserve existing ADR numbering and content. New Architecture Decision Records start at ADR-011.
+- Owner-approved product decisions must be reflected in this Constitution and the relevant Design Gate before implementation.
+- Where this Constitution records a product invariant but implementation details remain unresolved, keep those details OPEN; do not infer approval from the high-level decision.

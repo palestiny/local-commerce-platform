@@ -1,0 +1,2227 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إضافة متجر — معاينة احترافية</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'IBM Plex Sans Arabic', sans-serif; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --primary: #0F766E;
+    --primary-dark: #115E59;
+    --primary-light: #CCFBF1;
+    --primary-soft: #F0FDFA;
+    --accent: #F59E0B;
+    --accent-dark: #D97706;
+    --accent-light: #FEF3C7;
+    --danger: #EF4444;
+    --danger-light: #FEF2F2;
+    --success: #10B981;
+    --success-dark: #059669;
+    --success-light: #ECFDF5;
+    --purple: #8B5CF6;
+    --purple-light: #EDE9FE;
+    --blue: #2563EB;
+    --blue-light: #DBEAFE;
+    --pink: #EC4899;
+    --pink-light: #FCE7F3;
+    --cyan: #06B6D4;
+    --cyan-light: #CFFAFE;
+    --dark: #0F172A;
+    --gray-700: #374151;
+    --gray-600: #4B5563;
+    --gray-500: #6B7280;
+    --gray-400: #9CA3AF;
+    --gray-300: #D1D5DB;
+    --gray-200: #E5E7EB;
+    --gray-100: #F3F4F6;
+    --bg: #F8FAFC;
+    --white: #FFFFFF;
+
+    --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.07);
+    --shadow-lg: 0 10px 30px rgba(15, 23, 42, 0.09);
+    --shadow-xl: 0 20px 40px rgba(15, 23, 42, 0.14);
+    --shadow-primary: 0 8px 24px rgba(15, 118, 110, 0.32);
+
+    --r-sm: 10px;
+    --r-md: 14px;
+    --r-lg: 18px;
+    --r-xl: 24px;
+    --r-full: 999px;
+  }
+
+  body {
+    background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+    min-height: 100vh;
+    padding: 50px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+  }
+
+  .page-header { text-align: center; color: #fff; max-width: 900px; }
+  .page-header h1 {
+    font-size: 30px; font-weight: 700; margin-bottom: 8px;
+    background: linear-gradient(135deg, #fff, #94A3B8);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .page-header p { color: #94A3B8; font-size: 14px; }
+
+  .screens-container {
+    display: flex; gap: 40px; flex-wrap: wrap; justify-content: center;
+  }
+  .screen-wrapper {
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+  }
+  .screen-badge {
+    background: rgba(15, 118, 110, 0.15);
+    color: #5EEAD4;
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid rgba(94, 234, 212, 0.25);
+  }
+
+  .phone {
+    width: 375px;
+    height: 812px;
+    background: var(--bg);
+    border-radius: 44px;
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+      0 0 0 10px #0A0F1E,
+      0 0 0 12px #1E293B,
+      0 30px 60px rgba(0, 0, 0, 0.5),
+      0 0 80px rgba(15, 118, 110, 0.15);
+  }
+  .phone::before {
+    content: '';
+    position: absolute;
+    top: 10px; left: 50%;
+    transform: translateX(-50%);
+    width: 110px; height: 28px;
+    background: #0A0F1E;
+    border-radius: 999px;
+    z-index: 999;
+  }
+
+  .status-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 48px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 28px;
+    font-size: 13px; font-weight: 600;
+    z-index: 100;
+    pointer-events: none;
+    color: var(--dark);
+  }
+  .status-bar.light { color: #fff; }
+  .status-bar .time { margin-top: 4px; }
+  .status-bar .status-icons { display: flex; gap: 5px; margin-top: 4px; align-items: center; }
+  .status-bar svg { width: 15px; height: 15px; }
+
+  .screen {
+    width: 100%; height: 100%;
+    overflow-y: auto; overflow-x: hidden;
+    scrollbar-width: none;
+    padding-top: 48px;
+    padding-bottom: 100px;
+  }
+  .screen::-webkit-scrollbar { display: none; }
+
+  /* ══════════ APP BAR ══════════ */
+  .app-bar {
+    padding: 8px 20px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .back-btn {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .back-btn:hover { background: var(--gray-100); }
+  .back-btn svg {
+    width: 18px; height: 18px;
+    stroke: var(--gray-700);
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .app-title-wrap {
+    flex: 1;
+    text-align: center;
+  }
+  .app-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--dark);
+    letter-spacing: -0.3px;
+    margin-bottom: 2px;
+  }
+  .app-subtitle {
+    font-size: 10.5px;
+    color: var(--gray-500);
+    font-weight: 600;
+  }
+  .save-draft-btn {
+    padding: 8px 12px;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--gray-700);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .save-draft-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  .save-draft-btn:hover svg { stroke: var(--primary); }
+  .save-draft-btn svg {
+    width: 12px; height: 12px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+    transition: stroke 0.2s;
+  }
+
+  /* ══════════ PROGRESS STEPS ══════════ */
+  .progress-wrap {
+    padding: 0 20px 16px;
+  }
+  .progress-bar-track {
+    height: 6px;
+    background: var(--gray-200);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    width: 40%;
+    background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+    border-radius: 3px;
+    position: relative;
+    transition: width 0.5s;
+  }
+  .progress-bar-fill::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0; bottom: 0;
+    width: 30px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5));
+    border-radius: 3px;
+  }
+
+  .steps-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2px;
+  }
+  .step-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    position: relative;
+  }
+  .step-circle {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--gray-200);
+    color: var(--gray-500);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11.5px;
+    font-weight: 800;
+    transition: all 0.3s;
+    border: 2px solid transparent;
+  }
+  .step-circle svg {
+    width: 13px; height: 13px;
+    stroke: currentColor;
+    stroke-width: 3;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .step-item.completed .step-circle {
+    background: var(--primary);
+    color: #fff;
+  }
+  .step-item.active .step-circle {
+    background: var(--white);
+    color: var(--primary);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(15,118,110,0.15);
+  }
+  .step-item-label {
+    font-size: 8.5px;
+    font-weight: 600;
+    color: var(--gray-500);
+    text-align: center;
+    letter-spacing: -0.1px;
+    line-height: 1.2;
+  }
+  .step-item.active .step-item-label { color: var(--primary); font-weight: 800; }
+  .step-item.completed .step-item-label { color: var(--dark); }
+
+  /* ══════════ INFO BANNER ══════════ */
+  .info-banner {
+    margin: 0 20px 16px;
+    padding: 12px 14px;
+    background: linear-gradient(135deg, var(--blue-light), #BFDBFE);
+    border-radius: var(--r-md);
+    border: 1px solid #93C5FD;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .info-banner-icon {
+    width: 30px; height: 30px;
+    border-radius: 9px;
+    background: rgba(255,255,255,0.65);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .info-banner-icon svg {
+    width: 15px; height: 15px;
+    stroke: var(--blue);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .info-banner-text {
+    flex: 1;
+    font-size: 10.5px;
+    color: #1E40AF;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+  .info-banner-text strong {
+    display: block;
+    font-weight: 800;
+    font-size: 11.5px;
+    margin-bottom: 2px;
+  }
+
+  /* ══════════ SECTION HEADER ══════════ */
+  .section-header {
+    padding: 0 20px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .section-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    letter-spacing: -0.2px;
+  }
+  .section-title::before {
+    content: '';
+    width: 3px;
+    height: 14px;
+    background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+    border-radius: 4px;
+  }
+  .section-required {
+    font-size: 10px;
+    color: var(--danger);
+    background: var(--danger-light);
+    padding: 2px 7px;
+    border-radius: 5px;
+    font-weight: 700;
+  }
+  .section-optional {
+    font-size: 10px;
+    color: var(--gray-500);
+    font-weight: 700;
+    background: var(--gray-100);
+    padding: 2px 7px;
+    border-radius: 5px;
+  }
+
+  /* ══════════ FORM FIELDS ══════════ */
+  .form-section {
+    padding: 0 20px;
+    margin-bottom: 16px;
+  }
+  .form-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11.5px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 8px;
+    letter-spacing: -0.1px;
+  }
+  .form-label .required {
+    color: var(--danger);
+    font-size: 11px;
+    font-weight: 800;
+  }
+  .form-label .helper {
+    font-size: 10px;
+    color: var(--gray-500);
+    font-weight: 600;
+  }
+  .form-label .counter {
+    font-size: 10px;
+    color: var(--gray-400);
+    font-weight: 700;
+  }
+  .form-label .counter.warn { color: var(--accent-dark); }
+  .form-label .counter.good { color: var(--success); }
+
+  .form-input {
+    width: 100%;
+    padding: 12px 14px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-md);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--dark);
+    outline: none;
+    transition: all 0.2s;
+    box-shadow: var(--shadow-xs);
+  }
+  .form-input::placeholder {
+    color: var(--gray-400);
+    font-weight: 500;
+  }
+  .form-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(15,118,110,0.08);
+  }
+  .form-input.valid {
+    border-color: var(--success);
+    background: linear-gradient(135deg, var(--success-light), transparent);
+  }
+
+  .input-wrap {
+    position: relative;
+  }
+  .input-wrap .input-icon {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 17px;
+    height: 17px;
+    stroke: var(--gray-400);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    pointer-events: none;
+    transition: stroke 0.2s;
+  }
+  .form-input.with-icon {
+    padding-right: 40px;
+  }
+  .form-input.with-icon.valid + .input-icon {
+    stroke: var(--success);
+  }
+
+  .form-input.with-prefix {
+    padding-right: 60px;
+  }
+  .prefix-icon {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--gray-500);
+    pointer-events: none;
+  }
+  .prefix-icon svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Select input */
+  .select-input {
+    width: 100%;
+    padding: 12px 14px;
+    padding-left: 36px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-md);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--dark);
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    transition: all 0.2s;
+    box-shadow: var(--shadow-xs);
+  }
+  .select-wrap {
+    position: relative;
+  }
+  .select-wrap::after {
+    content: '';
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%) rotate(45deg);
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid var(--gray-500);
+    border-bottom: 2px solid var(--gray-500);
+    pointer-events: none;
+  }
+  .select-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(15,118,110,0.08);
+  }
+
+  /* ══════════ CATEGORY GRID ══════════ */
+  .category-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .category-card {
+    padding: 12px 6px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-md);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+    box-shadow: var(--shadow-xs);
+  }
+  .category-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-light);
+  }
+  .category-card.active {
+    border-color: var(--primary);
+    background: var(--primary-soft);
+    box-shadow: 0 0 0 3px rgba(15,118,110,0.08);
+  }
+  .category-card.active::after {
+    content: '';
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 16px;
+    height: 16px;
+    background: var(--primary);
+    border-radius: 50%;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+    background-size: 9px;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  .category-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.25s;
+  }
+  .category-card:hover .category-icon { transform: scale(1.1); }
+  .category-icon svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 1.8;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .category-icon.teal { background: linear-gradient(135deg, #CCFBF1, #99F6E4); }
+  .category-icon.teal svg { stroke: #0F766E; }
+  .category-icon.orange { background: linear-gradient(135deg, #FEF3C7, #FDE68A); }
+  .category-icon.orange svg { stroke: #D97706; }
+  .category-icon.blue { background: linear-gradient(135deg, #DBEAFE, #BFDBFE); }
+  .category-icon.blue svg { stroke: #2563EB; }
+  .category-icon.purple { background: linear-gradient(135deg, #EDE9FE, #DDD6FE); }
+  .category-icon.purple svg { stroke: #7C3AED; }
+  .category-icon.pink { background: linear-gradient(135deg, #FCE7F3, #FBCFE8); }
+  .category-icon.pink svg { stroke: #DB2777; }
+  .category-icon.cyan { background: linear-gradient(135deg, #CFFAFE, #A5F3FC); }
+  .category-icon.cyan svg { stroke: #0891B2; }
+
+  .category-name {
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--dark);
+    letter-spacing: -0.1px;
+    line-height: 1.2;
+  }
+
+  /* ══════════ SPECIALTY CHIPS ══════════ */
+  .specialty-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .specialty-chip {
+    padding: 7px 12px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-full);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--gray-700);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .specialty-chip:hover {
+    border-color: var(--primary-light);
+    background: var(--primary-soft);
+  }
+  .specialty-chip.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(15,118,110,0.25);
+  }
+  .specialty-chip.active::before {
+    content: '✓';
+    font-weight: 900;
+    font-size: 9.5px;
+    margin-left: 2px;
+  }
+
+  /* ══════════ MAP PICKER ══════════ */
+  .map-picker {
+    position: relative;
+    height: 180px;
+    border-radius: var(--r-md);
+    overflow: hidden;
+    background: #E8EEF2;
+    border: 1.5px solid var(--gray-200);
+    margin-bottom: 10px;
+  }
+  .map-grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(200,215,220,0.4) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(200,215,220,0.4) 1px, transparent 1px);
+    background-size: 26px 26px;
+  }
+  .map-block-pick {
+    position: absolute;
+    border-radius: 4px;
+    background: linear-gradient(135deg, #D4DCE3, #C7D1D8);
+  }
+  .map-block-pick.park { background: linear-gradient(135deg, #C8E6C9, #A5D6A7); }
+  .map-road-pick {
+    position: absolute;
+    background: #FFFFFF;
+    box-shadow: 0 0 0 1px rgba(180,190,200,0.4);
+  }
+  .map-road-pick.h { height: 14px; left: 0; right: 0; }
+  .map-road-pick.v { width: 14px; top: 0; bottom: 0; }
+  .map-road-pick.major { background: #F8FAFC; height: 20px; }
+
+  /* Map Pin */
+  .map-pin-marker {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -100%);
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: pinBounce 2s infinite;
+  }
+  @keyframes pinBounce {
+    0%, 100% { transform: translate(-50%, -100%); }
+    50% { transform: translate(-50%, -105%); }
+  }
+  .map-pin-body {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 20px rgba(15,118,110,0.5), 0 0 0 4px rgba(255,255,255,0.9);
+    border: 2px solid #fff;
+    position: relative;
+  }
+  .map-pin-body::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%) rotate(45deg);
+    width: 14px;
+    height: 14px;
+    background: var(--primary-dark);
+    border-radius: 0 0 3px 0;
+    box-shadow: 2px 2px 4px rgba(15,23,42,0.15);
+  }
+  .map-pin-body svg {
+    width: 22px;
+    height: 22px;
+    stroke: #fff;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    position: relative;
+    z-index: 1;
+  }
+  .map-pin-shadow {
+    width: 24px;
+    height: 8px;
+    background: rgba(15,23,42,0.2);
+    border-radius: 50%;
+    filter: blur(3px);
+    margin-top: 8px;
+    animation: shadowPulse 2s infinite;
+  }
+  @keyframes shadowPulse {
+    0%, 100% { transform: scale(1); opacity: 0.2; }
+    50% { transform: scale(0.85); opacity: 0.35; }
+  }
+
+  /* Map overlay buttons */
+  .map-overlay-btn {
+    position: absolute;
+    padding: 8px 12px;
+    background: var(--white);
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 10.5px;
+    font-weight: 800;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    box-shadow: var(--shadow-md);
+    border: none;
+    z-index: 5;
+  }
+  .map-overlay-btn.drag-hint {
+    top: 10px;
+    right: 10px;
+    color: var(--primary);
+  }
+  .map-overlay-btn.my-location {
+    bottom: 10px;
+    left: 10px;
+  }
+  .map-overlay-btn svg {
+    width: 12px;
+    height: 12px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Address input */
+  .address-details {
+    padding: 12px 14px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-md);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    transition: all 0.2s;
+  }
+  .address-details:focus-within {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(15,118,110,0.08);
+  }
+  .address-details-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: var(--primary-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .address-details-icon svg {
+    width: 15px;
+    height: 15px;
+    stroke: var(--primary);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .address-details input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--dark);
+    background: transparent;
+    min-width: 0;
+  }
+  .address-details input::placeholder {
+    color: var(--gray-400);
+    font-weight: 500;
+  }
+
+  /* ══════════ PHOTO UPLOAD ══════════ */
+  .photo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .photo-preview {
+    aspect-ratio: 1;
+    border-radius: var(--r-md);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .photo-preview.bg-1 { background: linear-gradient(135deg, #0F172A, #334155); }
+  .photo-preview.bg-2 { background: linear-gradient(135deg, #0F766E, #14B8A6); }
+  .photo-preview svg {
+    width: 30px;
+    height: 30px;
+    stroke: rgba(255,255,255,0.85);
+    stroke-width: 1.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .photo-remove {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(239,68,68,0.95);
+    border: 1.5px solid var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 2;
+  }
+  .photo-remove svg {
+    width: 10px;
+    height: 10px;
+    stroke: #fff;
+    stroke-width: 3;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .photo-cover-badge {
+    position: absolute;
+    bottom: 6px;
+    right: 6px;
+    padding: 3px 8px;
+    background: rgba(15,118,110,0.95);
+    color: #fff;
+    border-radius: var(--r-full);
+    font-size: 8.5px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .photo-cover-badge svg {
+    width: 8px;
+    height: 8px;
+    fill: #fff;
+    stroke: none;
+  }
+
+  .photo-upload-btn {
+    aspect-ratio: 1;
+    background: var(--white);
+    border: 2px dashed var(--gray-300);
+    border-radius: var(--r-md);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    padding: 8px;
+  }
+  .photo-upload-btn:hover {
+    border-color: var(--primary);
+    background: var(--primary-soft);
+  }
+  .photo-upload-btn:hover svg { stroke: var(--primary); }
+  .photo-upload-btn:hover .photo-upload-text { color: var(--primary); }
+  .photo-upload-btn svg {
+    width: 22px;
+    height: 22px;
+    stroke: var(--gray-400);
+    stroke-width: 1.8;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: stroke 0.2s;
+  }
+  .photo-upload-text {
+    font-size: 9.5px;
+    font-weight: 700;
+    color: var(--gray-500);
+    transition: color 0.2s;
+    text-align: center;
+  }
+
+  /* ══════════ VERIFICATION CARD ══════════ */
+  .verification-card {
+    margin: 0 20px 16px;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--white), #F8FAFC);
+    border: 1.5px solid var(--primary-light);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-xs);
+  }
+  .verification-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .verification-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+    background: linear-gradient(135deg, var(--primary-light), #99F6E4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .verification-icon svg {
+    width: 18px;
+    height: 18px;
+    stroke: var(--primary);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .verification-info { flex: 1; }
+  .verification-title {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 2px;
+    letter-spacing: -0.2px;
+  }
+  .verification-desc {
+    font-size: 10.5px;
+    color: var(--gray-500);
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  .verification-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .verification-item {
+    padding: 10px 12px;
+    background: var(--gray-100);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .verification-item:hover {
+    background: var(--primary-soft);
+  }
+  .verification-item.done {
+    background: linear-gradient(90deg, var(--success-light), transparent);
+  }
+  .verification-item-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-xs);
+  }
+  .verification-item.done .verification-item-icon {
+    background: var(--success);
+  }
+  .verification-item.done .verification-item-icon svg { stroke: #fff; }
+  .verification-item-icon svg {
+    width: 13px;
+    height: 13px;
+    stroke: var(--gray-500);
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .verification-item-text {
+    flex: 1;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--dark);
+  }
+  .verification-item.done .verification-item-text {
+    color: var(--success-dark);
+    text-decoration: line-through;
+    text-decoration-color: rgba(16,185,129,0.4);
+  }
+  .verification-item-badge {
+    padding: 3px 8px;
+    border-radius: var(--r-full);
+    font-size: 9px;
+    font-weight: 800;
+    background: var(--gray-200);
+    color: var(--gray-600);
+  }
+  .verification-item.done .verification-item-badge {
+    background: var(--success);
+    color: #fff;
+  }
+
+  /* ══════════ PREVIEW CARD ══════════ */
+  .preview-wrap {
+    margin: 0 20px 16px;
+    position: relative;
+  }
+  .preview-label {
+    position: absolute;
+    top: -8px;
+    right: 12px;
+    padding: 3px 10px;
+    background: var(--dark);
+    color: #fff;
+    border-radius: var(--r-full);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    z-index: 2;
+  }
+  .store-preview-card {
+    padding: 12px;
+    background: linear-gradient(135deg, var(--white), #F8FAFC);
+    border-radius: var(--r-lg);
+    border: 1.5px solid var(--gray-200);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    box-shadow: var(--shadow-sm);
+  }
+  .preview-avatar {
+    width: 54px;
+    height: 54px;
+    border-radius: 15px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 22px;
+    font-weight: 800;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .preview-avatar .v-badge {
+    position: absolute;
+    bottom: -3px;
+    left: -3px;
+    width: 18px;
+    height: 18px;
+    background: var(--primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--white);
+  }
+  .preview-avatar .v-badge svg {
+    width: 9px;
+    height: 9px;
+    stroke: #fff;
+    stroke-width: 3.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .preview-info { flex: 1; min-width: 0; }
+  .preview-name {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 4px;
+    letter-spacing: -0.2px;
+  }
+  .preview-category {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 9.5px;
+    font-weight: 700;
+    color: var(--primary);
+    background: var(--primary-soft);
+    padding: 2px 7px;
+    border-radius: 5px;
+    margin-bottom: 5px;
+  }
+  .preview-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: var(--gray-500);
+    font-weight: 700;
+  }
+  .preview-meta .rating {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    color: var(--dark);
+    font-weight: 800;
+  }
+  .preview-meta .rating svg {
+    width: 10px;
+    height: 10px;
+    fill: var(--accent);
+    stroke: none;
+  }
+  .preview-meta .sep {
+    width: 3px;
+    height: 3px;
+    background: var(--gray-300);
+    border-radius: 50%;
+  }
+  .preview-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 9.5px;
+    font-weight: 800;
+    color: var(--accent-dark);
+    background: var(--accent-light);
+    padding: 2px 7px;
+    border-radius: 5px;
+  }
+  .preview-status::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    background: var(--accent);
+    border-radius: 50%;
+  }
+
+  /* ══════════ STICKY BOTTOM ══════════ */
+  .sticky-bottom {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 12px 20px 20px;
+    background: linear-gradient(180deg, rgba(248,250,252,0) 0%, var(--bg) 30%, var(--bg) 100%);
+    z-index: 50;
+  }
+  .sticky-inner {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .sticky-btn-secondary {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.25s;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-sm);
+  }
+  .sticky-btn-secondary:hover {
+    border-color: var(--primary);
+  }
+  .sticky-btn-secondary:hover svg { stroke: var(--primary); }
+  .sticky-btn-secondary svg {
+    width: 20px;
+    height: 20px;
+    stroke: var(--gray-700);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: stroke 0.2s;
+  }
+  .sticky-btn-primary {
+    flex: 1;
+    height: 52px;
+    padding: 0 20px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: var(--shadow-primary);
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+    letter-spacing: -0.2px;
+  }
+  .sticky-btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    bottom: 0;
+    width: 60px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+    animation: shine 3s infinite;
+  }
+  @keyframes shine {
+    0% { transform: translateX(-100%); }
+    60% { transform: translateX(500%); }
+    100% { transform: translateX(500%); }
+  }
+  .sticky-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(15,118,110,0.4);
+  }
+  .sticky-btn-primary:active { transform: translateY(0); }
+  .sticky-btn-primary svg {
+    width: 17px;
+    height: 17px;
+    stroke: #fff;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    position: relative;
+    z-index: 1;
+  }
+  .sticky-btn-primary span { position: relative; z-index: 1; }
+
+  /* ══════════ SUCCESS SCREEN ══════════ */
+  .success-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 24px 40px;
+    text-align: center;
+    min-height: 100%;
+    position: relative;
+  }
+
+  /* Confetti */
+  .confetti-piece {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    animation: confettiFall 3s infinite;
+  }
+  @keyframes confettiFall {
+    0% { transform: translateY(-20px) rotate(0); opacity: 0; }
+    20% { opacity: 1; }
+    100% { transform: translateY(400px) rotate(720deg); opacity: 0; }
+  }
+
+  .success-icon {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--success), var(--success-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 22px;
+    position: relative;
+    box-shadow: 0 20px 40px rgba(16,185,129,0.35);
+    animation: successPop 0.7s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    margin-top: 20px;
+  }
+  @keyframes successPop {
+    0% { transform: scale(0) rotate(-180deg); }
+    70% { transform: scale(1.15) rotate(15deg); }
+    100% { transform: scale(1) rotate(0); }
+  }
+  .success-icon::before,
+  .success-icon::after {
+    content: '';
+    position: absolute;
+    inset: -12px;
+    border-radius: 50%;
+    border: 3px solid var(--success);
+    opacity: 0;
+    animation: ringPulse 2.5s infinite;
+  }
+  .success-icon::after {
+    inset: -24px;
+    animation-delay: 0.5s;
+  }
+  @keyframes ringPulse {
+    0% { transform: scale(0.85); opacity: 0.7; }
+    100% { transform: scale(1.35); opacity: 0; }
+  }
+  .success-icon svg {
+    width: 54px;
+    height: 54px;
+    stroke: #fff;
+    stroke-width: 3;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .success-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+  }
+  .success-text {
+    font-size: 13px;
+    color: var(--gray-500);
+    line-height: 1.7;
+    font-weight: 500;
+    margin-bottom: 22px;
+    max-width: 300px;
+  }
+
+  /* Store Card */
+  .success-store-card {
+    padding: 14px;
+    background: linear-gradient(135deg, var(--primary-soft), var(--primary-light));
+    border-radius: var(--r-md);
+    border: 1px solid var(--primary-light);
+    width: 100%;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 16px;
+    text-align: right;
+  }
+  .success-store-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 20px;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+  .success-store-info { flex: 1; min-width: 0; }
+  .success-store-name {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--primary-dark);
+    margin-bottom: 3px;
+    letter-spacing: -0.2px;
+  }
+  .success-store-meta {
+    font-size: 10.5px;
+    color: var(--primary-dark);
+    font-weight: 600;
+    opacity: 0.85;
+  }
+  .success-store-status {
+    padding: 4px 9px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: var(--r-full);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    flex-shrink: 0;
+  }
+
+  /* Next Steps */
+  .next-steps-title {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: var(--dark);
+    width: 100%;
+    text-align: right;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .next-steps-title svg {
+    width: 14px;
+    height: 14px;
+    stroke: var(--accent-dark);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .next-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    margin-bottom: 20px;
+  }
+  .next-step {
+    padding: 12px;
+    background: var(--white);
+    border-radius: 12px;
+    border: 1px solid var(--gray-100);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-align: right;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: var(--shadow-xs);
+  }
+  .next-step:hover {
+    transform: translateX(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: transparent;
+  }
+  .next-step-num {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 900;
+    flex-shrink: 0;
+    box-shadow: 0 4px 10px rgba(15,118,110,0.3);
+  }
+  .next-step-content { flex: 1; min-width: 0; }
+  .next-step-title {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 2px;
+    letter-spacing: -0.2px;
+  }
+  .next-step-desc {
+    font-size: 10px;
+    color: var(--gray-500);
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  .next-step-arrow {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--gray-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .next-step:hover .next-step-arrow {
+    background: var(--primary);
+  }
+  .next-step-arrow svg {
+    width: 11px;
+    height: 11px;
+    stroke: var(--gray-500);
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: stroke 0.2s;
+  }
+  .next-step:hover .next-step-arrow svg { stroke: #fff; }
+
+  .success-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+  .success-btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 14px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    transition: all 0.25s;
+    border: none;
+    letter-spacing: -0.2px;
+  }
+  .success-btn.primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    box-shadow: var(--shadow-primary);
+  }
+  .success-btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(15,118,110,0.4);
+  }
+  .success-btn.secondary {
+    background: var(--white);
+    color: var(--gray-700);
+    border: 1.5px solid var(--gray-200);
+  }
+  .success-btn.secondary:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  .success-btn svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Save Toast */
+  .save-toast {
+    position: absolute;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    padding: 10px 16px;
+    background: var(--dark);
+    color: #fff;
+    border-radius: 12px;
+    font-size: 11.5px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s;
+    white-space: nowrap;
+  }
+  .save-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  .save-toast svg {
+    width: 14px;
+    height: 14px;
+    stroke: var(--success);
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>إضافة متجر — Add Store</h1>
+  <p>5 خطوات · تصنيفات بصرية · تحقق الهوية</p>
+</div>
+
+<div class="screens-container">
+
+  <!-- ═══════════ SCREEN 1: FORM (Step 2 - Details) ═══════════ -->
+  <div class="screen-wrapper">
+    <div class="phone">
+      <div class="status-bar">
+        <div class="time">9:41</div>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h3v-9H2v9zm5 0h3V9H7v13zm5 0h3V5h-3v17zm5 0h3V2h-3v20z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21l-12-18h24z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm5 4v8h1c.6 0 1-.4 1-1V9c0-.6-.4-1-1-1h-1z"/></svg>
+        </div>
+      </div>
+
+      <div class="screen">
+
+        <!-- App Bar -->
+        <div class="app-bar">
+          <div class="back-btn">
+            <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+          <div class="app-title-wrap">
+            <div class="app-title">إضافة متجر</div>
+            <div class="app-subtitle">الخطوة 2 من 5 · التفاصيل</div>
+          </div>
+          <button class="save-draft-btn" onclick="showToast()">
+            <svg viewBox="0 0 24 24">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/>
+            </svg>
+            حفظ
+          </button>
+        </div>
+
+        <!-- Progress Steps -->
+        <div class="progress-wrap">
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill"></div>
+          </div>
+          <div class="steps-indicator">
+            <div class="step-item completed">
+              <div class="step-circle">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="step-item-label">الأساسي</div>
+            </div>
+            <div class="step-item active">
+              <div class="step-circle">2</div>
+              <div class="step-item-label">التفاصيل</div>
+            </div>
+            <div class="step-item">
+              <div class="step-circle">3</div>
+              <div class="step-item-label">الصور</div>
+            </div>
+            <div class="step-item">
+              <div class="step-circle">4</div>
+              <div class="step-item-label">الموقع</div>
+            </div>
+            <div class="step-item">
+              <div class="step-circle">5</div>
+              <div class="step-item-label">التحقق</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Info Banner -->
+        <div class="info-banner">
+          <div class="info-banner-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z"/>
+            </svg>
+          </div>
+          <div class="info-banner-text">
+            <strong>💡 نصيحة سريعة</strong>
+            المتاجر اللي فيها وصف كامل + صور احترافية بتجيب 3x زوار أكتر
+          </div>
+        </div>
+
+        <!-- Store Name -->
+        <div class="form-section">
+          <div class="form-label">
+            <span>اسم المتجر <span class="required">*</span></span>
+            <span class="counter good">14 / 50</span>
+          </div>
+          <div class="input-wrap">
+            <input type="text" class="form-input with-icon valid" value="متجر ريماس" placeholder="مثال: متجر النور">
+            <svg class="input-icon" viewBox="0 0 24 24" style="stroke: var(--success);">
+              <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Category Grid -->
+        <div class="form-section">
+          <div class="form-label">
+            <span>القطاع الرئيسي <span class="required">*</span></span>
+          </div>
+          <div class="category-grid">
+            <div class="category-card">
+              <div class="category-icon teal">
+                <svg viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+              </div>
+              <div class="category-name">طبي</div>
+            </div>
+            <div class="category-card">
+              <div class="category-icon orange">
+                <svg viewBox="0 0 24 24"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Z"/></svg>
+              </div>
+              <div class="category-name">مطاعم</div>
+            </div>
+            <div class="category-card active">
+              <div class="category-icon blue">
+                <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+              </div>
+              <div class="category-name">تجاري</div>
+            </div>
+            <div class="category-card">
+              <div class="category-icon purple">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              </div>
+              <div class="category-name">رياضة</div>
+            </div>
+            <div class="category-card">
+              <div class="category-icon pink">
+                <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+              </div>
+              <div class="category-name">تعليم</div>
+            </div>
+            <div class="category-card">
+              <div class="category-icon cyan">
+                <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+              </div>
+              <div class="category-name">خدمات</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub Categories -->
+        <div class="form-section">
+          <div class="form-label">
+            <span>التخصص الفرعي <span class="required">*</span></span>
+            <span class="helper">اختر حتى 3</span>
+          </div>
+          <div class="specialty-chips">
+            <div class="specialty-chip active">إلكترونيات</div>
+            <div class="specialty-chip active">ساعات ذكية</div>
+            <div class="specialty-chip active">إكسسوارات</div>
+            <div class="specialty-chip">موبايلات</div>
+            <div class="specialty-chip">لابتوبات</div>
+            <div class="specialty-chip">شواحن</div>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="form-section">
+          <div class="form-label">
+            <span>الوصف <span class="required">*</span></span>
+            <span class="counter good">185 / 500</span>
+          </div>
+          <textarea class="form-input" placeholder="اكتب وصفاً جاذباً لمتجرك..." style="min-height: 100px; resize: none; line-height: 1.6; padding: 12px 14px;">متجر متخصص في بيع الإلكترونيات والأجهزة الذكية الأصلية بأسعار تنافسية. نوفر خدمات ما بعد البيع وضمان سنة كامل على جميع المنتجات. نتميز بالجودة والأمانة وسرعة التوصيل.</textarea>
+        </div>
+
+        <!-- Phone + WhatsApp -->
+        <div class="form-section">
+          <div class="form-label">
+            <span>رقم الهاتف <span class="required">*</span></span>
+          </div>
+          <div class="input-wrap">
+            <input type="tel" class="form-input with-prefix valid" value="100 123 4567" placeholder="10xxxxxxxx">
+            <div class="prefix-icon">
+              🇪🇬 +20
+            </div>
+          </div>
+        </div>
+
+        <!-- WhatsApp separate -->
+        <div class="form-section">
+          <div class="form-label">
+            <span>رقم واتساب <span class="optional">اختياري</span></span>
+          </div>
+          <div class="input-wrap">
+            <input type="tel" class="form-input with-prefix" value="100 123 4567" placeholder="10xxxxxxxx">
+            <div class="prefix-icon">
+              💬 +20
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Sticky Bottom -->
+      <div class="sticky-bottom">
+        <div class="sticky-inner">
+          <button class="sticky-btn-secondary">
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button class="sticky-btn-primary">
+            <span>التالي</span>
+            <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+
+    </div>
+    <div class="screen-badge">1 · التفاصيل (Step 2)</div>
+  </div>
+
+  <!-- ═══════════ SCREEN 2: MAP + VERIFICATION (Step 4) ═══════════ -->
+  <div class="screen-wrapper">
+    <div class="phone">
+      <div class="status-bar">
+        <div class="time">9:41</div>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h3v-9H2v9zm5 0h3V9H7v13zm5 0h3V5h-3v17zm5 0h3V2h-3v20z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21l-12-18h24z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm5 4v8h1c.6 0 1-.4 1-1V9c0-.6-.4-1-1-1h-1z"/></svg>
+        </div>
+      </div>
+
+      <div class="screen">
+
+        <!-- App Bar -->
+        <div class="app-bar">
+          <div class="back-btn">
+            <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+          <div class="app-title-wrap">
+            <div class="app-title">إضافة متجر</div>
+            <div class="app-subtitle">الخطوة 4 من 5 · الموقع والتحقق</div>
+          </div>
+          <button class="save-draft-btn" onclick="showToast()">
+            <svg viewBox="0 0 24 24">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/>
+            </svg>
+            حفظ
+          </button>
+        </div>
+
+        <!-- Progress Steps -->
+        <div class="progress-wrap">
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" style="width: 80%;"></div>
+          </div>
+          <div class="steps-indicator">
+            <div class="step-item completed">
+              <div class="step-circle">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="step-item-label">الأساسي</div>
+            </div>
+            <div class="step-item completed">
+              <div class="step-circle">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="step-item-label">التفاصيل</div>
+            </div>
+            <div class="step-item completed">
+              <div class="step-circle">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="step-item-label">الصور</div>
+            </div>
+            <div class="step-item active">
+              <div class="step-circle">4</div>
+              <div class="step-item-label">الموقع</div>
+            </div>
+            <div class="step-item">
+              <div class="step-circle">5</div>
+              <div class="step-item-label">التحقق</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Map Picker -->
+        <div class="section-header">
+          <div class="section-title">موقع المتجر</div>
+          <div class="section-required">مطلوب</div>
+        </div>
+
+        <div class="form-section">
+          <div class="map-picker">
+            <div class="map-grid-bg"></div>
+
+            <!-- Buildings -->
+            <div class="map-block-pick" style="top: 20px; left: 20px; width: 60px; height: 40px;"></div>
+            <div class="map-block-pick park" style="top: 20px; right: 40px; width: 50px; height: 35px;"></div>
+            <div class="map-block-pick" style="top: 80px; left: 30px; width: 70px; height: 45px;"></div>
+            <div class="map-block-pick" style="bottom: 40px; right: 30px; width: 80px; height: 50px;"></div>
+
+            <!-- Roads -->
+            <div class="map-road-pick h major" style="top: 70px;"></div>
+            <div class="map-road-pick v" style="left: 50%;"></div>
+            <div class="map-road-pick h" style="bottom: 30px;"></div>
+
+            <!-- Pin -->
+            <div class="map-pin-marker">
+              <div class="map-pin-body">
+                <svg viewBox="0 0 24 24">
+                  <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/>
+                </svg>
+              </div>
+              <div class="map-pin-shadow"></div>
+            </div>
+
+            <!-- Drag Hint -->
+            <button class="map-overlay-btn drag-hint">
+              <svg viewBox="0 0 24 24">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+              </svg>
+              اسحب الدبوس
+            </button>
+
+            <!-- My Location -->
+            <button class="map-overlay-btn my-location">
+              <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M12 2v3"/>
+                <path d="M12 19v3"/>
+                <path d="M2 12h3"/>
+                <path d="M19 12h3"/>
+                <circle cx="12" cy="12" r="8"/>
+              </svg>
+              موقعي
+            </button>
+          </div>
+
+          <!-- Address Details -->
+          <div class="address-details">
+            <div class="address-details-icon">
+              <svg viewBox="0 0 24 24">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+            </div>
+            <input type="text" value="دكرنس — شارع المستشفى — برج رضا سامي" placeholder="اكتب تفاصيل العنوان">
+          </div>
+        </div>
+
+        <!-- Verification Card -->
+        <div class="section-header" style="margin-top: 16px;">
+          <div class="section-title">التحقق من الهوية</div>
+          <div class="section-optional">مطلوب للبائعين</div>
+        </div>
+
+        <div class="verification-card">
+          <div class="verification-header">
+            <div class="verification-icon">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <polyline points="9 12 11 14 15 10"/>
+              </svg>
+            </div>
+            <div class="verification-info">
+              <div class="verification-title">وثّق حسابك للبدء</div>
+              <div class="verification-desc">نحتاج التحقق من هويتك لضمان أمان المتجر والعملاء</div>
+            </div>
+          </div>
+
+          <div class="verification-list">
+            <div class="verification-item done">
+              <div class="verification-item-icon">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="verification-item-text">رقم الهاتف موثّق</div>
+              <div class="verification-item-badge">✓ مكتمل</div>
+            </div>
+
+            <div class="verification-item done">
+              <div class="verification-item-icon">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="verification-item-text">البريد الإلكتروني</div>
+              <div class="verification-item-badge">✓ مكتمل</div>
+            </div>
+
+            <div class="verification-item">
+              <div class="verification-item-icon">
+                <svg viewBox="0 0 24 24">
+                  <rect x="2" y="4" width="20" height="16" rx="2"/>
+                  <line x1="2" y1="10" x2="22" y2="10"/>
+                </svg>
+              </div>
+              <div class="verification-item-text">صورة البطاقة (وجه وظهر)</div>
+              <div class="verification-item-badge">رفع</div>
+            </div>
+
+            <div class="verification-item">
+              <div class="verification-item-icon">
+                <svg viewBox="0 0 24 24">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+              </div>
+              <div class="verification-item-text">السجل التجاري</div>
+              <div class="verification-item-badge">رفع</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Preview Card -->
+        <div class="section-header" style="margin-top: 16px;">
+          <div class="section-title">معاينة بطاقة المتجر</div>
+        </div>
+
+        <div class="preview-wrap">
+          <div class="preview-label">معاينة مباشرة</div>
+          <div class="store-preview-card">
+            <div class="preview-avatar">
+              ر
+              <div class="v-badge">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+            </div>
+            <div class="preview-info">
+              <div class="preview-name">متجر ريماس</div>
+              <div class="preview-category">
+                <svg viewBox="0 0 24 24" style="width: 9px; height: 9px; stroke: currentColor; stroke-width: 2.5; fill: none;">
+                  <circle cx="9" cy="21" r="1"/>
+                  <circle cx="20" cy="21" r="1"/>
+                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                </svg>
+                إلكترونيات
+              </div>
+              <div class="preview-meta">
+                <span class="rating">
+                  <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  جديد
+                </span>
+                <span class="sep"></span>
+                <span class="preview-status">قيد المراجعة</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Info Banner -->
+        <div class="info-banner" style="margin-top: 16px; background: linear-gradient(135deg, var(--accent-light), #FDE68A); border-color: #FCD34D;">
+          <div class="info-banner-icon" style="background: rgba(255,255,255,0.7);">
+            <svg viewBox="0 0 24 24" style="stroke: var(--accent-dark);">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="16" x2="12" y2="12"/>
+              <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+          </div>
+          <div class="info-banner-text" style="color: #92400E;">
+            <strong style="color: var(--accent-dark);">⏱️ المراجعة خلال 24 ساعة</strong>
+            هنراجع بيانات متجرك وهنبلغك فور الموافقة
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Sticky Bottom -->
+      <div class="sticky-bottom">
+        <div class="sticky-inner">
+          <button class="sticky-btn-secondary">
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button class="sticky-btn-primary">
+            <span>التالي · التحقق</span>
+            <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+
+    </div>
+    <div class="screen-badge">2 · الموقع والتحقق (Step 4)</div>
+  </div>
+
+  <!-- ═══════════ SCREEN 3: SUCCESS ═══════════ -->
+  <div class="screen-wrapper">
+    <div class="phone">
+      <div class="status-bar">
+        <div class="time">9:41</div>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h3v-9H2v9zm5 0h3V9H7v13zm5 0h3V5h-3v17zm5 0h3V2h-3v20z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21l-12-18h24z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm5 4v8h1c.6 0 1-.4 1-1V9c0-.6-.4-1-1-1h-1z"/></svg>
+        </div>
+      </div>
+
+      <div class="screen" style="position: relative;">
+
+        <!-- Confetti -->
+        <div class="confetti-piece" style="background: var(--primary); top: 5%; left: 15%; animation-delay: 0s;"></div>
+        <div class="confetti-piece" style="background: var(--accent); top: 8%; right: 20%; animation-delay: 0.3s; border-radius: 50%;"></div>
+        <div class="confetti-piece" style="background: var(--pink); top: 3%; left: 40%; animation-delay: 0.6s; width: 4px; height: 12px;"></div>
+        <div class="confetti-piece" style="background: var(--purple); top: 10%; right: 45%; animation-delay: 0.9s; border-radius: 50%;"></div>
+        <div class="confetti-piece" style="background: var(--blue); top: 12%; left: 25%; animation-delay: 1.2s;"></div>
+        <div class="confetti-piece" style="background: var(--success); top: 6%; right: 10%; animation-delay: 1.5s;"></div>
+
+        <div class="success-screen">
+
+          <!-- Success Icon -->
+          <div class="success-icon">
+            <svg viewBox="0 0 24 24">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+
+          <div class="success-title">تم استلام طلبك! 🎉</div>
+          <div class="success-text">
+            مبروك! هنراجع بيانات متجرك ونتواصل معاك خلال 24 ساعة
+          </div>
+
+          <!-- Store Card -->
+          <div class="success-store-card">
+            <div class="success-store-icon">ر</div>
+            <div class="success-store-info">
+              <div class="success-store-name">متجر ريماس</div>
+              <div class="success-store-meta">إلكترونيات · دكرنس</div>
+            </div>
+            <div class="success-store-status">قيد المراجعة</div>
+          </div>
+
+          <!-- Next Steps -->
+          <div class="next-steps-title">
+            <svg viewBox="0 0 24 24">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+            الخطوات الجاية
+          </div>
+
+          <div class="next-steps">
+            <div class="next-step">
+              <div class="next-step-num">1</div>
+              <div class="next-step-content">
+                <div class="next-step-title">أضف منتجاتك الأولى</div>
+                <div class="next-step-desc">ابدأ بإضافة 5 منتجات على الأقل</div>
+              </div>
+              <div class="next-step-arrow">
+                <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+              </div>
+            </div>
+
+            <div class="next-step">
+              <div class="next-step-num">2</div>
+              <div class="next-step-content">
+                <div class="next-step-title">جهّز عروض الافتتاح</div>
+                <div class="next-step-desc">خصومات خاصة لأول 100 عميل</div>
+              </div>
+              <div class="next-step-arrow">
+                <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+              </div>
+            </div>
+
+            <div class="next-step">
+              <div class="next-step-num">3</div>
+              <div class="next-step-content">
+                <div class="next-step-title">شارك رابط متجرك</div>
+                <div class="next-step-desc">انشره على السوشيال ميديا</div>
+              </div>
+              <div class="next-step-arrow">
+                <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="success-actions">
+            <button class="success-btn primary">
+              <svg viewBox="0 0 24 24">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              أضف منتجات الآن
+            </button>
+
+            <button class="success-btn secondary">
+              <svg viewBox="0 0 24 24">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                <polyline points="9 22 9 12 15 12 15 22"/>
+              </svg>
+              اذهب للوحة التحكم
+            </button>
+
+            <button class="success-btn secondary" style="background: transparent; border: none; color: var(--primary);">
+              مشاركة المتجر
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+    <div class="screen-badge">3 · تم الإرسال</div>
+  </div>
+
+</div>
+
+<!-- Save Toast -->
+<div class="save-toast" id="saveToast">
+  <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+  تم حفظ المسودة بنجاح!
+</div>
+
+<script>
+  function showToast() {
+    const toast = document.getElementById('saveToast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1865 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>شاشة الدفع — معاينة احترافية</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'IBM Plex Sans Arabic', sans-serif; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --primary: #0F766E;
+    --primary-dark: #115E59;
+    --primary-light: #CCFBF1;
+    --primary-soft: #F0FDFA;
+    --accent: #F59E0B;
+    --accent-dark: #D97706;
+    --accent-light: #FEF3C7;
+    --danger: #EF4444;
+    --danger-light: #FEF2F2;
+    --success: #10B981;
+    --success-dark: #059669;
+    --success-light: #ECFDF5;
+    --purple: #8B5CF6;
+    --purple-light: #EDE9FE;
+    --blue: #2563EB;
+    --blue-light: #DBEAFE;
+    --pink: #EC4899;
+    --pink-light: #FCE7F3;
+    --dark: #0F172A;
+    --gray-700: #374151;
+    --gray-600: #4B5563;
+    --gray-500: #6B7280;
+    --gray-400: #9CA3AF;
+    --gray-300: #D1D5DB;
+    --gray-200: #E5E7EB;
+    --gray-100: #F3F4F6;
+    --bg: #F8FAFC;
+    --white: #FFFFFF;
+
+    --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.07);
+    --shadow-lg: 0 10px 30px rgba(15, 23, 42, 0.09);
+    --shadow-xl: 0 20px 40px rgba(15, 23, 42, 0.14);
+    --shadow-primary: 0 8px 24px rgba(15, 118, 110, 0.32);
+
+    --r-sm: 10px;
+    --r-md: 14px;
+    --r-lg: 18px;
+    --r-xl: 24px;
+    --r-full: 999px;
+  }
+
+  body {
+    background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+    min-height: 100vh;
+    padding: 50px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+  }
+
+  .page-header { text-align: center; color: #fff; max-width: 900px; }
+  .page-header h1 {
+    font-size: 30px; font-weight: 700; margin-bottom: 8px;
+    background: linear-gradient(135deg, #fff, #94A3B8);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .page-header p { color: #94A3B8; font-size: 14px; }
+
+  .screens-container {
+    display: flex; gap: 40px; flex-wrap: wrap; justify-content: center;
+  }
+  .screen-wrapper {
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+  }
+  .screen-badge {
+    background: rgba(15, 118, 110, 0.15);
+    color: #5EEAD4;
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid rgba(94, 234, 212, 0.25);
+  }
+
+  .phone {
+    width: 375px;
+    height: 812px;
+    background: var(--bg);
+    border-radius: 44px;
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+      0 0 0 10px #0A0F1E,
+      0 0 0 12px #1E293B,
+      0 30px 60px rgba(0, 0, 0, 0.5),
+      0 0 80px rgba(15, 118, 110, 0.15);
+  }
+  .phone::before {
+    content: '';
+    position: absolute;
+    top: 10px; left: 50%;
+    transform: translateX(-50%);
+    width: 110px; height: 28px;
+    background: #0A0F1E;
+    border-radius: 999px;
+    z-index: 999;
+  }
+
+  .status-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 48px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 28px;
+    font-size: 13px; font-weight: 600;
+    z-index: 100;
+    pointer-events: none;
+    color: var(--dark);
+  }
+  .status-bar.light { color: #fff; }
+  .status-bar .time { margin-top: 4px; }
+  .status-bar .status-icons { display: flex; gap: 5px; margin-top: 4px; align-items: center; }
+  .status-bar svg { width: 15px; height: 15px; }
+
+  .screen {
+    width: 100%; height: 100%;
+    overflow-y: auto; overflow-x: hidden;
+    scrollbar-width: none;
+    padding-top: 48px;
+    padding-bottom: 100px;
+  }
+  .screen::-webkit-scrollbar { display: none; }
+
+  /* ══════════ APP BAR ══════════ */
+  .app-bar {
+    padding: 8px 20px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .back-btn {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .back-btn:hover { background: var(--gray-100); }
+  .back-btn svg {
+    width: 18px; height: 18px;
+    stroke: var(--gray-700);
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .app-title-wrap {
+    flex: 1;
+    text-align: center;
+  }
+  .app-title {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--dark);
+    letter-spacing: -0.3px;
+    margin-bottom: 2px;
+  }
+  .app-subtitle {
+    font-size: 11px;
+    color: var(--gray-500);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+  .app-subtitle svg {
+    width: 11px;
+    height: 11px;
+    stroke: var(--success);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  .secure-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 10px;
+    background: var(--success-light);
+    border-radius: var(--r-full);
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--success-dark);
+    flex-shrink: 0;
+  }
+  .secure-badge svg {
+    width: 11px;
+    height: 11px;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* ══════════ PROGRESS STEPS ══════════ */
+  .progress-steps {
+    padding: 4px 20px 18px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+  }
+  .progress-steps::before {
+    content: '';
+    position: absolute;
+    top: 18px;
+    right: 60px;
+    left: 60px;
+    height: 2px;
+    background: var(--gray-200);
+    z-index: 1;
+  }
+  .progress-steps::after {
+    content: '';
+    position: absolute;
+    top: 18px;
+    right: 60px;
+    width: calc(100% - 120px);
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+    z-index: 1;
+  }
+
+  .step-dot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    position: relative;
+    z-index: 2;
+    flex: 1;
+  }
+  .step-dot-circle {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--white);
+    border: 2px solid var(--gray-200);
+    color: var(--gray-400);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+    transition: all 0.3s;
+  }
+  .step-dot-circle svg {
+    width: 13px;
+    height: 13px;
+    stroke: currentColor;
+    stroke-width: 3;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .step-dot.active .step-dot-circle {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+    box-shadow: 0 0 0 4px rgba(15,118,110,0.18);
+    transform: scale(1.08);
+  }
+  .step-dot.completed .step-dot-circle {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+  }
+  .step-dot-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--gray-400);
+  }
+  .step-dot.active .step-dot-label { color: var(--primary); }
+  .step-dot.completed .step-dot-label { color: var(--dark); }
+
+  /* ══════════ SECTION HEADER ══════════ */
+  .section-header {
+    padding: 0 20px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .section-title {
+    font-size: 13.5px;
+    font-weight: 800;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    letter-spacing: -0.2px;
+  }
+  .section-title::before {
+    content: '';
+    width: 3px;
+    height: 14px;
+    background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+    border-radius: 4px;
+  }
+  .section-link {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    padding: 5px 8px;
+    border-radius: 8px;
+    transition: background 0.2s;
+  }
+  .section-link:hover { background: var(--primary-soft); }
+  .section-link svg {
+    width: 11px;
+    height: 11px;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ══════════ ORDER SUMMARY MINI ══════════ */
+  .mini-summary {
+    margin: 0 20px 16px;
+    padding: 12px 14px;
+    background: linear-gradient(135deg, var(--primary-soft), var(--primary-light));
+    border-radius: var(--r-md);
+    border: 1px solid var(--primary-light);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .mini-summary-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-xs);
+  }
+  .mini-summary-icon svg {
+    width: 20px;
+    height: 20px;
+    stroke: var(--primary);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .mini-summary-info { flex: 1; min-width: 0; }
+  .mini-summary-label {
+    font-size: 10.5px;
+    color: var(--primary-dark);
+    font-weight: 700;
+    margin-bottom: 3px;
+    opacity: 0.85;
+  }
+  .mini-summary-value {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--primary-dark);
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+  .mini-summary-value .count {
+    padding: 2px 7px;
+    background: var(--white);
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--primary);
+  }
+  .mini-summary-edit {
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: var(--shadow-xs);
+    flex-shrink: 0;
+  }
+  .mini-summary-edit:hover { background: var(--primary); }
+  .mini-summary-edit:hover svg { stroke: #fff; }
+  .mini-summary-edit svg {
+    width: 13px;
+    height: 13px;
+    stroke: var(--primary);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+    transition: stroke 0.2s;
+  }
+
+  /* ══════════ PAYMENT METHODS ══════════ */
+  .payment-list {
+    padding: 0 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .payment-option {
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-md);
+    padding: 14px;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+  }
+  .payment-option:hover {
+    border-color: var(--primary-light);
+    box-shadow: var(--shadow-sm);
+  }
+  .payment-option.active {
+    border-color: var(--primary);
+    background: linear-gradient(135deg, var(--primary-soft), var(--white));
+    box-shadow: 0 0 0 3px rgba(15,118,110,0.08), var(--shadow-sm);
+  }
+
+  .payment-option-main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .payment-radio {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--gray-300);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+    background: var(--white);
+  }
+  .payment-option.active .payment-radio {
+    border-color: var(--primary);
+    background: var(--primary);
+  }
+  .payment-option.active .payment-radio::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: #fff;
+    border-radius: 50%;
+  }
+
+  .payment-icon-wrap {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .payment-icon-wrap.visa { background: linear-gradient(135deg, #1E40AF, #3B82F6); }
+  .payment-icon-wrap.mastercard { background: linear-gradient(135deg, #DC2626, #F59E0B); }
+  .payment-icon-wrap.wallet { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); }
+  .payment-icon-wrap.cash { background: linear-gradient(135deg, var(--success), var(--success-dark)); }
+  .payment-icon-wrap.insta { background: linear-gradient(135deg, var(--purple), #6D28D9); }
+  .payment-icon-wrap svg {
+    width: 20px;
+    height: 20px;
+    stroke: #fff;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .payment-info { flex: 1; min-width: 0; }
+  .payment-name {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 3px;
+    letter-spacing: -0.2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .payment-name .badge-rec {
+    padding: 2px 7px;
+    background: var(--accent-light);
+    color: var(--accent-dark);
+    border-radius: var(--r-full);
+    font-size: 8.5px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+  }
+  .payment-desc {
+    font-size: 11px;
+    color: var(--gray-500);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .payment-desc .card-dots {
+    font-family: 'Courier New', monospace;
+    font-weight: 800;
+    color: var(--gray-700);
+    letter-spacing: 1px;
+  }
+  .payment-desc .balance {
+    color: var(--success);
+    font-weight: 800;
+  }
+
+  /* Card brand logo */
+  .card-brand-logo {
+    width: 34px;
+    height: 22px;
+    border-radius: 4px;
+    background: linear-gradient(135deg, #1E40AF, #3B82F6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8.5px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: 0.3px;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .card-brand-logo.mc {
+    background: linear-gradient(135deg, #DC2626, #F59E0B);
+  }
+  .card-brand-logo.mc::before,
+  .card-brand-logo.mc::after {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+  .card-brand-logo.mc::before { background: #DC2626; left: 6px; }
+  .card-brand-logo.mc::after { background: #F59E0B; right: 6px; }
+
+  /* ══════════ CARD FORM (Expanded) ══════════ */
+  .card-form {
+    padding: 16px;
+    margin-top: 12px;
+    border-top: 1px dashed var(--gray-200);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    animation: expandForm 0.3s ease;
+  }
+  @keyframes expandForm {
+    from { opacity: 0; max-height: 0; padding: 0 16px; }
+    to { opacity: 1; max-height: 500px; padding: 16px; }
+  }
+  .form-label {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .form-label .helper {
+    font-size: 9.5px;
+    color: var(--gray-500);
+    font-weight: 600;
+  }
+  .form-input {
+    width: 100%;
+    padding: 12px 14px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--dark);
+    outline: none;
+    transition: all 0.2s;
+  }
+  .form-input::placeholder {
+    color: var(--gray-400);
+    font-weight: 500;
+  }
+  .form-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(15,118,110,0.08);
+  }
+  .form-input.mono {
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 10px;
+  }
+  .input-row > * {
+    flex: 1;
+  }
+
+  /* Card brand selection */
+  .card-brand-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 4px;
+  }
+  .card-brand-btn {
+    flex: 1;
+    padding: 8px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 10.5px;
+    font-weight: 800;
+    color: var(--gray-600);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+  }
+  .card-brand-btn:hover {
+    border-color: var(--primary-light);
+  }
+  .card-brand-btn.active {
+    border-color: var(--primary);
+    background: var(--primary-soft);
+    color: var(--primary);
+  }
+  .card-brand-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* Save card toggle */
+  .save-card-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    background: var(--gray-100);
+    border-radius: 12px;
+    margin-top: 4px;
+  }
+  .save-card-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .save-card-info svg {
+    width: 16px;
+    height: 16px;
+    stroke: var(--primary);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+  }
+  .save-card-text {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--dark);
+  }
+  .toggle-switch {
+    width: 40px;
+    height: 22px;
+    background: var(--gray-300);
+    border-radius: 11px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.25s;
+    flex-shrink: 0;
+  }
+  .toggle-switch::after {
+    content: '';
+    position: absolute;
+    top: 2.5px;
+    right: 2.5px;
+    width: 17px;
+    height: 17px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    transition: transform 0.25s;
+  }
+  .toggle-switch.on {
+    background: var(--primary);
+  }
+  .toggle-switch.on::after {
+    transform: translateX(-18px);
+  }
+
+  /* ══════════ WALLET OPTION (Expanded) ══════════ */
+  .wallet-balance-row {
+    padding: 12px 16px;
+    margin-top: 12px;
+    border-top: 1px dashed var(--gray-200);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .wallet-balance-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .wallet-balance-label {
+    font-size: 10.5px;
+    color: var(--gray-500);
+    font-weight: 700;
+  }
+  .wallet-balance-value {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--primary);
+    letter-spacing: -0.4px;
+    display: flex;
+    align-items: baseline;
+    gap: 3px;
+  }
+  .wallet-balance-value .currency {
+    font-size: 11px;
+    color: var(--primary);
+    font-weight: 700;
+  }
+  .wallet-insufficient {
+    font-size: 10px;
+    color: var(--accent-dark);
+    font-weight: 700;
+    background: var(--accent-light);
+    padding: 3px 8px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .wallet-insufficient svg {
+    width: 11px;
+    height: 11px;
+    stroke: currentColor;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* ══════════ COUPON CARD ══════════ */
+  .coupon-card {
+    margin: 0 20px 16px;
+    padding: 14px;
+    background: var(--white);
+    border-radius: var(--r-md);
+    border: 1.5px dashed var(--primary-light);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+  }
+  .coupon-card:hover {
+    border-color: var(--primary);
+    background: var(--primary-soft);
+  }
+  .coupon-card.applied {
+    border-style: solid;
+    border-color: var(--success);
+    background: linear-gradient(135deg, var(--success-light), var(--white));
+  }
+  .coupon-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent-light), #FDE68A);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .coupon-card.applied .coupon-icon {
+    background: linear-gradient(135deg, var(--success-light), #A7F3D0);
+  }
+  .coupon-icon svg {
+    width: 20px;
+    height: 20px;
+    stroke: var(--accent-dark);
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .coupon-card.applied .coupon-icon svg { stroke: var(--success-dark); }
+
+  .coupon-content { flex: 1; min-width: 0; }
+  .coupon-title {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .coupon-card.applied .coupon-title { color: var(--success-dark); }
+  .coupon-code-pill {
+    padding: 2px 8px;
+    background: var(--success);
+    color: #fff;
+    border-radius: 5px;
+    font-size: 9px;
+    font-weight: 800;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.5px;
+  }
+  .coupon-desc {
+    font-size: 10.5px;
+    color: var(--gray-500);
+    font-weight: 600;
+  }
+  .coupon-card.applied .coupon-desc { color: var(--success); font-weight: 700; }
+
+  .coupon-arrow {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--gray-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .coupon-card:hover .coupon-arrow {
+    background: var(--primary);
+  }
+  .coupon-card.applied .coupon-arrow {
+    background: var(--success);
+  }
+  .coupon-arrow svg {
+    width: 12px;
+    height: 12px;
+    stroke: var(--gray-500);
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+    transition: stroke 0.2s;
+  }
+  .coupon-card:hover .coupon-arrow svg,
+  .coupon-card.applied .coupon-arrow svg { stroke: #fff; }
+
+  /* ══════════ ORDER SUMMARY ══════════ */
+  .summary-card {
+    margin: 0 20px 16px;
+    padding: 16px;
+    background: var(--white);
+    border-radius: var(--r-md);
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-xs);
+  }
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 0;
+    font-size: 12px;
+  }
+  .summary-row:not(:last-of-type):not(.total-row) {
+    border-bottom: 1px dashed var(--gray-100);
+  }
+  .summary-label {
+    color: var(--gray-600);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .summary-label svg {
+    width: 13px;
+    height: 13px;
+    stroke: var(--gray-400);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .summary-value {
+    color: var(--dark);
+    font-weight: 700;
+  }
+  .summary-value.discount {
+    color: var(--success);
+    font-weight: 800;
+  }
+  .summary-value.discount::before {
+    content: '-';
+    margin-left: 2px;
+  }
+
+  .total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 0 0;
+    margin-top: 6px;
+    border-top: 1.5px solid var(--gray-200);
+  }
+  .total-label {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .total-label svg {
+    width: 14px;
+    height: 14px;
+    stroke: var(--accent);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .total-value {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--primary);
+    letter-spacing: -0.8px;
+    display: flex;
+    align-items: baseline;
+    gap: 3px;
+  }
+  .total-value .currency {
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  /* ══════════ SECURITY BADGES ══════════ */
+  .security-badges {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin: 0 20px 16px;
+  }
+  .security-badge {
+    padding: 10px 6px;
+    background: var(--white);
+    border: 1px solid var(--gray-100);
+    border-radius: var(--r-md);
+    text-align: center;
+    box-shadow: var(--shadow-xs);
+  }
+  .security-badge-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    margin: 0 auto 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .security-badge-icon.green { background: var(--success-light); }
+  .security-badge-icon.green svg { stroke: var(--success); }
+  .security-badge-icon.blue { background: var(--blue-light); }
+  .security-badge-icon.blue svg { stroke: var(--blue); }
+  .security-badge-icon.purple { background: var(--purple-light); }
+  .security-badge-icon.purple svg { stroke: var(--purple); }
+  .security-badge-icon svg {
+    width: 15px;
+    height: 15px;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .security-badge-title {
+    font-size: 9.5px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 1px;
+  }
+  .security-badge-desc {
+    font-size: 8.5px;
+    color: var(--gray-500);
+    font-weight: 600;
+  }
+
+  /* ══════════ STICKY PAY BAR ══════════ */
+  .sticky-pay-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 12px 20px 20px;
+    background: linear-gradient(180deg, rgba(248,250,252,0) 0%, var(--bg) 30%, var(--bg) 100%);
+    z-index: 50;
+  }
+  .sticky-pay-inner {
+    background: var(--white);
+    border-radius: var(--r-lg);
+    padding: 10px 10px 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 8px 28px rgba(15,23,42,0.14), 0 2px 8px rgba(15,23,42,0.06);
+    border: 1px solid var(--gray-100);
+  }
+  .pay-info { flex: 1; min-width: 0; }
+  .pay-label {
+    font-size: 10px;
+    color: var(--gray-500);
+    font-weight: 700;
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .pay-label svg {
+    width: 10px;
+    height: 10px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .pay-value {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--primary);
+    display: flex;
+    align-items: baseline;
+    gap: 3px;
+    letter-spacing: -0.4px;
+  }
+  .pay-value .currency {
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .pay-btn {
+    padding: 14px 22px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    box-shadow: var(--shadow-primary);
+    transition: all 0.25s;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .pay-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    bottom: 0;
+    width: 60px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shine 3s infinite;
+  }
+  @keyframes shine {
+    0% { transform: translateX(-100%); }
+    60% { transform: translateX(500%); }
+    100% { transform: translateX(500%); }
+  }
+  .pay-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(15,118,110,0.4);
+  }
+  .pay-btn:active { transform: translateY(0); }
+  .pay-btn svg {
+    width: 15px;
+    height: 15px;
+    stroke: #fff;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+    position: relative;
+    z-index: 1;
+  }
+  .pay-btn span { position: relative; z-index: 1; }
+
+  /* ══════════ 3DS SCREEN ══════════ */
+  .threeds-hero {
+    background: linear-gradient(160deg, var(--dark) 0%, #1E293B 100%);
+    padding: 40px 20px 30px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .threeds-hero::before {
+    content: '';
+    position: absolute;
+    top: -80px; right: -60px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(15,118,110,0.3), transparent 70%);
+    border-radius: 50%;
+  }
+  .threeds-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; left: -40px;
+    width: 180px; height: 180px;
+    background: radial-gradient(circle, rgba(245,158,11,0.2), transparent 70%);
+    border-radius: 50%;
+  }
+
+  .threeds-bank-logo {
+    width: 76px;
+    height: 76px;
+    border-radius: 22px;
+    background: linear-gradient(135deg, #1E40AF, #3B82F6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 14px;
+    position: relative;
+    z-index: 2;
+    box-shadow: 0 12px 28px rgba(30,64,175,0.4);
+    font-size: 32px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -1px;
+  }
+
+  .threeds-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 6px;
+    position: relative;
+    z-index: 2;
+    letter-spacing: -0.3px;
+  }
+  .threeds-subtitle {
+    font-size: 12px;
+    color: rgba(255,255,255,0.75);
+    font-weight: 600;
+    position: relative;
+    z-index: 2;
+    line-height: 1.6;
+  }
+
+  .threeds-content {
+    padding: 20px;
+  }
+
+  .threeds-card-info {
+    padding: 12px 14px;
+    background: var(--gray-100);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .threeds-card-info svg {
+    width: 16px;
+    height: 16px;
+    stroke: var(--gray-600);
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+    flex-shrink: 0;
+  }
+  .threeds-card-text {
+    flex: 1;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--dark);
+  }
+  .threeds-card-text .dots {
+    font-family: 'Courier New', monospace;
+    color: var(--gray-500);
+    letter-spacing: 1px;
+  }
+
+  .otp-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--dark);
+    margin-bottom: 5px;
+    letter-spacing: -0.2px;
+  }
+  .otp-subtitle {
+    font-size: 11px;
+    color: var(--gray-500);
+    font-weight: 600;
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+
+  /* OTP inputs */
+  .otp-inputs {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 16px;
+    direction: ltr;
+  }
+  .otp-box {
+    width: 46px;
+    height: 58px;
+    border-radius: 12px;
+    background: var(--white);
+    border: 2px solid var(--gray-200);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--dark);
+    font-family: 'Courier New', monospace;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .otp-box.filled {
+    border-color: var(--primary);
+    background: var(--primary-soft);
+    box-shadow: 0 0 0 4px rgba(15,118,110,0.1);
+  }
+  .otp-box.focused {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(15,118,110,0.15);
+  }
+  .otp-box.focused::after {
+    content: '';
+    position: absolute;
+    width: 2px;
+    height: 26px;
+    background: var(--primary);
+    animation: cursorBlink 1s infinite;
+  }
+  @keyframes cursorBlink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+
+  /* Timer */
+  .otp-timer {
+    text-align: center;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--gray-500);
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .otp-timer svg {
+    width: 12px;
+    height: 12px;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .otp-timer .timer-num {
+    color: var(--danger);
+    font-weight: 800;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.5px;
+  }
+  .otp-resend {
+    color: var(--primary);
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  .threeds-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    box-shadow: var(--shadow-primary);
+    transition: all 0.25s;
+    margin-bottom: 10px;
+    position: relative;
+    overflow: hidden;
+    letter-spacing: -0.2px;
+  }
+  .threeds-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    bottom: 0;
+    width: 60px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shine 3s infinite;
+  }
+  .threeds-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(15,118,110,0.4);
+  }
+  .threeds-btn svg {
+    width: 16px;
+    height: 16px;
+    stroke: #fff;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+    position: relative;
+    z-index: 1;
+  }
+  .threeds-btn span { position: relative; z-index: 1; }
+
+  .threeds-cancel {
+    display: block;
+    width: 100%;
+    padding: 11px;
+    background: transparent;
+    border: none;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--gray-500);
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+  .threeds-cancel:hover { color: var(--danger); }
+
+  /* Info hint */
+  .threeds-hint {
+    margin-top: 14px;
+    padding: 10px 12px;
+    background: var(--blue-light);
+    border-radius: 10px;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .threeds-hint svg {
+    width: 14px;
+    height: 14px;
+    stroke: var(--blue);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .threeds-hint-text {
+    font-size: 10.5px;
+    color: #1E40AF;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+
+  /* Copy toast */
+  .copy-toast {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    padding: 12px 18px;
+    background: var(--dark);
+    color: #fff;
+    border-radius: var(--r-lg);
+    font-size: 12.5px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s;
+    white-space: nowrap;
+  }
+  .copy-toast.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  .copy-toast svg {
+    width: 16px;
+    height: 16px;
+    stroke: var(--success);
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>شاشة الدفع — Secure Checkout</h1>
+  <p>5 طرق دفع · بطاقات · محفظة · 3D Secure</p>
+</div>
+
+<div class="screens-container">
+
+  <!-- ═══════════ SCREEN 1: PAYMENT METHODS ═══════════ -->
+  <div class="screen-wrapper">
+    <div class="phone">
+      <div class="status-bar">
+        <div class="time">9:41</div>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h3v-9H2v9zm5 0h3V9H7v13zm5 0h3V5h-3v17zm5 0h3V2h-3v20z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21l-12-18h24z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm5 4v8h1c.6 0 1-.4 1-1V9c0-.6-.4-1-1-1h-1z"/></svg>
+        </div>
+      </div>
+
+      <div class="screen">
+
+        <!-- App Bar -->
+        <div class="app-bar">
+          <div class="back-btn">
+            <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+          <div class="app-title-wrap">
+            <div class="app-title">إتمام الدفع</div>
+            <div class="app-subtitle">
+              <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              اتصال آمن ومشفّر
+            </div>
+          </div>
+          <div class="secure-badge">
+            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            SSL
+          </div>
+        </div>
+
+        <!-- Progress Steps -->
+        <div class="progress-steps">
+          <div class="step-dot completed">
+            <div class="step-dot-circle">
+              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="step-dot-label">السلة</div>
+          </div>
+          <div class="step-dot completed">
+            <div class="step-dot-circle">
+              <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="step-dot-label">الشحن</div>
+          </div>
+          <div class="step-dot active">
+            <div class="step-dot-circle">3</div>
+            <div class="step-dot-label">الدفع</div>
+          </div>
+        </div>
+
+        <!-- Mini Summary -->
+        <div class="mini-summary">
+          <div class="mini-summary-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <path d="M16 10a4 4 0 0 1-8 0"/>
+            </svg>
+          </div>
+          <div class="mini-summary-info">
+            <div class="mini-summary-label">ملخص طلبك</div>
+            <div class="mini-summary-value">
+              2 منتج
+              <span class="count">1,250 ج.م</span>
+            </div>
+          </div>
+          <div class="mini-summary-edit">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 20h9"/>
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Payment Methods -->
+        <div class="section-header">
+          <div class="section-title">طريقة الدفع</div>
+          <div class="section-link">
+            المحفوظة
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </div>
+        </div>
+
+        <div class="payment-list">
+
+          <!-- Visa -->
+          <div class="payment-option active">
+            <div class="payment-option-main">
+              <div class="payment-radio"></div>
+              <div class="payment-icon-wrap visa">
+                <svg viewBox="0 0 24 24">
+                  <rect x="2" y="6" width="20" height="14" rx="2"/>
+                  <line x1="2" y1="10" x2="22" y2="10"/>
+                </svg>
+              </div>
+              <div class="payment-info">
+                <div class="payment-name">
+                  بطاقة فيزا
+                  <span class="badge-rec">⭐ موصى بها</span>
+                </div>
+                <div class="payment-desc">
+                  <span class="card-dots">•••• •••• •••• 4321</span>
+                  <span>·</span>
+                  <span>تنتهي 12/28</span>
+                </div>
+              </div>
+              <div class="card-brand-logo">VISA</div>
+            </div>
+
+            <!-- Expanded Card Form -->
+            <div class="card-form">
+              <div>
+                <div class="form-label">
+                  <span>رقم البطاقة</span>
+                  <span class="helper">16 رقم</span>
+                </div>
+                <input type="text" class="form-input mono" placeholder="0000 0000 0000 0000" maxlength="19">
+              </div>
+
+              <div class="input-row">
+                <div>
+                  <div class="form-label">تاريخ الانتهاء</div>
+                  <input type="text" class="form-input mono" placeholder="MM / YY" maxlength="7">
+                </div>
+                <div>
+                  <div class="form-label">CVV</div>
+                  <input type="text" class="form-input mono" placeholder="•••" maxlength="4">
+                </div>
+              </div>
+
+              <div class="save-card-row">
+                <div class="save-card-info">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                    <polyline points="17 21 17 13 7 13 7 21"/>
+                  </svg>
+                  <div class="save-card-text">حفظ البطاقة للطلبات القادمة</div>
+                </div>
+                <div class="toggle-switch on"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mastercard -->
+          <div class="payment-option">
+            <div class="payment-option-main">
+              <div class="payment-radio"></div>
+              <div class="payment-icon-wrap mastercard">
+                <svg viewBox="0 0 24 24">
+                  <rect x="2" y="6" width="20" height="14" rx="2"/>
+                  <line x1="2" y1="10" x2="22" y2="10"/>
+                </svg>
+              </div>
+              <div class="payment-info">
+                <div class="payment-name">بطاقة ماستركارد</div>
+                <div class="payment-desc">
+                  <span class="card-dots">•••• •••• •••• 8756</span>
+                  <span>·</span>
+                  <span>تنتهي 05/27</span>
+                </div>
+              </div>
+              <div class="card-brand-logo mc"></div>
+            </div>
+          </div>
+
+          <!-- Wallet -->
+          <div class="payment-option">
+            <div class="payment-option-main">
+              <div class="payment-radio"></div>
+              <div class="payment-icon-wrap wallet">
+                <svg viewBox="0 0 24 24">
+                  <path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/>
+                  <path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/>
+                  <path d="M18 12a2 2 0 0 0 0 4h4v-4z"/>
+                </svg>
+              </div>
+              <div class="payment-info">
+                <div class="payment-name">محفظتي</div>
+                <div class="payment-desc">
+                  الرصيد المتاح: <span class="balance">1,250 ج.م</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="wallet-balance-row">
+              <div class="wallet-balance-info">
+                <div class="wallet-balance-label">سيتم خصم</div>
+                <div class="wallet-balance-value">1,250 <span class="currency">ج.م</span></div>
+              </div>
+              <div class="wallet-insufficient">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                كامل المبلغ
+              </div>
+            </div>
+          </div>
+
+          <!-- InstaPay -->
+          <div class="payment-option">
+            <div class="payment-option-main">
+              <div class="payment-radio"></div>
+              <div class="payment-icon-wrap insta">
+                <svg viewBox="0 0 24 24">
+                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                </svg>
+              </div>
+              <div class="payment-info">
+                <div class="payment-name">InstaPay</div>
+                <div class="payment-desc">تحويل فوري من حسابك البنكي</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cash on Delivery -->
+          <div class="payment-option">
+            <div class="payment-option-main">
+              <div class="payment-radio"></div>
+              <div class="payment-icon-wrap cash">
+                <svg viewBox="0 0 24 24">
+                  <rect x="2" y="6" width="20" height="12" rx="2"/>
+                  <circle cx="12" cy="12" r="2"/>
+                  <path d="M6 12h.01M18 12h.01"/>
+                </svg>
+              </div>
+              <div class="payment-info">
+                <div class="payment-name">الدفع عند الاستلام</div>
+                <div class="payment-desc">تدفع كاش للمندوب (+ 20 ج.م رسوم)</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Coupon Card -->
+        <div class="coupon-card applied">
+          <div class="coupon-icon">
+            <svg viewBox="0 0 24 24">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <div class="coupon-content">
+            <div class="coupon-title">
+              كوبون مطبّق
+              <span class="coupon-code-pill">SAVE50</span>
+            </div>
+            <div class="coupon-desc">وفّرت 50 ج.م من هذا الطلب</div>
+          </div>
+          <div class="coupon-arrow">
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="section-header">
+          <div class="section-title">ملخص الدفع</div>
+        </div>
+
+        <div class="summary-card">
+          <div class="summary-row">
+            <div class="summary-label">
+              <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              المجموع الفرعي
+            </div>
+            <div class="summary-value">1,200 ج.م</div>
+          </div>
+          <div class="summary-row">
+            <div class="summary-label">
+              <svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/></svg>
+              الشحن السريع
+            </div>
+            <div class="summary-value">80 ج.م</div>
+          </div>
+          <div class="summary-row">
+            <div class="summary-label">
+              <svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.83z"/></svg>
+              كوبون SAVE50
+            </div>
+            <div class="summary-value discount">50 ج.م</div>
+          </div>
+          <div class="total-row">
+            <div class="total-label">
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              الإجمالي
+            </div>
+            <div class="total-value">1,230 <span class="currency">ج.م</span></div>
+          </div>
+        </div>
+
+        <!-- Security Badges -->
+        <div class="security-badges">
+          <div class="security-badge">
+            <div class="security-badge-icon green">
+              <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <div class="security-badge-title">SSL</div>
+            <div class="security-badge-desc">256-bit</div>
+          </div>
+          <div class="security-badge">
+            <div class="security-badge-icon blue">
+              <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+            </div>
+            <div class="security-badge-title">PCI DSS</div>
+            <div class="security-badge-desc">معتمد</div>
+          </div>
+          <div class="security-badge">
+            <div class="security-badge-icon purple">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <div class="security-badge-title">3D Secure</div>
+            <div class="security-badge-desc">مشفّر</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Sticky Pay Bar -->
+      <div class="sticky-pay-bar">
+        <div class="sticky-pay-inner">
+          <div class="pay-info">
+            <div class="pay-label">
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              إجمالي الدفع
+            </div>
+            <div class="pay-value">1,230 <span class="currency">ج.م</span></div>
+          </div>
+          <button class="pay-btn">
+            <svg viewBox="0 0 24 24">
+              <rect x="3" y="11" width="18" height="11" rx="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <span>ادفع الآن</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+    <div class="screen-badge">1 · طرق الدفع</div>
+  </div>
+
+  <!-- ═══════════ SCREEN 2: 3D SECURE ═══════════ -->
+  <div class="screen-wrapper">
+    <div class="phone">
+      <div class="status-bar light">
+        <div class="time">9:41</div>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h3v-9H2v9zm5 0h3V9H7v13zm5 0h3V5h-3v17zm5 0h3V2h-3v20z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21l-12-18h24z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm5 4v8h1c.6 0 1-.4 1-1V9c0-.6-.4-1-1-1h-1z"/></svg>
+        </div>
+      </div>
+
+      <div class="screen" style="padding-bottom: 30px;">
+
+        <!-- 3DS Hero -->
+        <div class="threeds-hero">
+          <div class="threeds-bank-logo">🏦</div>
+          <div class="threeds-title">التحقق من الهوية</div>
+          <div class="threeds-subtitle">لحماية معاملتك، أدخل رمز OTP المُرسل إلى هاتفك</div>
+        </div>
+
+        <div class="threeds-content">
+
+          <!-- Card Info -->
+          <div class="threeds-card-info">
+            <svg viewBox="0 0 24 24">
+              <rect x="2" y="6" width="20" height="14" rx="2"/>
+              <line x1="2" y1="10" x2="22" y2="10"/>
+            </svg>
+            <div class="threeds-card-text">
+              بطاقة فيزا · <span class="dots">•••• 4321</span>
+            </div>
+          </div>
+
+          <!-- OTP Title -->
+          <div class="otp-title">أدخل رمز التحقق</div>
+          <div class="otp-subtitle">أرسلنا رمز مكوّن من 4 أرقام إلى رقمك المُسجّل <strong>+20 •••• 4567</strong></div>
+
+          <!-- OTP Boxes -->
+          <div class="otp-inputs">
+            <div class="otp-box filled">4</div>
+            <div class="otp-box filled">8</div>
+            <div class="otp-box filled">2</div>
+            <div class="otp-box focused">1</div>
+          </div>
+
+          <!-- Timer -->
+          <div class="otp-timer">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            يُعاد الإرسال خلال <span class="timer-num">00:42</span>
+          </div>
+
+          <!-- Confirm Button -->
+          <button class="threeds-btn">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>تأكيد الدفع 1,230 ج.م</span>
+          </button>
+
+          <!-- Cancel -->
+          <button class="threeds-cancel">إلغاء العملية والعودة</button>
+
+          <!-- Hint -->
+          <div class="threeds-hint">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <div class="threeds-hint-text">
+              لم تستقبل الرمز؟ تحقق من رسائل SMS في هاتفك أو اطلب إعادة الإرسال من البنك
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+    <div class="screen-badge">2 · التحقق 3D Secure</div>
+  </div>
+
+</div>
+
+</body>
+</html>

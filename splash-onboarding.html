@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Splash + Onboarding — معاينة احترافية</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'IBM Plex Sans Arabic', sans-serif; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --primary: #0F766E;
+    --primary-dark: #115E59;
+    --primary-light: #CCFBF1;
+    --primary-soft: #F0FDFA;
+    --accent: #F59E0B;
+    --accent-dark: #D97706;
+    --accent-light: #FEF3C7;
+    --danger: #EF4444;
+    --danger-light: #FEF2F2;
+    --success: #10B981;
+    --success-light: #ECFDF5;
+    --purple: #8B5CF6;
+    --purple-light: #EDE9FE;
+    --blue: #2563EB;
+    --blue-light: #DBEAFE;
+    --pink: #EC4899;
+    --pink-light: #FCE7F3;
+    --dark: #0F172A;
+    --gray-700: #374151;
+    --gray-600: #4B5563;
+    --gray-500: #6B7280;
+    --gray-400: #9CA3AF;
+    --gray-300: #D1D5DB;
+    --gray-200: #E5E7EB;
+    --gray-100: #F3F4F6;
+    --bg: #F8FAFC;
+    --white: #FFFFFF;
+
+    --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.07);
+    --shadow-lg: 0 10px 30px rgba(15, 23, 42, 0.09);
+    --shadow-xl: 0 20px 40px rgba(15, 23, 42, 0.14);
+    --shadow-primary: 0 8px 24px rgba(15, 118, 110, 0.32);
+
+    --r-sm: 10px;
+    --r-md: 14px;
+    --r-lg: 18px;
+    --r-xl: 24px;
+    --r-full: 999px;
+  }
+
+  body {
+    background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+    min-height: 100vh;
+    padding: 50px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+  }
+
+  .page-header { text-align: center; color: #fff; max-width: 900px; }
+  .page-header h1 {
+    font-size: 30px; font-weight: 700; margin-bottom: 8px;
+    background: linear-gradient(135deg, #fff, #94A3B8);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .page-header p { color: #94A3B8; font-size: 14px; }
+
+  .screens-container {
+    display: flex; gap: 40px; flex-wrap: wrap; justify-content: center;
+  }
+  .screen-wrapper {
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+  }
+  .screen-badge {
+    background: rgba(15, 118, 110, 0.15);
+    color: #5EEAD4;
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid rgba(94, 234, 212, 0.25);
+  }
+
+  .phone {
+    width: 375px;
+    height: 812px;
+    background: var(--bg);
+    border-radius: 44px;
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+      0 0 0 10px #0A0F1E,
+      0 0 0 12px #1E293B,
+      0 30px 60px rgba(0, 0, 0, 0.5),
+      0 0 80px rgba(15, 118, 110, 0.15);
+  }
+  .phone::before {
+    content: '';
+    position: absolute;
+    top: 10px; left: 50%;
+    transform: translateX(-50%);
+    width: 110px; height: 28px;
+    background: #0A0F1E;
+    border-radius: 999px;
+    z-index: 999;
+  }
+
+  .status-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 48px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 28px;
+    font-size: 13px; font-weight: 600;
+    z-index: 100;
+    pointer-events: none;
+    color: var(--dark);
+  }
+  .status-bar.light { color: #fff; }
+  .status-bar .time { margin-top: 4px; }
+  .status-bar .status-icons { display: flex; gap: 5px; margin-top: 4px; align-items: center; }
+  .status-bar svg { width: 15px; height: 15px; }
+
+  .screen {
+    width: 100%; height: 100%;
+    overflow-y: auto; overflow-x: hidden;
+    scrollbar-width: none;
+    position: relative;
+  }
+  .screen::-webkit-scrollbar { display: none; }
+
+  /* ══════════ SPLASH SCREEN ══════════ */
+  .splash-screen {
+    background: linear-gradient(160deg, #0F766E 0%, #115E59 45%, #0F172A 100%);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Decorative circles */
+  .splash-screen::before {
+    content: '';
+    position: absolute;
+    top: -100px; left: -100px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(245,158,11,0.25), transparent 70%);
+    border-radius: 50%;
+    animation: float 8s ease-in-out infinite;
+  }
+  .splash-screen::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; right: -80px;
+    width: 250px; height: 250px;
+    background: radial-gradient(circle, rgba(255,255,255,0.15), transparent 70%);
+    border-radius: 50%;
+    animation: float 10s ease-in-out infinite reverse;
+  }
+  @keyframes float {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(20px, -20px); }
+  }
+
+  /* Decorative Lines */
+  .splash-lines {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.5;
+  }
+  .splash-lines svg {
+    width: 100%; height: 100%;
+  }
+
+  /* Logo */
+  .splash-logo-wrap {
+    position: relative;
+    z-index: 3;
+    animation: scaleIn 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes scaleIn {
+    0% { transform: scale(0); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .splash-logo {
+    width: 130px;
+    height: 130px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.25), rgba(255,255,255,0.08));
+    backdrop-filter: blur(20px);
+    border-radius: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid rgba(255,255,255,0.3);
+    box-shadow:
+      0 20px 60px rgba(0,0,0,0.4),
+      inset 0 2px 0 rgba(255,255,255,0.4);
+    position: relative;
+    overflow: hidden;
+  }
+  .splash-logo::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: conic-gradient(from 0deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: rotate 3s linear infinite;
+  }
+  @keyframes rotate {
+    to { transform: rotate(360deg); }
+  }
+  .splash-logo svg {
+    width: 62px;
+    height: 62px;
+    stroke: #fff;
+    stroke-width: 1.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    position: relative;
+    z-index: 2;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
+  }
+
+  /* Decorative dots around logo */
+  .splash-dots {
+    position: absolute;
+    width: 260px;
+    height: 260px;
+    pointer-events: none;
+    animation: rotateSlow 20s linear infinite;
+  }
+  @keyframes rotateSlow {
+    to { transform: rotate(360deg); }
+  }
+  .splash-dots .dot {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: rgba(255,255,255,0.6);
+    border-radius: 50%;
+  }
+  .splash-dots .dot:nth-child(1) { top: 0; left: 50%; transform: translateX(-50%); }
+  .splash-dots .dot:nth-child(2) { top: 50%; right: 0; transform: translateY(-50%); background: var(--accent); }
+  .splash-dots .dot:nth-child(3) { bottom: 0; left: 50%; transform: translateX(-50%); }
+  .splash-dots .dot:nth-child(4) { top: 50%; left: 0; transform: translateY(-50%); }
+
+  /* Title & Subtitle */
+  .splash-title {
+    font-size: 32px;
+    font-weight: 800;
+    color: #fff;
+    margin-top: 30px;
+    letter-spacing: -0.8px;
+    text-align: center;
+    position: relative;
+    z-index: 3;
+    animation: fadeUp 1s 0.4s both;
+  }
+  .splash-subtitle {
+    font-size: 14px;
+    color: rgba(255,255,255,0.8);
+    font-weight: 500;
+    margin-top: 8px;
+    text-align: center;
+    letter-spacing: 0.2px;
+    position: relative;
+    z-index: 3;
+    animation: fadeUp 1s 0.6s both;
+  }
+  @keyframes fadeUp {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Loading dots */
+  .splash-loader {
+    display: flex;
+    gap: 8px;
+    margin-top: 50px;
+    position: relative;
+    z-index: 3;
+    animation: fadeUp 1s 0.8s both;
+  }
+  .splash-loader span {
+    width: 8px;
+    height: 8px;
+    background: rgba(255,255,255,0.7);
+    border-radius: 50%;
+    animation: dotBounce 1.4s infinite;
+  }
+  .splash-loader span:nth-child(2) { animation-delay: 0.2s; }
+  .splash-loader span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes dotBounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+    30% { transform: translateY(-10px); opacity: 1; }
+  }
+
+  /* Version */
+  .splash-version {
+    position: absolute;
+    bottom: 40px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    z-index: 3;
+    animation: fadeUp 1s 1s both;
+  }
+
+  /* ══════════ ONBOARDING COMMON ══════════ */
+  .ob-screen {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    padding-top: 48px;
+    position: relative;
+  }
+
+  /* Top bar */
+  .ob-top-bar {
+    padding: 8px 20px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 5;
+  }
+  .ob-skip-btn {
+    padding: 8px 14px;
+    background: transparent;
+    border: none;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--gray-500);
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s;
+  }
+  .ob-skip-btn:hover {
+    background: var(--gray-100);
+    color: var(--dark);
+  }
+  .ob-step-counter {
+    padding: 6px 12px;
+    background: var(--primary-soft);
+    border-radius: var(--r-full);
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--primary);
+  }
+
+  /* Progress bar */
+  .ob-progress-bar {
+    margin: 20px 20px 0;
+    height: 4px;
+    background: var(--gray-200);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+  }
+  .ob-progress-fill {
+    height: 100%;
+    width: 33.33%;
+    background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+    border-radius: 2px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+  }
+  .ob-progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0; bottom: 0;
+    width: 30px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5));
+    border-radius: 2px;
+  }
+
+  /* Illustration area */
+  .ob-illustration {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Decorative background circles */
+  .ob-bg-circles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .ob-bg-circles .circle {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.5;
+  }
+  .ob-bg-circles .circle.c1 {
+    top: 10%; right: -50px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, var(--primary-soft), transparent 70%);
+  }
+  .ob-bg-circles .circle.c2 {
+    bottom: 10%; left: -40px;
+    width: 180px; height: 180px;
+    background: radial-gradient(circle, var(--accent-light), transparent 70%);
+  }
+
+  .ob-illustration-wrap {
+    width: 100%;
+    max-width: 300px;
+    aspect-ratio: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ob-main-icon {
+    width: 180px;
+    height: 180px;
+    border-radius: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+    box-shadow:
+      0 20px 50px rgba(15,118,110,0.28),
+      0 0 0 12px rgba(255,255,255,0.7),
+      inset 0 -4px 20px rgba(0,0,0,0.08);
+    animation: floatIcon 4s ease-in-out infinite;
+  }
+  @keyframes floatIcon {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  .ob-main-icon.teal { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); }
+  .ob-main-icon.orange { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); }
+  .ob-main-icon.purple { background: linear-gradient(135deg, var(--purple), #6D28D9); }
+  .ob-main-icon::before {
+    content: '';
+    position: absolute;
+    top: -40%; right: -40%;
+    width: 100%; height: 100%;
+    background: radial-gradient(circle, rgba(255,255,255,0.3), transparent 60%);
+    border-radius: 50%;
+  }
+  .ob-main-icon svg {
+    width: 90px;
+    height: 90px;
+    stroke: #fff;
+    stroke-width: 1.4;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    position: relative;
+    z-index: 2;
+    filter: drop-shadow(0 6px 16px rgba(0,0,0,0.2));
+  }
+
+  /* Floating mini badges */
+  .ob-float-badge {
+    position: absolute;
+    padding: 8px 12px;
+    background: var(--white);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--dark);
+    box-shadow: 0 8px 24px rgba(15,23,42,0.15);
+    z-index: 3;
+    animation: floatBadge 3s ease-in-out infinite;
+  }
+  @keyframes floatBadge {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+  .ob-float-badge.badge-1 {
+    top: 12%;
+    right: 0;
+    animation-delay: 0.5s;
+  }
+  .ob-float-badge.badge-2 {
+    bottom: 15%;
+    left: 0;
+    animation-delay: 1s;
+  }
+  .ob-float-badge .badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+  .ob-float-badge .badge-dot.green { background: var(--success); box-shadow: 0 0 0 3px rgba(16,185,129,0.2); }
+  .ob-float-badge .badge-dot.orange { background: var(--accent); box-shadow: 0 0 0 3px rgba(245,158,11,0.2); }
+  .ob-float-badge svg {
+    width: 12px; height: 12px;
+    stroke: var(--primary);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* Content area */
+  .ob-content {
+    padding: 0 24px;
+    text-align: center;
+    animation: fadeUpOb 0.5s ease;
+  }
+  @keyframes fadeUpOb {
+    0% { opacity: 0; transform: translateY(15px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  .ob-title {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--dark);
+    letter-spacing: -0.6px;
+    line-height: 1.3;
+    margin-bottom: 10px;
+  }
+  .ob-title .highlight {
+    position: relative;
+    color: var(--primary);
+    display: inline-block;
+  }
+  .ob-title .highlight::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 0; right: 0;
+    height: 6px;
+    background: var(--accent-light);
+    border-radius: 3px;
+    z-index: -1;
+  }
+
+  .ob-description {
+    font-size: 13px;
+    color: var(--gray-500);
+    line-height: 1.75;
+    font-weight: 500;
+    margin-bottom: 20px;
+  }
+
+  /* Bullet points */
+  .ob-bullets {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .ob-bullet {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--white);
+    border-radius: var(--r-md);
+    border: 1px solid var(--gray-100);
+    text-align: right;
+    box-shadow: var(--shadow-xs);
+  }
+  .ob-bullet-check {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--success-light), #A7F3D0);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .ob-bullet-check svg {
+    width: 12px; height: 12px;
+    stroke: var(--success);
+    stroke-width: 3;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .ob-bullet-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-700);
+    flex: 1;
+  }
+
+  /* Bottom actions */
+  .ob-bottom-actions {
+    padding: 20px 24px 30px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .ob-prev-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 14px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .ob-prev-btn:hover {
+    border-color: var(--primary);
+  }
+  .ob-prev-btn:hover svg { stroke: var(--primary); }
+  .ob-prev-btn svg {
+    width: 20px; height: 20px;
+    stroke: var(--gray-700);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+    transition: stroke 0.2s;
+  }
+
+  .ob-next-btn {
+    flex: 1;
+    padding: 15px 24px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: var(--shadow-primary);
+    transition: all 0.25s;
+  }
+  .ob-next-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(15,118,110,0.4);
+  }
+  .ob-next-btn:active { transform: translateY(0); }
+  .ob-next-btn svg {
+    width: 17px; height: 17px;
+    stroke: #fff;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  /* Dots indicator */
+  .ob-dots {
+    position: absolute;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+    z-index: 4;
+  }
+  .ob-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--gray-300);
+    transition: all 0.3s;
+  }
+  .ob-dot.active {
+    width: 22px;
+    background: var(--primary);
+    border-radius: 3px;
+  }
+
+  /* ══════════ INTERESTS SCREEN ══════════ */
+  .interests-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 0 24px;
+    margin-bottom: 16px;
+  }
+  .interest-card {
+    padding: 14px 10px;
+    background: var(--white);
+    border: 1.5px solid var(--gray-200);
+    border-radius: var(--r-md);
+    cursor: pointer;
+    transition: all 0.25s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    text-align: right;
+  }
+  .interest-card:hover {
+    border-color: var(--primary-light);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+  }
+  .interest-card.active {
+    background: var(--primary-soft);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(15,118,110,0.08);
+  }
+  .interest-card.active::after {
+    content: '';
+    position: absolute;
+    top: 8px; right: 8px;
+    width: 16px; height: 16px;
+    background: var(--primary);
+    border-radius: 50%;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+    background-size: 9px;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  .interest-icon {
+    width: 34px; height: 34px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .interest-icon svg {
+    width: 17px; height: 17px;
+    stroke-width: 1.8;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .interest-icon.teal { background: linear-gradient(135deg, #CCFBF1, #99F6E4); }
+  .interest-icon.teal svg { stroke: #0F766E; }
+  .interest-icon.orange { background: linear-gradient(135deg, #FEF3C7, #FDE68A); }
+  .interest-icon.orange svg { stroke: #D97706; }
+  .interest-icon.blue { background: linear-gradient(135deg, #DBEAFE, #BFDBFE); }
+  .interest-icon.blue svg { stroke: #2563EB; }
+  .interest-icon.purple { background: linear-gradient(135deg, #EDE9FE, #DDD6FE); }
+  .interest-icon.purple svg { stroke: #7C3AED; }
+  .interest-icon.pink { background: linear-gradient(135deg, #FCE7F3, #FBCFE8); }
+  .interest-icon.pink svg { stroke: #DB2777; }
+  .interest-icon.green { background: linear-gradient(135deg, #D1FAE5, #A7F3D0); }
+  .interest-icon.green svg { stroke: #059669; }
+  .interest-icon.red { background: linear-gradient(135deg, #FEE2E2, #FECACA); }
+  .interest-icon.red svg { stroke: #DC2626; }
+  .interest-icon.indigo { background: linear-gradient(135deg, #E0E7FF, #C7D2FE); }
+  .interest-icon.indigo svg { stroke: #4F46E5; }
+
+  .interest-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--dark);
+    line-height: 1.3;
+    letter-spacing: -0.2px;
+  }
+  .interest-count {
+    font-size: 10px;
+    color: var(--gray-500);
+    font-weight: 600;
+    margin-top: 1px;
+  }
+
+  /* ══════════ PERMISSION SCREEN ══════════ */
+  .permission-icon-wrap {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-soft), var(--primary-light));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    position: relative;
+    animation: floatIcon 4s ease-in-out infinite;
+  }
+  .permission-icon-wrap::before {
+    content: '';
+    position: absolute;
+    inset: -12px;
+    border-radius: 50%;
+    border: 2px dashed var(--primary-light);
+    animation: spin 25s linear infinite;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  .permission-icon-wrap::after {
+    content: '';
+    position: absolute;
+    inset: -24px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(15,118,110,0.15), transparent 70%);
+  }
+  .permission-icon-wrap svg {
+    width: 60px;
+    height: 60px;
+    stroke: var(--primary);
+    stroke-width: 1.6;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    position: relative;
+    z-index: 2;
+    filter: drop-shadow(0 4px 12px rgba(15,118,110,0.3));
+  }
+
+  /* ══════════ FINAL STEP ══════════ */
+  .final-wrap {
+    padding: 20px 24px 0;
+    text-align: center;
+  }
+  .final-emoji {
+    font-size: 60px;
+    margin-bottom: 16px;
+    animation: wave 1.5s ease-in-out infinite;
+    display: inline-block;
+  }
+  @keyframes wave {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-15deg); }
+    75% { transform: rotate(15deg); }
+  }
+  .final-title {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--dark);
+    letter-spacing: -0.6px;
+    margin-bottom: 10px;
+    line-height: 1.3;
+  }
+  .final-subtitle {
+    font-size: 13px;
+    color: var(--gray-500);
+    font-weight: 500;
+    line-height: 1.75;
+    margin-bottom: 24px;
+  }
+
+  .final-features {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .final-feature {
+    padding: 14px;
+    background: var(--white);
+    border-radius: var(--r-md);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-xs);
+    text-align: right;
+  }
+  .final-feature-icon {
+    width: 38px; height: 38px;
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .final-feature-icon svg {
+    width: 18px; height: 18px;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .final-feature-icon.teal { background: var(--primary-soft); }
+  .final-feature-icon.teal svg { stroke: var(--primary); }
+  .final-feature-icon.orange { background: var(--accent-light); }
+  .final-feature-icon.orange svg { stroke: var(--accent-dark); }
+  .final-feature-icon.purple { background: var(--purple-light); }
+  .final-feature-icon.purple svg { stroke: var(--purple); }
+
+  .final-feature-content { flex: 1; }
+  .final-feature-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 2px;
+  }
+  .final-feature-text {
+    font-size: 11px;
+    color: var(--gray-500);
+    font-weight: 500;
+    line-height: 1.5;
+  }
+
+  /* Start button */
+  .start-btn {
+    width: 100%;
+    padding: 17px 24px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    border: none;
+    border-radius: 16px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: var(--shadow-primary);
+    transition: all 0.25s;
+    position: relative;
+    overflow: hidden;
+    letter-spacing: -0.2px;
+  }
+  .start-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    bottom: 0;
+    width: 80px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+    animation: shine 3s infinite;
+  }
+  @keyframes shine {
+    0% { transform: translateX(-100%); }
+    60% { transform: translateX(500%); }
+    100% { transform: translateX(500%); }
+  }
+  .start-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 32px rgba(15,118,110,0.45);
+  }
+  .start-btn:active { transform: translateY(0); }
+  .start-btn svg {
+    width: 18px; height: 18px;
+    stroke: #fff;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+    position: relative;
+    z-index: 1;
+  }
+  .start-btn span { position: relative; z-index: 1; }
+
+  /* Permission buttons */
+  .permission-actions {
+    padding: 0 24px 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: auto;
+  }
+  .permission-primary-btn {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: var(--shadow-primary);
+    transition: all 0.25s;
+  }
+  .permission-primary-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(15,118,110,0.4);
+  }
+  .permission-primary-btn svg {
+    width: 16px; height: 16px;
+    stroke: #fff;
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .permission-secondary-btn {
+    width: 100%;
+    padding: 14px;
+    background: transparent;
+    color: var(--gray-500);
+    border: none;
+    border-radius: 14px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .permission-secondary-btn:hover {
+    background: var(--gray-100);
+    color: var(--dark);
+  }
+
+  /* Permission info */
+  .permission-info {
+    text-align: center;
+    padding: 0 24px;
+    margin-bottom: 20px;
+  }
+  .permission-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--dark);
+    letter-spacing: -0.5px;
+    margin-bottom: 10px;
+    line-height: 1.3;
+  }
+  .permission-text {
+    font-size: 13px;
+    color: var(--gray-500);
+    font-weight: 500;
+    line-height: 1.75;
+    margin-bottom: 20px;
+  }
+
+  .permission-features {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    text-align: right;
+  }
+  .permission-feature {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--white);
+    border-radius: var(--r-md);
+    border: 1px solid var(--gray-100);
+    box-shadow: var(--shadow-xs);
+  }
+  .permission-feature-icon {
+    width: 30px; height: 30px;
+    border-radius: 9px;
+    background: var(--primary-soft);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .permission-feature-icon svg {
+    width: 14px; height: 14px;
+    stroke: var(--primary);
+    stroke-width: 2.2;
+    fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .permission-feature-text {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--gray-700);
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Splash + Onboarding — أول تجربة مستخدم</h1>
+  <p>4 شاشات · تجربة إقناعية كاملة · جاهزة للتنفيذ</p>
+</div>
+
+<div class="screens-container">
+
+  <!-- ═══════════ SCREEN 1: SPLASH ═══════════ -->
+  <div class="screen-wrapper">
+    <div class="phone">
+      <div class="status-bar light">
+        <div class="time">9:41</div>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h3v-9H2v9zm5 0h3V9H7v13zm5 0h3V5h-3v17zm5 0h3V2h-3v20z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21l-12-18h24z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm5 4v8h1c.6 0 1-.4 1-1V9c0-.6-.4-1-1-1h-1z"/></svg>
+        </div>
+      </div>
+
+      <div class="splash-screen">
+        <!-- Decorative lines -->
+        <div class="splash-lines">
+          <svg viewBox="0 0 375 812" preserveAspectRatio="none">
+            <path d="M0,300 Q100,250 200,300 T400,320" stroke="rgba(255,255,255,0.1)" stroke-width="1" fill="none"/>
+            <path d="M0,500 Q120,450 240,500 T400,520" stroke="rgba(255,255,255,0.08)" stroke-width="1" fill="none"/>
+            <circle cx="80" cy="200" r="3" fill="rgba(255,255,255,0.3)"/>
+            <circle cx="300" cy="180" r="2" fill="rgba(245,158,11,0.5)"/>
+            <circle cx="320" cy="600" r="3" fill="rgba(255,255,255,0.2)"/>
+            <circle cx="60" cy="650" r="2" fill="rgba(245,158,11,0.4)"/>
+          </svg>
+        </div>
+
+        <!-- Rotating dots around logo -->
+        <div style="position: relative;">
+          <div class="splash-dots">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
+
+          <div class="splash-logo-wrap">
+            <div class="splash-logo">
+              <svg viewBox="0 0 24 24">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+                <path d="M5 6l2-2M19 6l-2-2"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="splash-title">دليل الخدمات</div>
+        <div class="splash-subtitle">كل اللي تحتاجه في مكان واحد</div>
+
+        <div class="splash-loader">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+
+        <div class="splash-version">الإصدار 1.0.0 · من Meg Tech</div>
+      </div>
+    </div>
+    <div class="screen-badge">1 · Splash</div>
+  </div>
+
+  <!-- ═══════════ SCREEN 2: ONBOARDING 1 ═══════════ -->
+  <div class="screen-wrapper">
+    <div class="phone">
+      <div class="status-bar">
+        <div class="time">9:41</div>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h3v-9H2v9zm5 0h3V9H7v13zm5 0h3V5h-3v17zm5 0h3V2h-3v20z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21l-12-18h24z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm5 4v8h1c.6 0 1-.4 1-1V9c0-.6-.4-1-1-1h-1z"/></svg>
+        </div>
+      </div>
+
+      <div class="ob-screen">
+        <div class="ob-top-bar">
+          <button class="ob-skip-btn">تخطي</button>
+          <div class="ob-step-counter">1 / 3</div>
+        </div>
+
+        <div class="ob-progress-bar">
+          <div class="ob-progress-fill"></div>
+        </div>
+
+        <div class="ob-illustration">
+          <div class="ob-bg-circles">
+            <div class="circle c1"></div>
+            <div class="circle c2"></div>
+          </div>
+
+          <div class="ob-illustration-wrap">
+            <div class="ob-main-icon teal">
+              <svg viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+            </div>
+
+            <div class="ob-float-badge badge-1">
+              <div class="badge-dot green"></div>
+              250+ نتيجة
+            </div>
+
+            <div class="ob-float-badge badge-2">
+              <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              ⭐ 4.9
+            </div>
+          </div>
+        </div>
+
+        <div class="ob-content">
+          <div class="ob-title">
+            ابحث عن أي خدمة <span class="highlight">بسهولة</span>
+          </div>
+          <div class="ob-description">
+            من العيادات للمطاعم للأندية الرياضية — كل حاجة في دكرنس في مكان واحد
+          </div>
+
+          <div class="ob-bullets">
+            <div class="ob-bullet">
+              <div class="ob-bullet-check">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="ob-bullet-text">بحث ذكي مع اقتراحات فورية</div>
+            </div>
+            <div class="ob-bullet">
+              <div class="ob-bullet-check">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="ob-bullet-text">فلترة متقدمة بالسعر والمسافة</div>
+            </div>
+            <div class="ob-bullet">
+              <div class="ob-bullet-check">
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <div class="ob-bullet-text">تقييمات حقيقية من مستخدمين</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ob-dots">
+          <div class="ob-dot active"></div>
+          <div class="ob-dot"></div>
+          <div class="ob-dot"></div>
+        </div>
+
+        <div class="ob-bottom-actions">
+          <button class="ob-next-btn">
+            التالي
+            <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="screen-badge">2 · Onboarding 1</div>
+  </div>
+
+  <!-- ═══════════ SCREEN 3: ONBOARDING 2 - INTERESTS ═══════════ -->
+  <div class="screen-wrapper">
+    <div class="phone">
+      <div class="status-bar">
+        <div class="time">9:41</div>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h3v-9H2v9zm5 0h3V9H7v13zm5 0h3V5h-3v17zm5 0h3V2h-3v20z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21l-12-18h24z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm5 4v8h1c.6 0 1-.4 1-1V9c0-.6-.4-1-1-1h-1z"/></svg>
+        </div>
+      </div>
+
+      <div class="ob-screen">
+        <div class="ob-top-bar">
+          <button class="ob-skip-btn">تخطي</button>
+          <div class="ob-step-counter">2 / 3</div>
+        </div>
+
+        <div class="ob-progress-bar">
+          <div class="ob-progress-fill" style="width: 66.66%;"></div>
+        </div>
+
+        <div style="padding: 24px 24px 16px; text-align: center;">
+          <div style="font-size: 44px; margin-bottom: 12px; display: inline-block; animation: floatIcon 4s ease-in-out infinite;">🎯</div>
+          <div style="font-size: 22px; font-weight: 800; color: var(--dark); letter-spacing: -0.5px; margin-bottom: 8px; line-height: 1.3;">
+            إيه اهتماماتك؟
+          </div>
+          <div style="font-size: 13px; color: var(--gray-500); font-weight: 500; line-height: 1.6;">
+            اختر القطاعات اللي تهمك عشان نظهّرلك الأنسب أولاً
+          </div>
+        </div>
+
+        <div class="interests-grid">
+          <div class="interest-card active">
+            <div class="interest-icon teal">
+              <svg viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+            </div>
+            <div>
+              <div class="interest-name">طبي</div>
+              <div class="interest-count">250+ خدمة</div>
+            </div>
+          </div>
+
+          <div class="interest-card active">
+            <div class="interest-icon orange">
+              <svg viewBox="0 0 24 24"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Z"/></svg>
+            </div>
+            <div>
+              <div class="interest-name">مطاعم</div>
+              <div class="interest-count">180+ مكان</div>
+            </div>
+          </div>
+
+          <div class="interest-card">
+            <div class="interest-icon blue">
+              <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+            </div>
+            <div>
+              <div class="interest-name">تجاري</div>
+              <div class="interest-count">400+ متجر</div>
+            </div>
+          </div>
+
+          <div class="interest-card">
+            <div class="interest-icon purple">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            </div>
+            <div>
+              <div class="interest-name">رياضة</div>
+              <div class="interest-count">95+ نادي</div>
+            </div>
+          </div>
+
+          <div class="interest-card">
+            <div class="interest-icon pink">
+              <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            </div>
+            <div>
+              <div class="interest-name">تعليم</div>
+              <div class="interest-count">120+ جهة</div>
+            </div>
+          </div>
+
+          <div class="interest-card">
+            <div class="interest-icon green">
+              <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+            </div>
+            <div>
+              <div class="interest-name">خدمات</div>
+              <div class="interest-count">200+ مقدم</div>
+            </div>
+          </div>
+
+          <div class="interest-card">
+            <div class="interest-icon red">
+              <svg viewBox="0 0 24 24"><path d="M3 9h18M9 21V9M21 9v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9"/></svg>
+            </div>
+            <div>
+              <div class="interest-name">جمال وعناية</div>
+              <div class="interest-count">80+ صالون</div>
+            </div>
+          </div>
+
+          <div class="interest-card">
+            <div class="interest-icon indigo">
+              <svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+            </div>
+            <div>
+              <div class="interest-name">توصيل</div>
+              <div class="interest-count">50+ خدمة</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ob-bottom-actions" style="margin-top: auto;">
+          <button class="ob-prev-btn">
+            <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <button class="ob-next-btn">
+            التالي
+            <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="screen-badge">3 · Onboarding 2</div>
+  </div>
+
+  <!-- ═══════════ SCREEN 4: PERMISSION + START ═══════════ -->
+  <div class="screen-wrapper">
+    <div class="phone">
+      <div class="status-bar">
+        <div class="time">9:41</div>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 22h3v-9H2v9zm5 0h3V9H7v13zm5 0h3V5h-3v17zm5 0h3V2h-3v20z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21l-12-18h24z"/></svg>
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm5 4v8h1c.6 0 1-.4 1-1V9c0-.6-.4-1-1-1h-1z"/></svg>
+        </div>
+      </div>
+
+      <div class="ob-screen">
+        <div class="ob-top-bar">
+          <div></div>
+          <div class="ob-step-counter">3 / 3</div>
+        </div>
+
+        <div class="ob-progress-bar">
+          <div class="ob-progress-fill" style="width: 100%;"></div>
+        </div>
+
+        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 20px 0;">
+          <div class="permission-info">
+            <div class="permission-icon-wrap">
+              <svg viewBox="0 0 24 24">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+            </div>
+            <div class="permission-title">اسمح لنا نوصلك بالأقرب</div>
+            <div class="permission-text">
+              عشان نقدر نعرضلك الأنشطة والخدمات الأقرب ليك في دكرنس
+            </div>
+
+            <div class="permission-features">
+              <div class="permission-feature">
+                <div class="permission-feature-icon">
+                  <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                </div>
+                <div class="permission-feature-text">اعرض الأنشطة القريبة منك خلال ثواني</div>
+              </div>
+
+              <div class="permission-feature">
+                <div class="permission-feature-icon">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                <div class="permission-feature-text">احسب وقت الوصول والمسافة تلقائياً</div>
+              </div>
+
+              <div class="permission-feature">
+                <div class="permission-feature-icon">
+                  <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <div class="permission-feature-text">بياناتك آمنة ومشفرة بالكامل</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="permission-actions">
+          <button class="permission-primary-btn">
+            <svg viewBox="0 0 24 24">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+            السماح بالوصول للموقع
+          </button>
+          <button class="permission-secondary-btn">لاحقاً</button>
+        </div>
+      </div>
+    </div>
+    <div class="screen-badge">4 · Permission</div>
+  </div>
+
+</div>
+
+</body>
+</html>

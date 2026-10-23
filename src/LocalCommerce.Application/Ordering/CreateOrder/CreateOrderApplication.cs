@@ -61,7 +61,7 @@ public interface IProductReader
 
 public interface IOrderWriter
 {
-    Task AddAsync(Order order, string orderNumber, CancellationToken cancellationToken);
+    Task AddAsync(Order order, Guid customerId, string orderNumber, CancellationToken cancellationToken);
 }
 
 public interface ICreateOrderUnitOfWork
@@ -87,6 +87,7 @@ public sealed class CreateOrderRejectedException : ApplicationFailureException
 public sealed class CreateOrderHandler
 {
     private const string Operation = "CreateOrder";
+    private const int MaxIdempotencyKeyLength = 256;
 
     public CreateOrderHandler(
         ICartReader cartReader,
@@ -129,6 +130,11 @@ public sealed class CreateOrderHandler
 
         if (string.IsNullOrWhiteSpace(command.IdempotencyKey))
             throw new CreateOrderRejectedException("Idempotency key is required.", ApplicationErrorCodes.IdempotencyKeyRequired);
+
+        if (command.IdempotencyKey.Length > MaxIdempotencyKeyLength)
+            throw new CreateOrderRejectedException(
+                $"Idempotency key must not exceed {MaxIdempotencyKeyLength} characters.",
+                ApplicationErrorCodes.RequestInvalid);
 
         var fingerprint = BuildFingerprint(command);
 
@@ -220,6 +226,7 @@ public sealed class CreateOrderHandler
 
             await OrderWriter.AddAsync(
                 order,
+                command.CustomerId,
                 orderNumber,
                 transactionCancellationToken);
 

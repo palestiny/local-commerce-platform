@@ -17,10 +17,10 @@ public sealed class EfCreateOrderUnitOfWork(CommerceDbContext db) : ICreateOrder
 
 public sealed class EfOrderWriter(CommerceDbContext db) : IOrderWriter
 {
-    public Task AddAsync(Order order,string orderNumber,CancellationToken ct)
+    public Task AddAsync(Order order,Guid customerId,string orderNumber,CancellationToken ct)
     {
         db.Orders.Add(new OrderEntity {
-            Id=order.Id, StoreId=order.StoreId, OrderNumber=orderNumber, Status=order.Status,
+            Id=order.Id, CustomerId=customerId, StoreId=order.StoreId, OrderNumber=orderNumber, Status=order.Status,
             CreatedAt=DateTimeOffset.UtcNow, UpdatedAt=DateTimeOffset.UtcNow,
             Items=order.Items.Select(i=>new OrderItemEntity {
                 Id=Guid.NewGuid(), OrderId=order.Id, ProductId=i.ProductId, StoreId=i.StoreId,
